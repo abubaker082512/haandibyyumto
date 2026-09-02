@@ -7,6 +7,7 @@ import { KitchenPortal } from './components/KitchenPortal';
 import { RiderPortal } from './components/RiderPortal';
 import { OwnerPortal } from './components/OwnerPortal';
 import { CashierPortal } from './components/CashierPortal';
+import { PortalGate } from './components/PortalGate';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { HelpCircle, RefreshCw, X, Info, Zap, User, LogIn } from 'lucide-react';
@@ -16,7 +17,7 @@ const SIMULATION_STEPS = [
     step: '1',
     title: 'Customer App',
     icon: '🍲',
-    text: 'Browse new Handi, Karahi & BBQ menu. Place a Dine-In or Delivery order. Book a table at Gulberg Greens or M.M. Alam.'
+    text: 'Browse new Handi, Karahi & BBQ menu. Place a Dine-In or Delivery order. Book a table at Gulberg Greens, Islamabad.'
   },
   {
     step: '2',
@@ -252,7 +253,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
           <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', lineHeight: 1.6 }}>
             © 2026 Haandi by Yumto. Authentic Desi, Karahi, Handi & Charcoal BBQ Cuisine.<br />
-            Islamabad: Gulberg Greens, Civic Center (0330 0500600) · Lahore: M.M. Alam Rd, Gulberg III
+            Islamabad: Gulberg Greens, Civic Center, Executive Block (0330 0500600) · NTN/GST: 4585147-3
           </div>
         </div>
       </footer>
@@ -277,11 +278,46 @@ function App() {
         <AppLayout>
           <Routes>
             <Route path="/" element={<CustomerPortal />} />
-            <Route path="/manager" element={<ManagerPortal />} />
-            <Route path="/kitchen" element={<KitchenPortal />} />
-            <Route path="/rider" element={<RiderPortal />} />
-            <Route path="/admin" element={<OwnerPortal />} />
-            <Route path="/pos" element={<CashierPortal />} />
+            <Route
+              path="/manager"
+              element={
+                <PortalGate allowedRoles={['MANAGER', 'OWNER']} portalName="Branch Manager Portal" portalIcon="📋">
+                  <ManagerPortal />
+                </PortalGate>
+              }
+            />
+            <Route
+              path="/kitchen"
+              element={
+                <PortalGate allowedRoles={['KITCHEN', 'MANAGER', 'OWNER']} portalName="Kitchen KDS Terminal" portalIcon="👨‍🍳">
+                  <KitchenPortal />
+                </PortalGate>
+              }
+            />
+            <Route
+              path="/rider"
+              element={
+                <PortalGate allowedRoles={['RIDER', 'MANAGER', 'OWNER']} portalName="Fleet Rider Portal" portalIcon="🛵">
+                  <RiderPortal />
+                </PortalGate>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <PortalGate allowedRoles={['OWNER']} portalName="Executive Owner Portal" portalIcon="👑">
+                  <OwnerPortal />
+                </PortalGate>
+              }
+            />
+            <Route
+              path="/pos"
+              element={
+                <PortalGate allowedRoles={['CASHIER', 'MANAGER', 'OWNER']} portalName="POS Cashier Terminal" portalIcon="🏦">
+                  <CashierPortal />
+                </PortalGate>
+              }
+            />
           </Routes>
         </AppLayout>
       </HashRouter>

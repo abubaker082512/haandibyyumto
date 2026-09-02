@@ -6,10 +6,12 @@ class MockDatabase {
   MockDatabase._internal();
 
   List<UserProfile> users = [
-    UserProfile(id: 'u-cust', name: 'Abubakar Customer', phone: '+92 300 1234567', role: 'CUSTOMER'),
+    UserProfile(id: 'u-owner', name: 'Haandi Owner', phone: '+92 300 0000000', role: 'OWNER'),
     UserProfile(id: 'u-man1', name: 'Bilal Manager', phone: '+92 333 4567890', role: 'MANAGER', branchId: 'br-isb'),
+    UserProfile(id: 'u-cash1', name: 'Nadia Cashier', phone: '+92 321 5550001', role: 'CASHIER', branchId: 'br-isb'),
     UserProfile(id: 'u-kit1', name: 'Chef Tariq', phone: '+92 312 3456789', role: 'KITCHEN', branchId: 'br-isb'),
     UserProfile(id: 'u-ride1', name: 'Zahid Rider 1', phone: '+92 345 6789012', role: 'RIDER'),
+    UserProfile(id: 'u-cust', name: 'Abubakar Customer', phone: '+92 300 1234567', role: 'CUSTOMER'),
   ];
 
   List<Branch> branches = [

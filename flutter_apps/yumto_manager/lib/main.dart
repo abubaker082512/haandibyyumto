@@ -20,7 +20,14 @@ class YumtoManagerApp extends StatelessWidget {
     return MaterialApp(
       title: 'Haandi - Manager',
       theme: YumtoTheme.lightTheme,
-      home: const SplashScreen(nextScreen: ManagerScreen()),
+      home: const SplashScreen(
+        nextScreen: HaandiLoginScreen(
+          portalTitle: 'Haandi Manager Portal',
+          portalSubtitle: 'Table Assignments & Floor Operations',
+          allowedRoles: ['MANAGER', 'OWNER'],
+          nextScreen: ManagerScreen(),
+        ),
+      ),
     );
   }
 }
@@ -34,16 +41,24 @@ class ManagerScreen extends StatelessWidget {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manager Dashboard'),
+        title: const Text('Manager Dashboard (Islamabad)'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications, color: Color(0xFFEAB308)),
-            onPressed: () {},
+            icon: const Icon(Icons.logout, color: Color(0xFFDC2626)),
+            tooltip: 'Sign Out',
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => const HaandiLoginScreen(
+                    portalTitle: 'Haandi Manager Portal',
+                    portalSubtitle: 'Table Assignments & Floor Operations',
+                    allowedRoles: ['MANAGER', 'OWNER'],
+                    nextScreen: ManagerScreen(),
+                  ),
+                ),
+              );
+            },
           ),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.black54),
-            onPressed: () {},
-          )
         ],
       ),
       body: Row(

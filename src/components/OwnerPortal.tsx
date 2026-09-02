@@ -40,7 +40,7 @@ export const OwnerPortal: React.FC = () => {
   // Branch Form States
   const [isBranchFormOpen, setIsBranchFormOpen] = useState(false);
   const [branchName, setBranchName] = useState('');
-  const [branchCity, setBranchCity] = useState('Lahore');
+  const [branchCity, setBranchCity] = useState('Islamabad');
   const [branchAddress, setBranchAddress] = useState('');
   const [branchPhone, setBranchPhone] = useState('');
   const [branchFee, setBranchFee] = useState(500);

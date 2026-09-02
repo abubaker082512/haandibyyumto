@@ -20,7 +20,14 @@ class YumtoOwnerApp extends StatelessWidget {
     return MaterialApp(
       title: 'Haandi - Owner',
       theme: YumtoTheme.lightTheme,
-      home: const SplashScreen(nextScreen: AdminScreen()),
+      home: const SplashScreen(
+        nextScreen: HaandiLoginScreen(
+          portalTitle: 'Haandi Owner Executive',
+          portalSubtitle: 'Global Business Analytics & Outlets',
+          allowedRoles: ['OWNER'],
+          nextScreen: AdminScreen(),
+        ),
+      ),
     );
   }
 }
@@ -39,18 +46,25 @@ class _AdminScreenState extends State<AdminScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard - Yumto Mandi', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Haandi Owner Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
-          ElevatedButton.icon(
-            onPressed: () => _showAddBranchDialog(context),
-            icon: const Icon(Icons.add_business, color: Colors.black),
-            label: const Text('Add Branch', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8B1E1E),
-              foregroundColor: Colors.white,
-            ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Color(0xFFDC2626)),
+            tooltip: 'Sign Out',
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => const HaandiLoginScreen(
+                    portalTitle: 'Haandi Owner Executive',
+                    portalSubtitle: 'Global Business Analytics & Outlets',
+                    allowedRoles: ['OWNER'],
+                    nextScreen: AdminScreen(),
+                  ),
+                ),
+              );
+            },
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
         ],
       ),
       body: Row(

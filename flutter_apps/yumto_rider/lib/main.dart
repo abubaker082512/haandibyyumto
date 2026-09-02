@@ -20,7 +20,14 @@ class YumtoRiderApp extends StatelessWidget {
     return MaterialApp(
       title: 'Haandi - Rider',
       theme: YumtoTheme.lightTheme,
-      home: const SplashScreen(nextScreen: RiderScreen()),
+      home: const SplashScreen(
+        nextScreen: HaandiLoginScreen(
+          portalTitle: 'Haandi Rider App',
+          portalSubtitle: 'Live Delivery Dispatch & GPS Navigation',
+          allowedRoles: ['RIDER', 'MANAGER', 'OWNER'],
+          nextScreen: RiderScreen(),
+        ),
+      ),
     );
   }
 }
@@ -32,12 +39,24 @@ class RiderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rider Active Deliveries'),
+        title: const Text('Haandi Rider Active Deliveries'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person, color: Color(0xFFEAB308)),
-            onPressed: () {},
-          )
+            icon: const Icon(Icons.logout, color: Color(0xFFDC2626)),
+            tooltip: 'Sign Out',
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => const HaandiLoginScreen(
+                    portalTitle: 'Haandi Rider App',
+                    portalSubtitle: 'Live Delivery Dispatch & GPS Navigation',
+                    allowedRoles: ['RIDER', 'MANAGER', 'OWNER'],
+                    nextScreen: RiderScreen(),
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: ListView(
@@ -45,18 +64,18 @@ class RiderScreen extends StatelessWidget {
         children: [
           _buildDeliveryCard(
             context,
-            orderId: 'ORD-5829',
-            customerName: 'Ahsan',
-            address: 'DHA Phase 6, Sector L',
-            timeElapsed: '12m ago',
+            orderId: 'ORD-ISB-5829',
+            customerName: 'Ahsan Khan',
+            address: 'House 14, Street 7, Block B, Gulberg Greens, Islamabad',
+            timeElapsed: '8m ago',
             status: 'OUT_FOR_DELIVERY',
           ),
           const SizedBox(height: 16),
           _buildDeliveryCard(
             context,
-            orderId: 'ORD-5830',
-            customerName: 'Fatima',
-            address: 'Gulberg 2, Main Blvd',
+            orderId: 'ORD-ISB-5830',
+            customerName: 'Fatima Zahra',
+            address: 'Executive Block, Civic Center, Gulberg Greens, Islamabad',
             timeElapsed: '2m ago',
             status: 'READY_FOR_PICKUP',
           ),

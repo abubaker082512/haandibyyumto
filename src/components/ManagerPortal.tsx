@@ -14,8 +14,8 @@ export const ManagerPortal: React.FC = () => {
     });
   }, []);
 
-  const [selectedBranchId, setSelectedBranchId] = useState('br-lhr');
-  const [activeFloorId, setActiveFloorId] = useState('fl-lhr-g');
+  const [selectedBranchId, setSelectedBranchId] = useState('br-isb');
+  const [activeFloorId, setActiveFloorId] = useState('fl-isb-g');
   
   // Table Assignment States
   const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null);
