@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Yumto Mandi</string>
+    <string name="title_activity_main">Yumto Mandi</string>
+    <string name="package_name">com.yumto.mandi</string>
+    <string name="custom_url_scheme">com.yumto.mandi</string>
+</resources>
