@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Yumto Mandi</string>
-    <string name="title_activity_main">Yumto Mandi</string>
-    <string name="package_name">com.yumto.mandi</string>
-    <string name="custom_url_scheme">com.yumto.mandi</string>
+    <string name="app_name">Haandi by Yumto</string>
+    <string name="title_activity_main">Haandi by Yumto</string>
+    <string name="package_name">com.haandi.yumto</string>
+    <string name="custom_url_scheme">com.haandi.yumto</string>
 </resources>

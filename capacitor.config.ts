@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.yumto.mandi',
-  appName: 'Yumto Mandi',
+  appId: 'com.haandi.yumto',
+  appName: 'Haandi by Yumto',
   webDir: 'dist'
 };
 
