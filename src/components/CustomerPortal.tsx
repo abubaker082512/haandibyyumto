@@ -84,13 +84,25 @@ export const CustomerPortal: React.FC = () => {
   const [custName, setCustName] = useState('');
   const [custPhone, setCustPhone] = useState('');
   const [deliveryAddr, setDeliveryAddr] = useState('');
-  // Advance payment only: CARD or ONLINE (No Cash / COD)
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'ONLINE'>('CARD');
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
   const [showDiningModeModal, setShowDiningModeModal] = useState(true);
   const [showLiveTrackingModal, setShowLiveTrackingModal] = useState(false);
   const [showSectorModal, setShowSectorModal] = useState(false);
+  const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const [showOrderHistoryModal, setShowOrderHistoryModal] = useState(false);
+  const [selectedDishForDetails, setSelectedDishForDetails] = useState<any | null>(null);
+  const [promoCode, setPromoCode] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  
+  // Inquiry form
+  const [inquiryName, setInquiryName] = useState('');
+  const [inquiryPhone, setInquiryPhone] = useState('');
+  const [inquiryType, setInquiryType] = useState('Catering & Outdoor Handi');
+  const [inquiryGuests, setInquiryGuests] = useState('50');
+  const [inquiryMsg, setInquiryMsg] = useState('');
 
   // Hero carousel
   const [heroIdx, setHeroIdx] = useState(0);
@@ -183,11 +195,29 @@ export const CustomerPortal: React.FC = () => {
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const deliveryFee = orderType === 'DELIVERY' ? 150 : 0;
 
+  const applyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (code === 'HAANDI10') {
+      const disc = Math.round(subtotal * 0.10);
+      setDiscountAmount(disc);
+      setAppliedPromo('HAANDI10 (10% Off)');
+      showToast('🎉 Promo code HAANDI10 applied: 10% discount!', 'success');
+    } else if (code === 'YUMTO50') {
+      setDiscountAmount(50);
+      setAppliedPromo('YUMTO50 (Rs. 50 Off)');
+      showToast('🎉 Promo code YUMTO50 applied: Rs. 50 off!', 'success');
+    } else {
+      showToast('Invalid promo code. Try "HAANDI10"', 'error');
+    }
+  };
+
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+
   // Dynamic Sales Tax: Only applied and shown if Admin Master Toggle is ACTIVE
-  const taxCalc = dbState.calculateSalesTax(subtotal, paymentMethod);
+  const taxCalc = dbState.calculateSalesTax(discountedSubtotal, paymentMethod);
   const tax = settings.isTaxActive ? taxCalc.taxAmount : 0;
   const premiumReservationFee = 0;
-  const grandTotal = subtotal + tax + deliveryFee + premiumReservationFee;
+  const grandTotal = discountedSubtotal + tax + deliveryFee + premiumReservationFee;
 
   const handleCheckout = () => {
     if (cart.length === 0) {
@@ -227,7 +257,7 @@ export const CustomerPortal: React.FC = () => {
       paymentStatus: 'PAID', // Advance prepayment verified
       paymentMethod,
       items: cart.map(i => ({ menuItemId: i.menuItemId, name: i.name, price: i.price, quantity: i.quantity, variation: i.variation })),
-      subtotal, discountAmount: 0, discountPercent: 0, tax, deliveryFee, premiumReservationFee, total: grandTotal,
+      subtotal, discountAmount, discountPercent: appliedPromo ? 10 : 0, tax, deliveryFee, premiumReservationFee, total: grandTotal,
       deliveryAddress: fullDeliveryAddress,
     });
 
@@ -298,8 +328,26 @@ export const CustomerPortal: React.FC = () => {
             </div>
           </a>
 
-          {/* Right: Live Map Tracker, Table Reservation & Cart */}
+          {/* Right: Live Map, Catering Inquiry, Order History, Table Reservation & Cart */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              className="haandi-nav-btn"
+              onClick={() => setShowInquiryModal(true)}
+              title="Catering & Banquet Inquiries"
+            >
+              <span>🎉</span>
+              <span className="hidden sm:inline">Catering</span>
+            </button>
+
+            <button
+              className="haandi-nav-btn"
+              onClick={() => setShowOrderHistoryModal(true)}
+              title="View Past Orders & Live Status"
+            >
+              <span>🧾</span>
+              <span className="hidden sm:inline">My Orders</span>
+            </button>
+
             <button
               className="haandi-nav-btn haandi-nav-btn-map"
               onClick={() => setShowLiveTrackingModal(true)}
@@ -319,7 +367,7 @@ export const CustomerPortal: React.FC = () => {
               }}
             >
               <Utensils style={{ width: '13px', height: '13px', color: 'var(--haandi-saffron)' }} />
-              <span className="hidden sm:inline">Reserve Table</span>
+              <span className="hidden sm:inline">Reserve</span>
             </button>
 
             <button
@@ -327,7 +375,7 @@ export const CustomerPortal: React.FC = () => {
               onClick={() => setCartOpen(true)}
             >
               <ShoppingBag style={{ width: '15px', height: '15px' }} />
-              <span>Handi Cart</span>
+              <span>Cart</span>
               {cartCount > 0 && <span className="haandi-cart-badge">{cartCount}</span>}
             </button>
           </div>
@@ -620,10 +668,12 @@ export const CustomerPortal: React.FC = () => {
                       src={item.imageUrl}
                       alt={item.name}
                       className="haandi-card-img"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setSelectedDishForDetails(item)}
                       onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80'; }}
                     />
                     <div className="haandi-card-info">
-                      <div>
+                      <div style={{ cursor: 'pointer' }} onClick={() => setSelectedDishForDetails(item)}>
                         <div className="haandi-card-name">{item.name}</div>
                         {item.description && <div className="haandi-card-desc">{item.description}</div>}
                       </div>
@@ -1005,12 +1055,48 @@ export const CustomerPortal: React.FC = () => {
                   </button>
                 </div>
 
+                {/* Promo Code Input */}
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    type="text"
+                    placeholder="Promo Code (e.g. HAANDI10)"
+                    value={promoCode}
+                    onChange={e => setPromoCode(e.target.value)}
+                    style={{
+                      flex: 1, padding: '8px 10px', borderRadius: '8px',
+                      border: '1.5px solid var(--border-warm)', fontSize: '11px',
+                      background: 'var(--bg-cream-light)', textTransform: 'uppercase', fontWeight: '800'
+                    }}
+                  />
+                  <button
+                    onClick={applyPromo}
+                    style={{
+                      background: 'var(--haandi-red)', color: '#ffffff', border: 'none',
+                      borderRadius: '8px', padding: '8px 12px', fontSize: '11px', fontWeight: '800', cursor: 'pointer'
+                    }}
+                  >
+                    Apply
+                  </button>
+                </div>
+                {appliedPromo && (
+                  <div style={{ fontSize: '11px', color: 'var(--emerald)', fontWeight: '800', display: 'flex', justifyContent: 'space-between', background: 'var(--emerald-light)', padding: '4px 8px', borderRadius: '6px' }}>
+                    <span>{appliedPromo}</span>
+                    <span>-Rs. {discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
+
                 {/* Calculations */}
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Subtotal:</span>
                     <span>Rs. {subtotal.toLocaleString()}</span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--emerald)', fontWeight: '700' }}>
+                      <span>Voucher Discount:</span>
+                      <span>-Rs. {discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
                   {settings.isTaxActive && tax > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Digital Sales Tax ({taxCalc.taxRate}%):</span>
@@ -1379,6 +1465,263 @@ export const CustomerPortal: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ============================================================
+          ONLINE INQUIRY & CATERING BOOKING MODAL
+          ============================================================ */}
+      {showInquiryModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(26,18,11,0.75)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: 'var(--bg-cream-light)', borderRadius: '24px', maxWidth: '500px', width: '100%', overflow: 'hidden', border: '2px solid var(--border-warm)', boxShadow: 'var(--shadow-xl)' }}>
+            <div style={{ background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)', padding: '18px 22px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: '900', fontSize: '16px' }}>🎉 Catering & Event Inquiry</div>
+                <div style={{ fontSize: '11px', color: 'var(--haandi-gold)' }}>Live Clay Pot Cooking & VIP Banquets · Islamabad</div>
+              </div>
+              <button onClick={() => setShowInquiryModal(false)} style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer' }}>
+                <X style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
+
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)' }}>Your Full Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Imran Khan"
+                  value={inquiryName}
+                  onChange={e => setInquiryName(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1.5px solid var(--border-warm)', marginTop: '4px', fontSize: '13px', background: '#ffffff' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)' }}>Phone / WhatsApp Number</label>
+                <input
+                  type="text"
+                  placeholder="0330 0000000"
+                  value={inquiryPhone}
+                  onChange={e => setInquiryPhone(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1.5px solid var(--border-warm)', marginTop: '4px', fontSize: '13px', background: '#ffffff' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)' }}>Occasion Type</label>
+                  <select
+                    value={inquiryType}
+                    onChange={e => setInquiryType(e.target.value)}
+                    style={{ width: '100%', padding: '9px 10px', borderRadius: '10px', border: '1.5px solid var(--border-warm)', marginTop: '4px', fontSize: '12px', background: '#ffffff' }}
+                  >
+                    <option value="Catering & Outdoor Handi">Outdoor Catering</option>
+                    <option value="Corporate Dinner">Corporate Dinner</option>
+                    <option value="VIP Majlis Private Hall">VIP Majlis Booking</option>
+                    <option value="Wedding / Daawat">Wedding / Daawat</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)' }}>Expected Guests</label>
+                  <input
+                    type="number"
+                    value={inquiryGuests}
+                    onChange={e => setInquiryGuests(e.target.value)}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1.5px solid var(--border-warm)', marginTop: '4px', fontSize: '13px', background: '#ffffff' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)' }}>Special Requirements / Menu Preferences</label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. Mutton Handi, Shinwari Karahi with live tandoor and clay pot presentation"
+                  value={inquiryMsg}
+                  onChange={e => setInquiryMsg(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1.5px solid var(--border-warm)', marginTop: '4px', fontSize: '12px', background: '#ffffff' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                <button
+                  onClick={() => {
+                    if (!inquiryName.trim() || !inquiryPhone.trim()) {
+                      showToast('Please enter your name and phone number', 'error');
+                      return;
+                    }
+                    setShowInquiryModal(false);
+                    showToast('🎉 Catering inquiry received! Our manager will call you within 15 mins.', 'success');
+                  }}
+                  style={{
+                    flex: 1, background: 'var(--haandi-red)', color: '#ffffff', border: 'none',
+                    borderRadius: '12px', padding: '12px', fontWeight: '900', fontSize: '13px', cursor: 'pointer'
+                  }}
+                >
+                  Submit Inquiry
+                </button>
+
+                <a
+                  href={`https://wa.me/923300500600?text=Hi%20Haandi%20by%20Yumto!%20I%20want%20to%20inquire%20about%20${encodeURIComponent(inquiryType)}%20for%20${inquiryGuests}%20guests.`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    background: '#25D366', color: '#ffffff', textDecoration: 'none',
+                    borderRadius: '12px', padding: '12px 16px', fontWeight: '900', fontSize: '13px',
+                    display: 'flex', alignItems: 'center', gap: '6px'
+                  }}
+                >
+                  <span>💬 WhatsApp</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          CUSTOMER PAST ORDERS & STATUS HISTORY MODAL
+          ============================================================ */}
+      {showOrderHistoryModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(26,18,11,0.75)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: 'var(--bg-cream-light)', borderRadius: '24px', maxWidth: '560px', width: '100%', maxHeight: '80vh', overflow: 'hidden', border: '2px solid var(--border-warm)', boxShadow: 'var(--shadow-xl)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)', padding: '18px 22px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: '900', fontSize: '16px' }}>🧾 My Orders & Live Status</div>
+                <div style={{ fontSize: '11px', color: 'var(--haandi-gold)' }}>Haandi by Yumto · Gulberg Greens, Islamabad</div>
+              </div>
+              <button onClick={() => setShowOrderHistoryModal(false)} style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer' }}>
+                <X style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
+
+            <div style={{ padding: '16px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {dbState.getOrders('br-isb').length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                  <p style={{ fontWeight: '800', fontSize: '15px' }}>No orders placed yet</p>
+                  <p style={{ fontSize: '12px', marginTop: '4px' }}>Explore our menu and place your first clay pot order!</p>
+                </div>
+              ) : (
+                dbState.getOrders('br-isb').slice(-8).reverse().map(order => (
+                  <div key={order.id} style={{ background: '#ffffff', border: '1.5px solid var(--border-warm)', borderRadius: '14px', padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontWeight: '900', fontSize: '13px', color: 'var(--text-dark)' }}>
+                        #{order.id.slice(-6).toUpperCase()} · {order.orderType}
+                      </span>
+                      <span style={{
+                        fontSize: '10px', fontWeight: '900', padding: '2px 8px', borderRadius: '6px',
+                        background: order.status === 'COMPLETED' ? 'var(--emerald-light)' : order.status === 'PREPARING' ? '#FEF3C7' : 'var(--haandi-red-light)',
+                        color: order.status === 'COMPLETED' ? 'var(--emerald)' : order.status === 'PREPARING' ? '#D97706' : 'var(--haandi-red)'
+                      }}>
+                        {order.status}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      {order.items.map(i => `${i.quantity}× ${i.name}`).join(', ')}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', borderTop: '1px dashed var(--border-warm)', paddingTop: '6px', fontSize: '12px' }}>
+                      <span style={{ fontWeight: '800', color: 'var(--haandi-red)' }}>Rs. {order.total.toLocaleString()}</span>
+                      <button
+                        onClick={() => {
+                          setPlacedOrderId(order.id);
+                          setShowOrderHistoryModal(false);
+                          setShowLiveTrackingModal(true);
+                        }}
+                        style={{ background: 'var(--haandi-red-light)', color: 'var(--haandi-red)', border: '1px solid var(--haandi-red)', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
+                      >
+                        📍 Track Route
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          DISH DETAILS & AUTHENTIC CLAY POT STORY MODAL
+          ============================================================ */}
+      {selectedDishForDetails && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(26,18,11,0.75)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: 'var(--bg-cream-light)', borderRadius: '24px', maxWidth: '460px', width: '100%', overflow: 'hidden', border: '2px solid var(--border-warm)', boxShadow: 'var(--shadow-xl)' }}>
+            <div style={{ position: 'relative', height: '180px', overflow: 'hidden' }}>
+              <img src={selectedDishForDetails.image} alt={selectedDishForDetails.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(26,18,11,0.85) 0%, transparent 60%)' }} />
+              <button onClick={() => setSelectedDishForDetails(null)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', color: '#ffffff', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <X style={{ width: '18px', height: '18px' }} />
+              </button>
+              <div style={{ position: 'absolute', bottom: '12px', left: '16px', color: '#ffffff' }}>
+                <div style={{ fontWeight: '900', fontSize: '18px' }}>{selectedDishForDetails.name}</div>
+                <div style={{ fontSize: '12px', color: 'var(--haandi-gold)', fontWeight: '700' }}>Rs. {selectedDishForDetails.price.toLocaleString()} · {selectedDishForDetails.category}</div>
+              </div>
+            </div>
+
+            <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                {selectedDishForDetails.description}
+              </p>
+
+              <div style={{ background: '#ffffff', borderRadius: '12px', padding: '12px', border: '1px solid var(--border-warm)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>🏺 Earthenware Slow-Cooking Guarantee:</span>
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  Slow cooked inside unglazed terracotta pots over open charcoal fire. Sealed with dough to lock in the aroma and juices. Cooked with 100% Pure Desi Ghee.
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  addToCart(selectedDishForDetails);
+                  setSelectedDishForDetails(null);
+                }}
+                style={{
+                  background: 'var(--haandi-red)', color: '#ffffff', border: 'none',
+                  borderRadius: '12px', padding: '12px', fontWeight: '900', fontSize: '13px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '6px'
+                }}
+              >
+                <span>Add to Handi Cart · Rs. {selectedDishForDetails.price.toLocaleString()}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          FLOATING WHATSAPP SUPPORT BUTTON (BOTTOM LEFT)
+          ============================================================ */}
+      <a
+        href="https://wa.me/923300500600?text=Hi%20Haandi%20by%20Yumto!%20I%20have%20an%20inquiry%20regarding%20orders%20and%20reservations."
+        target="_blank"
+        rel="noreferrer"
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '24px',
+          zIndex: 800,
+          background: '#25D366',
+          color: '#ffffff',
+          borderRadius: '99px',
+          padding: '10px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          textDecoration: 'none',
+          fontWeight: '800',
+          fontSize: '13px',
+          boxShadow: '0 4px 18px rgba(37,211,102,0.4)',
+          transition: 'transform 0.2s'
+        }}
+        onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.06)')}
+        onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+      >
+        <span style={{ fontSize: '16px' }}>💬</span>
+        <span className="hidden sm:inline">WhatsApp Help</span>
+      </a>
 
       {/* ============================================================
           FLOATING HAANDI LOGO CART BUTTON (BOTTOM RIGHT)

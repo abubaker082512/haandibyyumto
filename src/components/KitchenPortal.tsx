@@ -5,6 +5,7 @@ import { Play, Check, Clock, ChefHat, CheckCircle } from 'lucide-react';
 export const KitchenPortal: React.FC = () => {
   const [dbState, setDbState] = useState(db);
   const [, setTimeTick] = useState(0);
+  const [selectedStation, setSelectedStation] = useState<'ALL' | 'HANDI' | 'KARAHI' | 'BBQ' | 'TANDOOR'>('ALL');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -25,9 +26,18 @@ export const KitchenPortal: React.FC = () => {
   const tables = dbState.getTables(selectedBranchId);
 
   // Active kitchen orders (PENDING, CONFIRMED, PREPARING, READY)
-  const activeOrders = dbState.getOrders(selectedBranchId)
+  const rawActiveOrders = dbState.getOrders(selectedBranchId)
     .filter(o => ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'].includes(o.status))
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()); // oldest first
+
+  const activeOrders = rawActiveOrders.filter(order => {
+    if (selectedStation === 'ALL') return true;
+    if (selectedStation === 'HANDI') return order.items.some(i => i.name.toLowerCase().includes('handi'));
+    if (selectedStation === 'KARAHI') return order.items.some(i => i.name.toLowerCase().includes('karahi'));
+    if (selectedStation === 'BBQ') return order.items.some(i => i.name.toLowerCase().includes('bbq') || i.name.toLowerCase().includes('boti') || i.name.toLowerCase().includes('kebab') || i.name.toLowerCase().includes('tikka') || i.name.toLowerCase().includes('chops'));
+    if (selectedStation === 'TANDOOR') return order.items.some(i => i.name.toLowerCase().includes('naan') || i.name.toLowerCase().includes('roti') || i.name.toLowerCase().includes('rice') || i.name.toLowerCase().includes('paratha'));
+    return true;
+  });
 
   const handleStartPrep = (orderId: string) => {
     dbState.updateOrderStatus(orderId, 'PREPARING');
@@ -89,9 +99,36 @@ export const KitchenPortal: React.FC = () => {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ background: 'rgba(232,93,4,0.2)', border: '1px solid var(--haandi-saffron)', borderRadius: '10px', padding: '6px 14px', color: '#F4C430', fontWeight: '800', fontSize: '12px' }}>
-              🔥 {activeOrders.length} Active Tickets
+              🔥 {rawActiveOrders.length} Total Tickets
             </div>
           </div>
+        </div>
+
+        {/* Station Tabs */}
+        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '16px' }}>
+          {[
+            { id: 'ALL', label: 'All Stations', icon: '👨‍🍳' },
+            { id: 'HANDI', label: 'Earthen Handi Pots', icon: '🍲' },
+            { id: 'KARAHI', label: 'Shinwari Karahi Woks', icon: '🍳' },
+            { id: 'BBQ', label: 'Charcoal BBQ Grill', icon: '🔥' },
+            { id: 'TANDOOR', label: 'Tandoor & Rice', icon: '🫓' },
+          ].map(st => (
+            <button
+              key={st.id}
+              onClick={() => setSelectedStation(st.id as any)}
+              style={{
+                padding: '8px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: '800',
+                border: selectedStation === st.id ? '2px solid var(--haandi-saffron)' : '1px solid var(--border-warm)',
+                background: selectedStation === st.id ? 'var(--haandi-red)' : 'var(--bg-card)',
+                color: selectedStation === st.id ? '#ffffff' : 'var(--text-dark)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap',
+                boxShadow: selectedStation === st.id ? '0 2px 8px rgba(139,30,30,0.3)' : 'none'
+              }}
+            >
+              <span>{st.icon}</span>
+              <span>{st.label}</span>
+            </button>
+          ))}
         </div>
 
         {/* KDS Order Tickets Grid */}
