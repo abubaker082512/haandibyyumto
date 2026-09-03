@@ -76,7 +76,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       <div style={{
         maxWidth: '440px',
         width: '100%',
-        background: '#ffffff',
+        background: '#FDFBF7',
         borderRadius: '24px',
         overflow: 'hidden',
         boxShadow: '0 25px 60px rgba(0,0,0,0.5)',

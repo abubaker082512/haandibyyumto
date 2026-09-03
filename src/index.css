@@ -1,52 +1,64 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap');
 
 /* ============================================================
-   YUMTO MANDI — Exact Design System Matching yumtomandi.com
-   Yellow/Gold Category Banners | Dark Header | Arabic Market Style
+   HAANDI BY YUMTO — HERITAGE DESI DINING DESIGN SYSTEM
+   Palette: Warm Creamy Ivory, Rich Clay Terracotta, Flame Saffron, Golden Amber, Deep Espresso
    ============================================================ */
 
 :root {
-  --font-sans: 'Poppins', sans-serif;
-  --font-display: 'Playfair Display', serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
 
-  /* Brand Colors — Haandi by Yumto Terracotta & Saffron Palette */
-  --primary: #8B1E1E;         /* Deep Rich Burgundy / Terracotta */
-  --primary-dark: #6E1515;
-  --primary-light: #FBF2F0;
-  --yellow: #E85D04;          /* Warm Terracotta / Saffron Orange */
-  --yellow-dark: #C84B03;     /* Deeper Amber for hover */
-  --yellow-light: #FDF6EE;    /* Warm Cream Tint */
-  --black: #1A120B;           /* Deep Espresso / Rich Dark */
-  --black-soft: #241A13;      /* Soft Espresso */
-  --white: #ffffff;
-  --red: #8B1E1E;             /* Terracotta CTA */
-  --red-dark: #6E1515;
+  /* Primary Brand Colors (Haandi Clay Pot & Logo) */
+  --haandi-red: #8B1E1E;            /* Terracotta Clay Pot Maroon */
+  --haandi-red-hover: #731818;
+  --haandi-red-light: #FBF0EF;
+  --haandi-red-alpha: rgba(139, 30, 30, 0.12);
 
-  /* Grays */
-  --gray-50: #FBF8F3;
-  --gray-100: #F5EFE6;
-  --gray-200: #EADBCC;
-  --gray-300: #D1C0AF;
-  --gray-400: #9C8B7A;
-  --gray-500: #6B5B4C;
-  --gray-600: #4B3E32;
-  --gray-700: #372C23;
-  --gray-800: #241A13;
-  --gray-900: #1A120B;
+  --haandi-saffron: #E85D04;        /* Warm Flame Amber / Saffron */
+  --haandi-saffron-hover: #D04F00;
+  --haandi-saffron-light: #FDF4EB;
+  --haandi-saffron-alpha: rgba(232, 93, 4, 0.15);
 
-  /* Semantic */
-  --text-primary: #1A120B;
-  --text-secondary: #4B3E32;
-  --text-muted: #9C8B7A;
-  --border: #EADBCC;
-  --bg-page: #FBF8F3;
-  --shadow-sm: 0 1px 3px rgba(33,18,11,0.08);
-  --shadow-md: 0 4px 12px rgba(33,18,11,0.1);
-  --shadow-lg: 0 10px 30px rgba(33,18,11,0.15);
+  --haandi-gold: #F4C430;           /* Golden Honey / Royal Mustard */
+  --haandi-gold-dark: #C69500;
+  --haandi-gold-alpha: rgba(244, 196, 48, 0.18);
+
+  /* Backgrounds: Creamy Warm Porcelain & Ivory (NO harsh clinical pure white) */
+  --bg-cream: #F8F3EA;             /* Warm Porcelain Canvas */
+  --bg-cream-light: #FBF8F3;       /* Delicate Warm Ivory */
+  --bg-card: #FDFBF7;              /* Card Surface */
+  --bg-card-hover: #FFFDF9;
+  --bg-warm-tint: #F5EDE2;         /* Accent Tint */
+  --bg-dark: #1A120B;              /* Deep Espresso / Roasted Charcoal */
+  --bg-dark-soft: #281D14;         /* Soft Dark Espresso */
+
+  /* Text Colors */
+  --text-dark: #1A120B;            /* Deep Roasted Charcoal */
+  --text-muted: #5C4B3C;           /* Warm Earthy Muted */
+  --text-light: #9C8B7A;           /* Soft Dust Light */
+  --text-white: #FFFFFF;
+
+  /* Accent & Status Colors */
+  --emerald: #15803D;              /* Fresh Mint Green */
+  --emerald-light: #F0FDF4;
+  --emerald-border: #BBF7D0;
+  --ruby: #DC2626;                 /* Alert Red */
+
+  /* Borders & Shadows */
+  --border-warm: #EADBCC;
+  --border-warm-dark: #D4C1AC;
+  --border-focus: #8B1E1E;
+
+  --shadow-sm: 0 2px 6px rgba(26, 18, 11, 0.04);
+  --shadow-md: 0 6px 18px rgba(26, 18, 11, 0.08);
+  --shadow-lg: 0 14px 34px rgba(26, 18, 11, 0.12);
+  --shadow-xl: 0 24px 50px rgba(26, 18, 11, 0.18);
+  --shadow-gold: 0 8px 24px rgba(232, 93, 4, 0.25);
 
   font-family: var(--font-sans);
-  color: var(--text-primary);
-  background: var(--bg-page);
+  color: var(--text-dark);
+  background-color: var(--bg-cream);
   color-scheme: light;
 }
 
@@ -57,35 +69,43 @@
   font-family: var(--font-sans) !important;
 }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-cream);
+}
 
 body {
   min-height: 100vh;
-  background: var(--bg-page);
+  background: var(--bg-cream);
+  color: var(--text-dark);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-/* Scrollbars */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--gray-100); }
-::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 99px; }
+/* Custom Scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-cream-light); }
+::-webkit-scrollbar-thumb { background: var(--border-warm-dark); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--haandi-red); }
+
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ============================================================
-   NAVBAR — Dark black, sticky
+   HEADER & NAVIGATION BAR
    ============================================================ */
-.yumto-navbar {
+.haandi-navbar {
   position: sticky;
   top: 0;
   z-index: 500;
-  background: var(--black);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 2px 16px rgba(0,0,0,0.5);
+  background: var(--bg-dark);
+  border-bottom: 2px solid rgba(232, 93, 4, 0.3);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.45);
 }
-.yumto-navbar-inner {
-  max-width: 1200px;
+
+.haandi-navbar-inner {
+  max-width: 1280px;
   margin: 0 auto;
   padding: 10px 16px;
   display: flex;
@@ -93,777 +113,631 @@ body {
   justify-content: space-between;
   gap: 12px;
 }
-.yumto-navbar-logo {
-  height: 48px;
-  width: auto;
+
+.haandi-logo-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.haandi-logo-img {
+  height: 44px;
+  width: 44px;
+  border-radius: 12px;
   object-fit: contain;
+  background: var(--bg-cream-light);
+  padding: 2px;
+  border: 2px solid var(--haandi-saffron);
+  box-shadow: 0 2px 10px rgba(232, 93, 4, 0.4);
+}
+
+.haandi-brand-title {
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
+
+.haandi-brand-subtitle {
+  color: var(--haandi-gold);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 /* Nav location pill */
-.nav-location-pill {
+.haandi-location-pill {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 99px;
   padding: 6px 14px;
-  color: #d1d5db;
-  font-size: 12px;
-  font-weight: 500;
+  color: #F8F3EA;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
 }
-.nav-location-pill:hover { background: rgba(255,255,255,0.12); color: white; }
+.haandi-location-pill:hover {
+  background: rgba(232, 93, 4, 0.2);
+  border-color: var(--haandi-saffron);
+  color: #ffffff;
+}
 
-/* Cart button */
-.nav-cart-btn {
-  position: relative;
+/* Navigation Action Buttons */
+.haandi-nav-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--yellow);
-  border: none;
+  gap: 6px;
   border-radius: 10px;
-  padding: 8px 16px;
-  color: var(--black);
-  font-size: 13px;
+  padding: 7px 14px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
+  border: none;
   white-space: nowrap;
 }
-.nav-cart-btn:hover { background: var(--yellow-dark); transform: translateY(-1px); }
-.nav-cart-badge {
+
+.haandi-nav-btn-map {
+  background: rgba(232, 93, 4, 0.15);
+  border: 1.5px solid var(--haandi-saffron);
+  color: #F4C430;
+}
+.haandi-nav-btn-map:hover {
+  background: var(--haandi-saffron);
+  color: #1A120B;
+}
+
+.haandi-nav-btn-cart {
+  position: relative;
+  background: linear-gradient(135deg, var(--haandi-red) 0%, #B91C1C 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(139, 30, 30, 0.4);
+}
+.haandi-nav-btn-cart:hover {
+  background: linear-gradient(135deg, #731818 0%, #991B1B 100%);
+  transform: translateY(-1px);
+}
+
+.haandi-cart-badge {
   position: absolute;
-  top: -6px; right: -6px;
-  background: var(--red);
-  color: white;
+  top: -6px;
+  right: -6px;
+  background: var(--haandi-gold);
+  color: #1A120B;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 900;
   border-radius: 99px;
-  min-width: 18px; height: 18px;
-  display: flex; align-items: center; justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
 
 /* ============================================================
-   HERO BANNER with sliding carousel — dark with overlaid text
+   HERO BANNER CAROUSEL
    ============================================================ */
-.hero-wrap {
+.haandi-hero-wrap {
   width: 100%;
-  background: var(--black);
   position: relative;
   overflow: hidden;
+  background: var(--bg-dark);
 }
-.hero-slide {
+
+.haandi-hero-slide {
   position: relative;
   width: 100%;
-  height: 320px;
+  height: 380px;
 }
-@media (min-width: 768px) { .hero-slide { height: 420px; } }
-.hero-slide img {
+@media (min-width: 768px) {
+  .haandi-hero-slide { height: 460px; }
+}
+
+.haandi-hero-slide img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-.hero-overlay {
+
+.haandi-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 60%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(26, 18, 11, 0.92) 0%,
+    rgba(26, 18, 11, 0.72) 45%,
+    rgba(26, 18, 11, 0.2) 100%
+  );
 }
-.hero-content {
+
+.haandi-hero-content {
   position: absolute;
-  left: 5%;
+  left: 6%;
   top: 50%;
   transform: translateY(-50%);
-  color: white;
-  max-width: 480px;
+  color: #ffffff;
+  max-width: 580px;
+  z-index: 2;
 }
-.hero-content h2 {
-  font-family: var(--font-display) !important;
-  font-size: 32px;
+
+.haandi-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(232, 93, 4, 0.25);
+  border: 1px solid rgba(244, 196, 48, 0.5);
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 11px;
   font-weight: 800;
-  line-height: 1.2;
-  color: white;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-  margin-bottom: 8px;
+  color: var(--haandi-gold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
 }
-@media (min-width: 768px) { .hero-content h2 { font-size: 48px; } }
-.hero-content p { font-size: 14px; color: rgba(255,255,255,0.85); margin-bottom: 16px; }
-.hero-order-btn {
+
+.haandi-hero-content h1 {
+  font-family: var(--font-display) !important;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+  margin-bottom: 10px;
+}
+@media (min-width: 768px) {
+  .haandi-hero-content h1 { font-size: 48px; }
+}
+
+.haandi-hero-content p {
+  font-size: 14px;
+  color: rgba(251, 248, 243, 0.88);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.haandi-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.haandi-btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--yellow);
-  color: var(--black);
-  font-size: 14px;
-  font-weight: 700;
+  background: linear-gradient(135deg, var(--haandi-saffron) 0%, var(--haandi-gold) 100%);
+  color: #1A120B;
+  font-size: 13px;
+  font-weight: 800;
   border: none;
-  border-radius: 99px;
-  padding: 11px 24px;
+  border-radius: 12px;
+  padding: 12px 24px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(244, 196, 48, 0.5);
+  box-shadow: 0 6px 18px rgba(232, 93, 4, 0.4);
 }
-.hero-order-btn:hover { background: var(--yellow-dark); transform: translateY(-2px); }
-.hero-dots {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
+.haandi-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(232, 93, 4, 0.6);
 }
-.hero-dot {
-  width: 8px; height: 8px;
-  border-radius: 99px;
-  background: rgba(255,255,255,0.4);
-  border: none;
+
+.haandi-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 12px 20px;
   cursor: pointer;
-  transition: all 0.25s;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s;
 }
-.hero-dot.active { background: white; width: 24px; }
+.haandi-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffffff;
+}
 
 /* ============================================================
-   CATEGORY NAVIGATION — Sticky pill tabs
+   PROMOTIONAL MARQUEE STRIP
    ============================================================ */
-.cat-nav-wrap {
-  position: sticky;
-  top: 68px;
-  z-index: 400;
-  background: var(--white);
-  border-bottom: 2px solid var(--gray-200);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+.haandi-marquee-strip {
+  background: linear-gradient(90deg, #8B1E1E 0%, #1A120B 50%, #8B1E1E 100%);
+  color: var(--haandi-gold);
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--haandi-saffron);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  overflow: hidden;
+  text-align: center;
 }
-.cat-nav-inner {
+
+/* ============================================================
+   DINING MODE SELECTOR & LOCATION ZONE CARD
+   ============================================================ */
+.haandi-mode-container {
+  max-width: 1200px;
+  margin: -30px auto 20px;
+  padding: 0 16px;
+  position: relative;
+  z-index: 10;
+}
+
+.haandi-mode-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-warm);
+  border-radius: 20px;
+  padding: 18px 22px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.haandi-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.haandi-mode-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 800;
+  border: 2px solid var(--border-warm);
+  background: var(--bg-cream-light);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.haandi-mode-pill:hover {
+  border-color: var(--haandi-red);
+  color: var(--haandi-red);
+}
+.haandi-mode-pill.active {
+  background: var(--haandi-red);
+  border-color: var(--haandi-red);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(139, 30, 30, 0.35);
+}
+
+/* ============================================================
+   CATEGORY NAVIGATION TABS (Sticky Creamy Bar)
+   ============================================================ */
+.haandi-cat-nav-wrap {
+  position: sticky;
+  top: 66px;
+  z-index: 400;
+  background: var(--bg-cream-light);
+  border-top: 1px solid var(--border-warm);
+  border-bottom: 2px solid var(--border-warm);
+  box-shadow: 0 4px 16px rgba(26, 18, 11, 0.05);
+  backdrop-filter: blur(8px);
+}
+
+.haandi-cat-nav-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 8px 16px;
   display: flex;
-  gap: 0;
+  gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
 }
-.cat-nav-inner::-webkit-scrollbar { display: none; }
-.cat-tab {
+.haandi-cat-nav-inner::-webkit-scrollbar { display: none; }
+
+.haandi-cat-pill {
   flex-shrink: 0;
-  padding: 14px 18px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--gray-500);
-  background: transparent;
-  border: none;
-  border-bottom: 3px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  position: relative;
-  top: 2px;
-}
-.cat-tab:hover { color: var(--black); }
-.cat-tab.active { color: var(--black); font-weight: 700; border-bottom-color: var(--yellow); }
-
-/* ============================================================
-   PAGE LAYOUT
-   ============================================================ */
-.page-wrap {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 16px 60px;
-}
-.page-cols {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-  padding-top: 24px;
-}
-@media (min-width: 1024px) {
-  .page-cols { grid-template-columns: 1fr 360px; }
-}
-
-/* ============================================================
-   MENU SECTION — Yellow banner + item list (EXACT match screenshot)
-   ============================================================ */
-.menu-section { margin-bottom: 32px; }
-
-/* Yellow Category Banner — the distinctive element from the screenshot */
-.cat-banner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: var(--yellow);
-  border-radius: 16px 16px 0 0;
-  padding: 14px 20px;
-  position: relative;
-  overflow: hidden;
-  border: 3px solid var(--yellow-dark);
-}
-.cat-banner::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='25' fill='none' stroke='rgba(0,0,0,0.06)' stroke-width='1'/%3E%3Ccircle cx='30' cy='30' r='12' fill='none' stroke='rgba(0,0,0,0.05)' stroke-width='1'/%3E%3C/svg%3E") repeat;
-  pointer-events: none;
-}
-.cat-banner-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  z-index: 1;
-}
-.cat-banner-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--black);
-  font-family: var(--font-display) !important;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-.cat-banner-count {
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(0,0,0,0.55);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.cat-banner-img {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid rgba(255,255,255,0.7);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  flex-shrink: 0;
-  z-index: 1;
-}
-
-/* Item rows — the white horizontal list cards from the screenshot */
-.item-list {
-  background: var(--white);
-  border: 2px solid var(--yellow-dark);
-  border-top: none;
-  border-radius: 0 0 16px 16px;
-  overflow: hidden;
-}
-
-.item-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--gray-100);
-  transition: background 0.15s;
-  position: relative;
-}
-.item-row:last-child { border-bottom: none; }
-.item-row:hover { background: var(--yellow-light); }
-
-.item-img {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: var(--gray-100);
-  border: 1px solid var(--gray-200);
-}
-
-.item-info { flex: 1; min-width: 0; }
-.item-name {
-  font-size: 15px;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 99px;
+  font-size: 12.5px;
   font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.3;
-  margin-bottom: 4px;
-}
-.item-desc {
-  font-size: 12px;
-  color: var(--text-secondary);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.4;
-}
-
-.item-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.item-price {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--black);
-}
-.item-add-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--yellow);
-  color: var(--black);
-  border: 2px solid var(--yellow-dark);
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 700;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-warm);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
 }
-.item-add-btn:hover {
-  background: var(--black);
-  color: white;
-  border-color: var(--black);
-  transform: scale(1.05);
+.haandi-cat-pill:hover {
+  background: #FFFDF9;
+  border-color: var(--haandi-red);
+  color: var(--haandi-red);
+}
+.haandi-cat-pill.active {
+  background: var(--haandi-red);
+  border-color: var(--haandi-red);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(139, 30, 30, 0.3);
 }
 
 /* ============================================================
-   CART PANEL (right sidebar)
+   MENU SECTION & APPETIZING CREAMY CARDS
    ============================================================ */
-.cart-panel {
-  background: var(--white);
-  border-radius: 16px;
-  border: 2px solid var(--yellow-dark);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  position: sticky;
-  top: 120px;
+.haandi-menu-section {
+  margin-bottom: 40px;
 }
-.cart-panel-header {
-  background: var(--yellow);
-  padding: 14px 18px;
+
+/* Category Header Banner with Terracotta/Saffron Heritage Gradient */
+.haandi-cat-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 2px solid var(--yellow-dark);
-}
-.cart-panel-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--black);
-  font-family: var(--font-display) !important;
-}
-.cart-item-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--gray-100);
-}
-.cart-item-img {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: var(--gray-100);
-}
-.cart-qty-ctrl {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--gray-100);
-  border-radius: 8px;
-  padding: 2px;
-}
-.cart-qty-btn {
-  width: 24px; height: 24px;
-  border-radius: 6px;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  color: var(--text-primary);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-weight: 700;
-  font-size: 13px;
-}
-.cart-qty-btn:hover { background: var(--black); color: white; border-color: var(--black); }
-
-/* Price rows */
-.price-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); padding: 4px 0; }
-.price-row.total { font-size: 16px; font-weight: 800; color: var(--black); border-top: 2px solid var(--yellow); padding-top: 10px; margin-top: 6px; }
-
-.checkout-btn {
-  width: 100%;
-  background: var(--black);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 14px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  letter-spacing: 0.02em;
-  margin-top: 12px;
-}
-.checkout-btn:hover:not(:disabled) { background: var(--red); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(230,57,70,0.35); }
-.checkout-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-
-/* ============================================================
-   FORM INPUTS
-   ============================================================ */
-.form-input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid var(--gray-200);
-  border-radius: 10px;
-  font-size: 13px;
-  color: var(--text-primary);
-  background: var(--white);
-  transition: border-color 0.2s;
-  outline: none;
-}
-.form-input:focus { border-color: var(--yellow-dark); box-shadow: 0 0 0 3px rgba(244, 196, 48, 0.2); }
-.form-label {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gray-600);
-  margin-bottom: 5px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-/* ============================================================
-   POPUP / MODAL
-   ============================================================ */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.88);
-  backdrop-filter: blur(6px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-.modal-box {
-  background: var(--white);
-  border-radius: 24px;
-  overflow: hidden;
-  width: 100%;
-  max-width: 440px;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.5);
-  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.modal-header {
-  background: var(--black);
-  padding: 28px 20px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
-}
-.modal-logo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--yellow); }
-.modal-body { padding: 22px; }
-
-.order-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
-.order-type-btn {
-  padding: 10px 6px;
-  border: 2px solid var(--gray-200);
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gray-600);
-  background: var(--gray-50);
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  text-align: center;
-}
-.order-type-btn.active { background: var(--yellow); border-color: var(--yellow-dark); color: var(--black); }
-.modal-confirm-btn {
-  width: 100%;
-  padding: 13px;
-  background: var(--black);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 8px;
-}
-.modal-confirm-btn:hover { background: var(--yellow); color: var(--black); }
-
-/* ============================================================
-   TABLE FLOOR PLAN
-   ============================================================ */
-.table-cell {
-  position: absolute;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 2px solid transparent;
-  font-size: 10px;
-  font-weight: 700;
-}
-.status-available { background: #d1fae5; border-color: #10b981; color: #065f46; }
-.status-available:hover { background: #10b981; color: white; transform: scale(1.05); }
-.status-selected { background: var(--yellow); border-color: var(--yellow-dark); color: var(--black); transform: scale(1.05); }
-.status-reserved { background: #fef3c7; border-color: #f59e0b; color: #92400e; cursor: not-allowed; }
-.status-occupied { background: #fee2e2; border-color: #ef4444; color: #991b1b; cursor: not-allowed; }
-.status-blocked { background: var(--gray-200); border-color: var(--gray-300); color: var(--gray-500); cursor: not-allowed; }
-
-/* ============================================================
-   BADGES
-   ============================================================ */
-.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-.badge-pending { background: #fef3c7; color: #92400e; }
-.badge-confirmed { background: #dbeafe; color: #1e40af; }
-.badge-preparing { background: #ffedd5; color: #9a3412; }
-.badge-ready { background: #d1fae5; color: #065f46; }
-.badge-delivered { background: #d1fae5; color: #065f46; }
-.badge-muted { background: var(--gray-100); color: var(--gray-500); }
-
-/* ============================================================
-   ORDER STATUS TRACKER
-   ============================================================ */
-.tracker-wrap { display: flex; align-items: flex-start; gap: 0; padding: 8px 0; }
-.tracker-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; }
-.tracker-step::after { content: ''; position: absolute; top: 13px; left: 50%; width: 100%; height: 2px; background: var(--gray-200); z-index: 0; }
-.tracker-step:last-child::after { display: none; }
-.tracker-dot { width: 26px; height: 26px; border-radius: 50%; background: var(--gray-200); border: 2px solid var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--gray-500); position: relative; z-index: 1; }
-.tracker-dot.done { background: var(--black); border-color: var(--black); color: white; }
-.tracker-dot.active { background: var(--yellow); border-color: var(--yellow-dark); color: var(--black); box-shadow: 0 0 0 4px rgba(244,196,48,0.3); }
-.tracker-label { font-size: 9px; font-weight: 600; color: var(--gray-400); text-align: center; text-transform: uppercase; letter-spacing: 0.05em; }
-.tracker-label.active { color: var(--yellow-dark); font-weight: 700; }
-.tracker-label.done { color: var(--text-primary); }
-
-/* ============================================================
-   VARIATION MODAL
-   ============================================================ */
-.var-option-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  background: var(--white);
-  border: 2px solid var(--gray-200);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-.var-option-btn:hover { border-color: var(--yellow-dark); background: var(--yellow-light); }
-
-/* ============================================================
-   ANIMATIONS
-   ============================================================ */
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(28px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.animate-fade { animation: fadeIn 0.3s ease; }
-.animate-slideup { animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-/* ============================================================
-   SHARED SIMULATION PORTAL UTILITY CLASSES
-   ============================================================ */
-.gold-card {
-  background: var(--white);
-  border-radius: 12px;
-  border: 1.5px solid var(--yellow-dark);
-  padding: 16px;
+  background: linear-gradient(135deg, #8B1E1E 0%, #A82424 50%, #E85D04 100%);
+  border-radius: 18px 18px 0 0;
+  padding: 16px 24px;
+  color: #ffffff;
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
 }
-
-.gold-btn {
-  background: var(--yellow);
-  color: var(--black);
-  font-weight: 700;
-  border: 2.5px solid var(--yellow-dark);
-  border-radius: 8px;
-  padding: 7px 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  font-size: 11px;
-}
-.gold-btn:hover {
-  background: var(--black);
-  color: var(--white);
-  border-color: var(--black);
-  transform: translateY(-1px);
-}
-
-/* Background & Border colors */
-.bg-bg-tertiary { background-color: var(--gray-50) !important; }
-.bg-bg-secondary { background-color: var(--gray-100) !important; }
-.border-border-color { border-color: var(--gray-200) !important; }
-.text-text-primary { color: var(--text-primary) !important; }
-.text-text-secondary { color: var(--text-secondary) !important; }
-.text-gold { color: var(--yellow-dark) !important; }
-
-/* Status / Alert alpha backgrounds */
-.bg-gold-alpha { background-color: var(--yellow-light) !important; }
-.bg-emerald-alpha { background-color: #d1fae5 !important; }
-.bg-ruby-alpha { background-color: #fee2e2 !important; }
-.bg-amber-alpha { background-color: #fef3c7 !important; }
-
-.text-ruby { color: #dc2626 !important; }
-.border-ruby { border-color: #fca5a5 !important; }
-.text-amber { color: #d97706 !important; }
-.border-amber { border-color: #fde68a !important; }
-.text-emerald { color: #059669 !important; }
-.border-emerald { border-color: #a7f3d0 !important; }
-
-/* Rider Navigation Map Animation */
-@keyframes dash {
-  to {
-    stroke-dashoffset: -100;
-  }
-}
-.floorplan-container {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 2/1;
-  background-color: #0b0f19;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 24px 24px;
-  border: 2px solid #1e293b;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: inset 0 4px 20px rgba(0,0,0,0.6);
-}
-
-.map-table-element {
+.haandi-cat-banner::after {
+  content: '';
   position: absolute;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid transparent;
-  font-size: 10px;
+  right: 0; top: 0; bottom: 0;
+  width: 150px;
+  background: radial-gradient(circle, rgba(244, 196, 48, 0.2) 0%, transparent 70%);
+}
+
+.haandi-cat-title {
+  font-family: var(--font-display) !important;
+  font-size: 20px;
   font-weight: 800;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.02em;
+  color: #ffffff;
 }
 
-.type-standard {
-  border-color: rgba(255, 255, 255, 0.15) !important;
+.haandi-cat-badge {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 99px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--haandi-gold);
 }
 
-.type-cabin {
-  border: 3px double #f59e0b !important;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25), 0 4px 10px rgba(0,0,0,0.3) !important;
-}
-
-.type-majlis {
-  border-radius: 16px !important;
-  border: 2px dashed #ef4444 !important;
-  background-image: radial-gradient(#ef4444 1px, transparent 1px) !important;
-  background-size: 6px 6px !important;
-}
-
-/* Device Simulator Wrappers */
-.device-tablet-frame {
-  width: 100%;
-  max-width: 1000px;
-  background: #09090b;
-  border: 12px solid #27272a;
-  border-radius: 36px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.device-tablet-camera {
-  position: absolute;
-  top: 50%;
-  left: 3px;
-  transform: translateY(-50%);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #3f3f46;
-  z-index: 100;
-}
-
-.device-tablet-header {
-  background: #18181b;
-  padding: 5px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #a1a1aa;
-  font-size: 10px;
-  border-bottom: 1px solid #27272a;
-  user-select: none;
-}
-
-.device-laptop-frame {
-  width: 100%;
-  max-width: 1100px;
-  background: #09090b;
-  border: 12px solid #3f3f46;
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.device-laptop-base {
-  width: 106%;
-  margin-left: -3%;
-  height: 12px;
-  background: #27272a;
-  border-radius: 0 0 12px 12px;
-  border-top: 2px solid #52525b;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-}
-
-.owner-menu-grid {
+/* Item List Grid */
+.haandi-item-grid {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-warm);
+  border-top: none;
+  border-radius: 0 0 18px 18px;
+  padding: 16px;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 14px;
 }
-@media (min-width: 768px) {
-  .owner-menu-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+@media (min-width: 640px) {
+  .haandi-item-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-.owner-menu-img {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+/* Individual Creamy Menu Card */
+.haandi-card {
+  background: var(--bg-cream-light);
+  border: 1.5px solid var(--border-warm);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  gap: 14px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.haandi-card:hover {
+  background: #FFFDF9;
+  border-color: var(--haandi-red);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.haandi-card-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
   object-fit: cover;
   flex-shrink: 0;
+  border: 1.5px solid var(--border-warm);
 }
 
+.haandi-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.haandi-card-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+
+.haandi-card-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.haandi-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.haandi-card-price {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--haandi-red);
+}
+
+.haandi-add-btn {
+  background: var(--haandi-red);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.haandi-add-btn:hover {
+  background: var(--haandi-red-hover);
+  box-shadow: 0 3px 10px rgba(139, 30, 30, 0.35);
+}
+
+.haandi-qty-stepper {
+  display: flex;
+  align-items: center;
+  background: var(--haandi-red);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.haandi-qty-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  padding: 6px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.haandi-qty-btn:hover {
+  background: rgba(0,0,0,0.15);
+}
+.haandi-qty-count {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0 6px;
+}
+
+/* ============================================================
+   HERITAGE STORY & BRAND TRUST CARDS
+   ============================================================ */
+.haandi-story-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin: 40px 0;
+}
+
+.haandi-story-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-warm);
+  border-radius: 18px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s;
+}
+.haandi-story-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--haandi-saffron);
+}
+
+.haandi-story-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--haandi-saffron-light);
+  border: 1.5px solid var(--haandi-saffron);
+  color: var(--haandi-saffron);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 22px;
+}
+
+.haandi-story-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+
+.haandi-story-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ============================================================
+   FLOATING CART DRAWER & MODALS (Warm Creamy Ivory)
+   ============================================================ */
+.haandi-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 18, 11, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.haandi-drawer-panel {
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  background: var(--bg-cream-light);
+  border-left: 2px solid var(--border-warm);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 35px rgba(0,0,0,0.3);
+  animation: slideInRight 0.25s ease-out;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade {
+  animation: fadeIn 0.3s ease-out;
+}

@@ -2,26 +2,30 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../store/mockDb';
 import type { MenuItem, OrderType, OrderItem } from '../types';
 import {
-  MapPin, ShoppingBag, Calendar, CheckCircle,
-  Trash, Plus, Minus, User, ChevronLeft, ChevronRight, X, Star, Navigation
+  MapPin, ShoppingBag, Calendar,
+  Trash2, Plus, Minus, ChevronLeft, ChevronRight, X, Navigation,
+  Utensils, Sparkles, ArrowRight, Flame
 } from 'lucide-react';
 import { LiveTrackingMap } from './LiveTrackingMap';
 
 const HERO_BANNERS = [
   {
     src: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=1400&q=80',
-    title: 'Authentic Clay Pot Handi',
-    subtitle: 'Slow-cooked in traditional earthenware pots with rich desi spices',
+    tag: 'Authentic Heritage',
+    title: 'Clay Pot Handi Masterpieces',
+    subtitle: 'Slow-simmered in traditional clay earthenware with rich desi spices, pure butter & aromatic ginger',
   },
   {
     src: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=1400&q=80',
-    title: 'Sizzling Wok Karahi',
-    subtitle: 'Prepared fresh in pure butter, black pepper & rich aromatic gravy',
+    tag: 'Sizzling Wok',
+    title: 'Desi Murgh & Shinwari Karahi',
+    subtitle: 'Flash-seared over high flame with fresh tomatoes, green chillies, crushed coriander & black pepper',
   },
   {
     src: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1400&q=80',
+    tag: 'Charcoal Grills',
     title: 'Royal Charcoal BBQ & Platters',
-    subtitle: 'Flame-grilled Seekh Kabab, Malai Boti & Shehnsha Platters',
+    subtitle: 'Flame-grilled Seekh Kababs, velvety Malai Boti, Chicken Tikka & Shehnsha Royal Platters',
   },
 ];
 
@@ -29,12 +33,12 @@ export const CustomerPortal: React.FC = () => {
   const [dbState, setDbState] = useState(db);
   useEffect(() => db.subscribe(() => setDbState(Object.create(db))), []);
 
-  // Form States
-  const [selectedBranchId, setSelectedBranchId] = useState('br-isb');
+  // Mode & Category States
   const [orderType, setOrderType] = useState<OrderType>('DELIVERY');
   const [activeCategory, setActiveCategory] = useState('All');
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [selectedItemForVariation, setSelectedItemForVariation] = useState<MenuItem | null>(null);
+  const [cartOpen, setCartOpen] = useState(false);
 
   // Toast notifications state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
@@ -55,7 +59,7 @@ export const CustomerPortal: React.FC = () => {
   const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
   const getDefaultTime = () => {
     const d = new Date(); d.setHours(d.getHours() + 3);
-    return `${String(d.getHours()).padStart(2,'0')}:${String(Math.floor(d.getMinutes()/15)*15).padStart(2,'0')}`;
+    return `${String(d.getHours()).padStart(2, '0')}:${String(Math.floor(d.getMinutes() / 15) * 15).padStart(2, '0')}`;
   };
   const [bookingTime, setBookingTime] = useState(getDefaultTime());
   const [guestCount, setGuestCount] = useState(4);
@@ -85,159 +89,115 @@ export const CustomerPortal: React.FC = () => {
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
   const [showLiveTrackingModal, setShowLiveTrackingModal] = useState(false);
-
-  // Popup Welcome & Order Mode
-  const [showLandPopup, setShowLandPopup] = useState(true);
-  const [tempOrderType, setTempOrderType] = useState<OrderType>('DELIVERY');
+  const [showSectorModal, setShowSectorModal] = useState(false);
 
   // Hero carousel
   const [heroIdx, setHeroIdx] = useState(0);
   const heroTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const renderSeatsForCustomer = (capacity: number) => {
-    const seats = [];
-    for (let i = 0; i < Math.min(capacity, 6); i++) {
-      let style: React.CSSProperties = {};
-      if (i === 0) style = { top: '-4px', left: '50%', transform: 'translateX(-50%)' };
-      else if (i === 1) style = { bottom: '-4px', left: '50%', transform: 'translateX(-50%)' };
-      else if (i === 2) style = { left: '-4px', top: '50%', transform: 'translateY(-50%)' };
-      else if (i === 3) style = { right: '-4px', top: '50%', transform: 'translateY(-50%)' };
-      else if (i === 4) style = { top: '-4px', left: '20%' };
-      else style = { top: '-4px', right: '20%' };
-      seats.push(
-        <span 
-          key={i} 
-          className="absolute w-1.5 h-1.5 rounded-full bg-zinc-600 border border-zinc-500 shadow-sm z-10" 
-          style={style} 
-        />
-      );
-    }
-    return seats;
-  };
   const startHeroTimer = () => {
     if (heroTimer.current) clearInterval(heroTimer.current);
-    heroTimer.current = setInterval(() => setHeroIdx(p => (p + 1) % HERO_BANNERS.length), 4500);
+    heroTimer.current = setInterval(() => {
+      setHeroIdx(prev => (prev + 1) % HERO_BANNERS.length);
+    }, 5500);
   };
-  useEffect(() => { startHeroTimer(); return () => { if (heroTimer.current) clearInterval(heroTimer.current); }; }, []);
-
-  // Cart open state
-  const [cartOpen, setCartOpen] = useState(false);
-
-  const branches = dbState.getBranches();
-  const branch = branches.find(b => b.id === selectedBranchId) || branches[0] || {
-    id: 'br-isb',
-    name: 'Haandi by Yumto - Gulberg Greens, Islamabad',
-    city: 'Islamabad',
-    address: 'Gulberg Greens, Civic Center, Executive Block, Islamabad',
-    phone: '0330 0500600',
-    premiumBookingFee: 1500,
-    activeSurchargeToggle: true
-  };
-  const floors = dbState.getFloors('br-isb');
-  const tables = dbState.getTables('br-isb', activeFloorId);
-  const allMenuItems = dbState.getMenu('br-isb');
 
   useEffect(() => {
-    if (floors.length > 0 && !floors.some(f => f.id === activeFloorId)) {
-      setActiveFloorId(floors[0].id);
-      setSelectedTableId(null);
-    }
-  }, [floors, activeFloorId]);
+    startHeroTimer();
+    return () => { if (heroTimer.current) clearInterval(heroTimer.current); };
+  }, []);
 
-  const surcharge = (() => {
-    if (!branch?.activeSurchargeToggle) return { isPremium: false, fee: 0 };
-    try {
-      const res = new Date(`${bookingDate}T${bookingTime}:00`);
-      const diff = (res.getTime() - Date.now()) / 3600000;
-      if (diff >= 0 && diff < 2) return { isPremium: true, fee: branch.premiumBookingFee };
-    } catch (_) {}
-    return { isPremium: false, fee: 0 };
-  })();
+  // Database Data (Single Islamabad Branch)
+  const menu = dbState.getMenu();
+  const floors = dbState.getFloors('br-isb');
+  const tables = dbState.getTables('br-isb', activeFloorId);
 
-  // Derive unique categories from all available menu items
-  const categoriesFromMenu = ['All', ...Array.from(new Set(allMenuItems.map(i => i.category)))];
+  // Categories list
+  const allCategories = ['All', ...Array.from(new Set(menu.map(i => i.category)))];
+
+  // Grouped by Category for display
+  const groupedByCategory = (activeCategory === 'All'
+    ? Array.from(new Set(menu.map(i => i.category)))
+    : [activeCategory]
+  ).map(cat => ({
+    cat,
+    items: menu.filter(i => i.category === cat)
+  })).filter(g => g.items.length > 0);
 
   // Cart operations
   const addToCart = (item: MenuItem, variation?: { name: string; price: number }) => {
+    if (!item.isAvailable) {
+      showToast('Item is currently sold out', 'error');
+      return;
+    }
+    if (item.variations && item.variations.length > 0 && !variation) {
+      setSelectedItemForVariation(item);
+      return;
+    }
+
+    const price = variation ? variation.price : item.price;
+    const varName = variation ? variation.name : undefined;
+
     setCart(prev => {
-      const varName = variation?.name;
-      const finalPrice = variation ? variation.price : item.price;
-      const finalName = variation ? `${item.name} - ${variation.name}` : item.name;
       const existing = prev.find(i => i.menuItemId === item.id && i.variation === varName);
       if (existing) {
-        showToast(`Updated ${finalName} quantity to ${existing.quantity + 1}`, 'success');
-        return prev.map(i => (i.menuItemId === item.id && i.variation === varName) ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map(i =>
+          i.menuItemId === item.id && i.variation === varName
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
+        );
       }
-      showToast(`Added ${finalName} to cart`, 'success');
-      return [...prev, { menuItemId: item.id, name: finalName, price: finalPrice, quantity: 1, variation: varName }];
+      return [...prev, {
+        menuItemId: item.id,
+        name: item.name,
+        price,
+        quantity: 1,
+        variation: varName,
+      }];
     });
+
     setSelectedItemForVariation(null);
+    showToast(`Added ${item.name} to your Handi`, 'success');
   };
 
-  const handleAddToCartClick = (item: MenuItem) => {
-    if (item.variations && item.variations.length > 0) setSelectedItemForVariation(item);
-    else addToCart(item);
-  };
-
-  const removeFromCart = (menuItemId: string, variation?: string) => {
+  const updateQuantity = (index: number, delta: number) => {
     setCart(prev => {
-      const target = prev.find(i => i.menuItemId === menuItemId && i.variation === variation);
-      if (target) showToast(`Removed ${target.name} from cart`, 'info');
-      return prev.filter(i => !(i.menuItemId === menuItemId && i.variation === variation));
+      const updated = [...prev];
+      const newQty = updated[index].quantity + delta;
+      if (newQty <= 0) {
+        updated.splice(index, 1);
+      } else {
+        updated[index].quantity = newQty;
+      }
+      return updated;
     });
   };
 
-  const updateQty = (menuItemId: string, variation: string | undefined, amount: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.menuItemId === menuItemId && item.variation === variation) {
-        const newQty = item.quantity + amount;
-        if (newQty <= 0) {
-          showToast(`Removed ${item.name} from cart`, 'info');
-          return null!;
-        }
-        showToast(`Updated ${item.name} quantity to ${newQty}`, 'success');
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }).filter(Boolean));
+  const removeFromCart = (index: number) => {
+    setCart(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Pricing: FBR Digital Tax is 5% for Card & Online Prepayments
-  const subtotal = cart.reduce((acc, i) => acc + i.price * i.quantity, 0);
-  const tax = Math.round(subtotal * 0.05); // 5% for digital card/online advance payment
+  const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0);
+  const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const deliveryFee = orderType === 'DELIVERY' ? 150 : 0;
-  const premiumReservationFee = isReservingTable ? surcharge.fee : 0;
-  const grandTotal = subtotal + tax + deliveryFee + premiumReservationFee;
-  const cartCount = cart.reduce((a, i) => a + i.quantity, 0);
 
-  // Checkout
-  const handleCheckout = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (cart.length === 0 && !isReservingTable) {
-      showToast('Please add items to your cart first.', 'error');
+  // 5% digital tax on Card/Online prepayment
+  const tax = Math.round(subtotal * 0.05);
+  const premiumReservationFee = 0;
+  const grandTotal = subtotal + tax + deliveryFee + premiumReservationFee;
+
+  const handleCheckout = () => {
+    if (cart.length === 0) {
+      showToast('Your Handi cart is empty!', 'error');
       return;
     }
-    if (isReservingTable && !selectedTableId) {
-      showToast('Please select a table on the floor plan.', 'error');
+    if (orderType === 'DELIVERY' && !isWithinDeliveryRadius) {
+      showToast('Delivery address is outside our 2.5 km Gulberg Greens boundary', 'error');
       return;
     }
-    if (!custName.trim()) {
-      showToast('Please enter your full name.', 'error');
+    if (orderType === 'DELIVERY' && !deliveryAddr.trim()) {
+      showToast('Please enter your house/street address in Gulberg Greens', 'error');
       return;
-    }
-    if (!custPhone.trim()) {
-      showToast('Please enter your phone number.', 'error');
-      return;
-    }
-    if (orderType === 'DELIVERY') {
-      if (!deliveryAddr.trim()) {
-        showToast('Please enter your street / house address.', 'error');
-        return;
-      }
-      if (!isWithinDeliveryRadius) {
-        showToast('⚠️ Delivery is only available within 2.5 km of Gulberg Greens Civic Center.', 'error');
-        return;
-      }
     }
 
     let reservationId;
@@ -246,22 +206,22 @@ export const CustomerPortal: React.FC = () => {
       const endDT = new Date(startDT.getTime() + 2 * 3600000);
       const r = dbState.addReservation({
         tableId: selectedTableId, branchId: 'br-isb', userId: 'u-cust',
-        userName: custName || 'Guest', userPhone: custPhone || '0300-0000000',
+        userName: custName || 'Guest Customer', userPhone: custPhone || '0330-0500600',
         startTime: startDT.toISOString(), endTime: endDT.toISOString(), guestCount,
-        type: surcharge.isPremium ? 'PRIOR_2H_PREMIUM' : 'STANDARD', premiumFee: surcharge.fee, status: 'CONFIRMED'
+        type: 'STANDARD', premiumFee: 0, status: 'CONFIRMED'
       });
       reservationId = r.id;
     }
 
-    const fullDeliveryAddress = orderType === 'DELIVERY' 
+    const fullDeliveryAddress = orderType === 'DELIVERY'
       ? `${deliveryAddr.trim()}, ${selectedSector}, Islamabad (${currentSector.distanceKm} km from Civic Center)`
       : undefined;
 
     const created = dbState.addOrder({
-      branchId: 'br-isb', userId: 'u-cust', userName: custName || 'Guest', userPhone: custPhone || '0300-0000000',
+      branchId: 'br-isb', userId: 'u-cust', userName: custName || 'Guest Customer', userPhone: custPhone || '0330-0500600',
       orderType: isReservingTable ? 'DINE_IN' : orderType, tableId: selectedTableId || undefined, reservationId,
       status: 'PENDING',
-      paymentStatus: 'PAID', // Advance payment verified via Card or Online transfer
+      paymentStatus: 'PAID', // Advance prepayment verified
       paymentMethod,
       items: cart.map(i => ({ menuItemId: i.menuItemId, name: i.name, price: i.price, quantity: i.quantity, variation: i.variation })),
       subtotal, discountAmount: 0, discountPercent: 0, tax, deliveryFee, premiumReservationFee, total: grandTotal,
@@ -274,498 +234,628 @@ export const CustomerPortal: React.FC = () => {
     setSelectedTableId(null);
     setIsReservingTable(false);
     setCartOpen(false);
-    showToast('Advance Payment Received & Order Confirmed!', 'success');
+    showToast('Advance Payment Verified · Order Confirmed & In Kitchen!', 'success');
   };
-
-  const handlePopupSelect = () => {
-    setSelectedBranchId('br-isb');
-    setOrderType(tempOrderType);
-    if (tempOrderType === 'DINE_IN') setIsReservingTable(true);
-    else { setIsReservingTable(false); setSelectedTableId(null); }
-    setShowLandPopup(false);
-  };
-
-  const statusSteps = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
-  const getStepState = (step: string, currentStatus: string) => {
-    const si = statusSteps.indexOf(step);
-    const ci = statusSteps.indexOf(currentStatus);
-    if (si < ci) return 'done';
-    if (si === ci) return 'active';
-    return 'idle';
-  };
-
-  // Filtered items
-  const filteredItems = activeCategory === 'All' ? allMenuItems : allMenuItems.filter(i => i.category === activeCategory);
-  const groupedByCategory = activeCategory === 'All'
-    ? categoriesFromMenu.filter(c => c !== 'All').map(cat => ({ cat, items: allMenuItems.filter(i => i.category === cat) })).filter(g => g.items.length > 0)
-    : [{ cat: activeCategory, items: filteredItems }];
 
   return (
-    <>
-      {/* ============================
-          POPUP MODAL
-          ============================ */}
-      {showLandPopup && (
-        <div className="modal-backdrop">
-          <div className="modal-box animate-slideup">
-            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)' }}>
-              <img src="/logo.png" alt="Haandi by Yumto" className="modal-logo" style={{ borderRadius: '12px', background: '#fff', padding: '2px', objectFit: 'contain' }} />
-              <div>
-                <div style={{ color: '#ffffff', fontSize: '20px', fontWeight: '800', fontFamily: 'Playfair Display, serif' }}>Haandi by Yumto</div>
-                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginTop: '2px' }}>Authentic Desi, Karahi, Handi & BBQ</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#E85D04', fontSize: '13px', fontWeight: '700' }}>
-                <Star style={{ width: '14px', height: '14px', fill: '#E85D04' }} /> 4.9 &nbsp;
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: '400' }}>(2.4k Reviews)</span>
-              </div>
-            </div>
-
-            <div className="modal-body">
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#374151', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                How would you like to order?
-              </p>
-              <div className="order-type-grid">
-                {(['DELIVERY', 'PICK_UP', 'DINE_IN'] as OrderType[]).map(type => (
-                  <button key={type} type="button" onClick={() => setTempOrderType(type)}
-                    className={`order-type-btn ${tempOrderType === type ? 'active' : ''}`}>
-                    {type === 'PICK_UP' ? 'Pickup' : type === 'DINE_IN' ? 'Dine In' : 'Delivery'}
-                  </button>
-                ))}
-              </div>
-
-              {/* Single Location Details */}
-              <div style={{
-                background: '#FBF8F3', border: '1px solid rgba(232,93,4,0.3)', borderRadius: '12px',
-                padding: '14px', marginBottom: '14px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                  <MapPin style={{ width: '16px', height: '16px', color: '#8B1E1E' }} />
-                  <span style={{ fontWeight: '800', fontSize: '13px', color: '#1A120B' }}>
-                    Gulberg Greens, Civic Center, Islamabad
-                  </span>
-                </div>
-                <div style={{ fontSize: '11px', color: '#4b5563', lineHeight: 1.5 }}>
-                  Executive Block, Gulberg Greens · 0330 0500600
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                    fontSize: '11px', fontWeight: '700', color: '#15803d', background: '#dcfce7',
-                    padding: '6px 8px', borderRadius: '6px'
-                  }}>
-                    <span>📍</span> Delivery exclusively within 2.5 km radius of Civic Center
-                  </div>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                    fontSize: '11px', fontWeight: '700', color: '#854d0e', background: '#fef9c3',
-                    padding: '6px 8px', borderRadius: '6px'
-                  }}>
-                    <span>💳</span> Advance Prepayment Required (Card & Online — No COD)
-                  </div>
-                </div>
-              </div>
-
-              <button className="modal-confirm-btn" onClick={handlePopupSelect}>
-                Continue →
-              </button>
-            </div>
-          </div>
+    <div style={{ background: 'var(--bg-cream)', minHeight: '100vh' }}>
+      
+      {/* ============================================================
+          PROMOTIONAL MARQUEE STRIP
+          ============================================================ */}
+      <div className="haandi-marquee-strip">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Sparkles style={{ width: '14px', height: '14px', color: '#F4C430' }} />
+          <span>Authentic Handi Slow-Cooked in Earthen Pots</span>
+          <span style={{ opacity: 0.5 }}>•</span>
+          <span>100% Desi Ghee & Fresh Farm Meat</span>
+          <span style={{ opacity: 0.5 }}>•</span>
+          <span>Strict 2.5 km Delivery Zone (Gulberg Greens, Islamabad)</span>
+          <span style={{ opacity: 0.5 }}>•</span>
+          <span>5% Digital FBR Sales Tax</span>
         </div>
-      )}
+      </div>
 
-      {/* ============================
-          NAVBAR
-          ============================ */}
-      <nav className="yumto-navbar">
-        <div className="yumto-navbar-inner">
-          {/* Left: location */}
-          <button className="nav-location-pill" onClick={() => setShowLandPopup(true)}>
-            <MapPin style={{ width: '13px', height: '13px' }} />
-            <span>{branch?.city || 'Select City'}</span>
-            <span style={{ color: '#9ca3af', fontSize: '10px' }}>▼</span>
+      {/* ============================================================
+          TOP NAVIGATION BAR (Luxury Heritage Espresso & Gold)
+          ============================================================ */}
+      <nav className="haandi-navbar">
+        <div className="haandi-navbar-inner">
+          {/* Left: Location & Radius Badge */}
+          <button
+            className="haandi-location-pill"
+            onClick={() => setShowSectorModal(true)}
+            title="View Delivery Boundary & Sector Details"
+          >
+            <MapPin style={{ width: '14px', height: '14px', color: 'var(--haandi-saffron)' }} />
+            <span>Gulberg Greens, Islamabad</span>
+            <span style={{ color: 'var(--haandi-gold)', fontSize: '10px', fontWeight: '800' }}>2.5 km</span>
           </button>
 
-          {/* Center: Logo */}
-          <div style={{ flex: '0 0 auto' }}>
-            <img src="/logo.png" alt="Haandi by Yumto" className="yumto-navbar-logo" style={{ borderRadius: '10px', height: '46px', width: '46px', objectFit: 'contain', background: '#fff', padding: '2px', border: '2px solid rgba(232,93,4,0.5)' }} />
-          </div>
+          {/* Center: Haandi Brand Logo */}
+          <a href="#menu-section" className="haandi-logo-badge">
+            <img src="/logo.png" alt="Haandi by Yumto" className="haandi-logo-img" />
+            <div className="hidden sm:block">
+              <div className="haandi-brand-title">
+                HAANDI <span style={{ color: 'var(--haandi-saffron)' }}>BY YUMTO</span>
+              </div>
+              <div className="haandi-brand-subtitle">Civic Center Islamabad</div>
+            </div>
+          </a>
 
-          {/* Right: track & cart */}
+          {/* Right: Live Map Tracker, Table Reservation & Cart */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
+              className="haandi-nav-btn haandi-nav-btn-map"
               onClick={() => setShowLiveTrackingModal(true)}
-              style={{
-                background: 'rgba(232,93,4,0.15)', border: '1px solid #E85D04',
-                color: '#E85D04', borderRadius: '8px', padding: '6px 10px',
-                fontSize: '11px', fontWeight: '800', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: '5px'
-              }}
-              title="Track live delivery on OpenStreetMap"
+              title="Open Live GPS Delivery Map"
             >
               <Navigation style={{ width: '13px', height: '13px' }} />
-              <span>Live Map</span>
+              <span className="hidden sm:inline">Live Map</span>
             </button>
-            <button className="nav-cart-btn" onClick={() => setCartOpen(true)}>
-              <ShoppingBag style={{ width: '16px', height: '16px' }} />
-              <span>Cart</span>
-              {cartCount > 0 && <span className="nav-cart-badge">{cartCount}</span>}
+
+            <button
+              className="haandi-nav-btn"
+              style={{ background: 'rgba(255,255,255,0.08)', color: '#FBF8F3', border: '1px solid rgba(255,255,255,0.15)' }}
+              onClick={() => {
+                setOrderType('DINE_IN');
+                setIsReservingTable(true);
+                document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              <Utensils style={{ width: '13px', height: '13px', color: 'var(--haandi-saffron)' }} />
+              <span className="hidden sm:inline">Reserve Table</span>
+            </button>
+
+            <button
+              className="haandi-nav-btn haandi-nav-btn-cart"
+              onClick={() => setCartOpen(true)}
+            >
+              <ShoppingBag style={{ width: '15px', height: '15px' }} />
+              <span>Handi Cart</span>
+              {cartCount > 0 && <span className="haandi-cart-badge">{cartCount}</span>}
             </button>
           </div>
         </div>
       </nav>
 
-      {/* ============================
-          HERO BANNER CAROUSEL
-          ============================ */}
-      <div className="hero-wrap">
-        <div className="hero-slide">
+      {/* ============================================================
+          HERO CAROUSEL SECTION
+          ============================================================ */}
+      <div className="haandi-hero-wrap">
+        <div className="haandi-hero-slide">
           <img
             key={heroIdx}
             src={HERO_BANNERS[heroIdx].src}
             alt={HERO_BANNERS[heroIdx].title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=1400&q=80'; }}
           />
-          <div className="hero-overlay" />
-          <div className="hero-content animate-fade">
-            <p style={{ fontSize: '12px', color: '#F4C430', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '8px' }}>
-              ★ Authentic Arabic Cuisine ★
-            </p>
-            <h2>{HERO_BANNERS[heroIdx].title}</h2>
+          <div className="haandi-hero-overlay" />
+          <div className="haandi-hero-content animate-fade">
+            <div className="haandi-hero-pill">
+              ★ {HERO_BANNERS[heroIdx].tag} ★
+            </div>
+            <h1>{HERO_BANNERS[heroIdx].title}</h1>
             <p>{HERO_BANNERS[heroIdx].subtitle}</p>
-            <button className="hero-order-btn" onClick={() => document.getElementById('menu-section')?.scrollIntoView({ behavior: 'smooth' })}>
-              Order Now
-            </button>
+
+            <div className="haandi-hero-actions">
+              <button
+                className="haandi-btn-primary"
+                onClick={() => document.getElementById('menu-section')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                <Flame style={{ width: '16px', height: '16px' }} />
+                <span>Explore Handi Menu</span>
+              </button>
+              <button
+                className="haandi-btn-outline"
+                onClick={() => {
+                  setOrderType('DINE_IN');
+                  setIsReservingTable(true);
+                  document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                <Calendar style={{ width: '16px', height: '16px' }} />
+                <span>Book VIP Majlis / Table</span>
+              </button>
+            </div>
           </div>
 
-          {/* Prev/Next arrows */}
-          <button onClick={() => { setHeroIdx(p => (p - 1 + HERO_BANNERS.length) % HERO_BANNERS.length); startHeroTimer(); }}
-            style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: 'white', transition: 'background 0.2s' }}
-            onMouseOver={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.3)')}
-            onMouseOut={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+          {/* Carousel Arrows */}
+          <button
+            onClick={() => { setHeroIdx(p => (p - 1 + HERO_BANNERS.length) % HERO_BANNERS.length); startHeroTimer(); }}
+            style={{
+              position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
+              background: 'rgba(26,18,11,0.6)', border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: '50%', width: '40px', height: '40px', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', zIndex: 3
+            }}
           >
             <ChevronLeft style={{ width: '20px', height: '20px' }} />
           </button>
-          <button onClick={() => { setHeroIdx(p => (p + 1) % HERO_BANNERS.length); startHeroTimer(); }}
-            style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: 'white', transition: 'background 0.2s' }}
-            onMouseOver={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.3)')}
-            onMouseOut={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+          <button
+            onClick={() => { setHeroIdx(p => (p + 1) % HERO_BANNERS.length); startHeroTimer(); }}
+            style={{
+              position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
+              background: 'rgba(26,18,11,0.6)', border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: '50%', width: '40px', height: '40px', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', zIndex: 3
+            }}
           >
             <ChevronRight style={{ width: '20px', height: '20px' }} />
           </button>
-
-          <div className="hero-dots">
-            {HERO_BANNERS.map((_, i) => (
-              <button key={i} className={`hero-dot ${i === heroIdx ? 'active' : ''}`} onClick={() => { setHeroIdx(i); startHeroTimer(); }} />
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* ============================
-          CATEGORY NAV TABS
-          ============================ */}
-      <div className="cat-nav-wrap" id="menu-section">
-        <div className="cat-nav-inner">
-          {categoriesFromMenu.map(cat => (
-            <button key={cat} className={`cat-tab ${activeCategory === cat ? 'active' : ''}`} onClick={() => setActiveCategory(cat)}>
-              {cat}
+      {/* ============================================================
+          INTERACTIVE DINING MODE & 2.5 KM RADIUS SELECTOR
+          ============================================================ */}
+      <div className="haandi-mode-container">
+        <div className="haandi-mode-card">
+          <div className="haandi-mode-tabs">
+            <button
+              className={`haandi-mode-pill ${orderType === 'DELIVERY' ? 'active' : ''}`}
+              onClick={() => { setOrderType('DELIVERY'); setIsReservingTable(false); }}
+            >
+              <span>🛵 Delivery</span>
+              <span style={{ fontSize: '10px', opacity: 0.8 }}>(2.5 km)</span>
+            </button>
+            <button
+              className={`haandi-mode-pill ${orderType === 'PICK_UP' ? 'active' : ''}`}
+              onClick={() => { setOrderType('PICK_UP'); setIsReservingTable(false); }}
+            >
+              <span>🛍️ Takeaway</span>
+              <span style={{ fontSize: '10px', opacity: 0.8 }}>(Civic Center)</span>
+            </button>
+            <button
+              className={`haandi-mode-pill ${orderType === 'DINE_IN' ? 'active' : ''}`}
+              onClick={() => {
+                setOrderType('DINE_IN');
+                setIsReservingTable(true);
+                document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              <span>🪑 Dine-In</span>
+              <span style={{ fontSize: '10px', opacity: 0.8 }}>(Book Table)</span>
+            </button>
+          </div>
+
+          {/* Delivery Sector Selector */}
+          {orderType === 'DELIVERY' && (
+            <div style={{
+              background: 'var(--bg-cream-light)', padding: '14px', borderRadius: '14px',
+              border: '1px solid var(--border-warm)', display: 'flex', flexWrap: 'wrap',
+              alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MapPin style={{ width: '18px', height: '18px', color: 'var(--haandi-red)' }} />
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-dark)' }}>
+                    Delivery Destination in Gulberg Greens, Islamabad:
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Orders dispatched hot from Civic Center · Max distance: 2.5 km
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <select
+                  value={selectedSector}
+                  onChange={e => setSelectedSector(e.target.value)}
+                  style={{
+                    background: '#ffffff', border: `1.5px solid ${isWithinDeliveryRadius ? 'var(--border-warm)' : '#EF4444'}`,
+                    borderRadius: '10px', padding: '8px 12px', fontSize: '12px', fontWeight: '700',
+                    color: 'var(--text-dark)', outline: 'none'
+                  }}
+                >
+                  {GULBERG_SECTORS.map(s => (
+                    <option key={s.name} value={s.name}>
+                      {s.name} ({s.distanceKm} km)
+                    </option>
+                  ))}
+                </select>
+
+                <div style={{
+                  padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '800',
+                  background: isWithinDeliveryRadius ? 'var(--emerald-light)' : '#FEE2E2',
+                  color: isWithinDeliveryRadius ? 'var(--emerald)' : '#DC2626',
+                  border: `1px solid ${isWithinDeliveryRadius ? 'var(--emerald-border)' : '#FCA5A5'}`
+                }}>
+                  {isWithinDeliveryRadius ? `✓ ${currentSector.distanceKm} km · Eligible` : '✗ Outside 2.5 km'}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ============================================================
+          SIGNATURE SPECIALS SHOWCASE (Creamy Cards with Fire Badges)
+          ============================================================ */}
+      <div style={{ maxWidth: '1200px', margin: '20px auto 30px', padding: '0 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--haandi-saffron)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              Chef's Master Creations
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: '800', color: 'var(--text-dark)' }}>
+              Signature Clay Pot Specials
+            </h2>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--haandi-red)', fontSize: '12px', fontWeight: '800' }}>
+            <Sparkles style={{ width: '14px', height: '14px' }} />
+            <span>Slow-Cooked Fresh</span>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+          {menu.slice(0, 4).map(item => (
+            <div key={item.id} className="haandi-card" style={{ flexDirection: 'column' }}>
+              <div style={{ position: 'relative', width: '100%', height: '150px', borderRadius: '12px', overflow: 'hidden', border: '1.5px solid var(--border-warm)' }}>
+                <img
+                  src={item.imageUrl}
+                  alt={item.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80'; }}
+                />
+                <div style={{
+                  position: 'absolute', top: '8px', left: '8px',
+                  background: 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)',
+                  color: '#ffffff', fontSize: '10px', fontWeight: '900', padding: '3px 8px',
+                  borderRadius: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+                }}>
+                  🔥 Clay Pot Signature
+                </div>
+              </div>
+
+              <div style={{ padding: '8px 0 0', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div className="haandi-card-name">{item.name}</div>
+                  <div className="haandi-card-desc">{item.description}</div>
+                </div>
+
+                <div className="haandi-card-bottom" style={{ marginTop: '10px' }}>
+                  <div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Price from</div>
+                    <div className="haandi-card-price">Rs. {item.price.toLocaleString()}</div>
+                  </div>
+
+                  <button
+                    className="haandi-add-btn"
+                    onClick={() => addToCart(item)}
+                  >
+                    <Plus style={{ width: '14px', height: '14px' }} />
+                    <span>Add to Handi</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ============================================================
+          STICKY CATEGORY PILLS BAR
+          ============================================================ */}
+      <div id="menu-section" className="haandi-cat-nav-wrap">
+        <div className="haandi-cat-nav-inner">
+          {allCategories.map(cat => (
+            <button
+              key={cat}
+              className={`haandi-cat-pill ${activeCategory === cat ? 'active' : ''}`}
+              onClick={() => setActiveCategory(cat)}
+            >
+              {cat === 'All' && '🌟 All Items'}
+              {cat.includes('Handi') && '🍲 ' + cat}
+              {cat.includes('Karahi') && '🍳 ' + cat}
+              {cat.includes('BBQ') && '🍢 ' + cat}
+              {cat.includes('Rice') && '🍚 ' + cat}
+              {cat.includes('Roti') && '🫓 ' + cat}
+              {cat.includes('Soup') && '🥣 ' + cat}
+              {cat.includes('Salad') && '🥗 ' + cat}
+              {cat.includes('Beverages') && '🍹 ' + cat}
+              {cat.includes('Desserts') && '🍨 ' + cat}
+              {!['All', 'Handi', 'Karahi', 'BBQ', 'Rice', 'Roti', 'Soup', 'Salad', 'Beverages', 'Desserts'].some(k => cat.includes(k)) && cat}
             </button>
           ))}
         </div>
       </div>
 
-      {/* ============================
-          MAIN PAGE CONTENT
-          ============================ */}
-      <div className="page-wrap">
-        <div className="page-cols">
-          {/* LEFT: Menu Sections */}
-          <div>
-            {/* Branch/Order type strip */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', padding: '16px 0', borderBottom: '1px solid #e5e7eb', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#4b5563' }}>
-                <MapPin style={{ width: '14px', height: '14px', color: '#F4C430' }} />
-                <span style={{ fontWeight: '600', color: '#111827' }}>{branch?.name || 'Select Branch'}</span>
+      {/* ============================================================
+          MAIN MENU SECTIONS (Authentic Terracotta Banners & Creamy Cards)
+          ============================================================ */}
+      <div style={{ maxWidth: '1200px', margin: '30px auto', padding: '0 16px' }}>
+        {groupedByCategory.map(({ cat, items }) => (
+          <div key={cat} className="haandi-menu-section animate-fade">
+            {/* Terracotta/Saffron Header Banner */}
+            <div className="haandi-cat-banner">
+              <div>
+                <div className="haandi-cat-title">{cat}</div>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.85)', marginTop: '2px' }}>
+                  {items.length} {items.length === 1 ? 'Dish Available' : 'Dishes Available'} · Prepared Fresh on Order
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '6px', marginLeft: 'auto' }}>
-                {(['DELIVERY', 'PICK_UP', 'DINE_IN'] as OrderType[]).map(type => (
-                  <button key={type} type="button" onClick={() => {
-                    setOrderType(type);
-                    if (type === 'DINE_IN') setIsReservingTable(true);
-                    else { setIsReservingTable(false); setSelectedTableId(null); }
-                  }}
-                    style={{
-                      padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '700',
-                      cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em', border: '2px solid',
-                      background: orderType === type ? '#0d0d0d' : '#f9fafb',
-                      borderColor: orderType === type ? '#0d0d0d' : '#e5e7eb',
-                      color: orderType === type ? 'white' : '#6b7280',
-                      transition: 'all 0.2s'
-                    }}>
-                    {type === 'PICK_UP' ? 'Pickup' : type === 'DINE_IN' ? 'Dine-In' : 'Delivery'}
-                  </button>
-                ))}
+              <div className="haandi-cat-badge">
+                Authentic Recipe
               </div>
             </div>
 
-            {/* Order placed confirmation banner */}
-            {isOrderPlaced && placedOrderId && (() => {
-              const order = dbState.getOrders().find(o => o.id === placedOrderId);
-              if (!order) return null;
-              return (
-                <div style={{ background: '#f0fdf4', border: '2px solid #86efac', borderRadius: '16px', padding: '16px', marginBottom: '20px' }} className="animate-fade">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                    <CheckCircle style={{ width: '22px', height: '22px', color: '#16a34a', flexShrink: 0 }} />
-                    <div>
-                      <div style={{ fontWeight: '800', fontSize: '16px', color: '#15803d' }}>Order Placed Successfully!</div>
-                      <div style={{ fontSize: '12px', color: '#4b5563' }}>Ref: <strong>{order.id.toUpperCase()}</strong></div>
-                    </div>
-                    <button onClick={() => setIsOrderPlaced(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }}>
-                      <X style={{ width: '18px', height: '18px' }} />
-                    </button>
-                  </div>
-                  {/* Status tracker */}
-                  <div className="tracker-wrap">
-                    {statusSteps.slice(0, -1).map((step, i) => {
-                      const state = getStepState(step, order.status);
-                      return (
-                        <div key={step} className="tracker-step">
-                          <div className={`tracker-dot ${state}`}>{i + 1}</div>
-                          <div className={`tracker-label ${state}`}>{step.charAt(0) + step.slice(1).toLowerCase()}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <button onClick={() => setIsOrderPlaced(false)} style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280', background: 'none', border: '1px solid #d1d5db', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', display: 'block' }}>
-                    Place Another Order
-                  </button>
-                </div>
-              );
-            })()}
+            {/* Menu Cards Grid */}
+            <div className="haandi-item-grid">
+              {items.map(item => {
+                const inCart = cart.find(i => i.menuItemId === item.id);
+                const cartIdx = cart.findIndex(i => i.menuItemId === item.id);
 
-            {/* Table Reservation Section */}
-            {(isReservingTable || orderType === 'DINE_IN') && (
-              <div style={{ background: '#fff', border: '2px solid #D4A017', borderRadius: '16px', marginBottom: '24px', overflow: 'hidden' }}>
-                <div style={{ background: '#F4C430', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', fontSize: '16px', color: '#0d0d0d', fontFamily: 'Playfair Display, serif' }}>
-                    <Calendar style={{ width: '18px', height: '18px' }} /> Reserve a Table
-                  </div>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button onClick={() => setIsReservingTable(true)}
-                      style={{ padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', background: isReservingTable ? '#0d0d0d' : 'rgba(255,255,255,0.6)', color: isReservingTable ? 'white' : '#374151', border: 'none' }}>
-                      Book Table
-                    </button>
-                    <button onClick={() => { setIsReservingTable(false); setSelectedTableId(null); }}
-                      style={{ padding: '5px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', background: !isReservingTable ? '#0d0d0d' : 'rgba(255,255,255,0.6)', color: !isReservingTable ? 'white' : '#374151', border: 'none' }}>
-                      Staff Assign
-                    </button>
-                  </div>
-                </div>
-
-                {isReservingTable ? (
-                  <div style={{ padding: '16px' }}>
-                    {/* Date/Time/Guests inputs */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '14px' }}>
-                      <div>
-                        <label className="form-label">Date</label>
-                        <input type="date" value={bookingDate} min={new Date().toISOString().split('T')[0]} onChange={e => setBookingDate(e.target.value)} className="form-input" />
-                      </div>
-                      <div>
-                        <label className="form-label">Time</label>
-                        <input type="time" value={bookingTime} onChange={e => setBookingTime(e.target.value)} className="form-input" />
-                      </div>
-                      <div>
-                        <label className="form-label">Guests</label>
-                        <input type="number" min={1} max={20} value={guestCount} onChange={e => setGuestCount(Number(e.target.value))} className="form-input" />
-                      </div>
-                    </div>
-
-                    {/* Floor selector */}
-                    <div style={{ marginBottom: '12px' }}>
-                      <label className="form-label">Floor</label>
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        {floors.map(fl => (
-                          <button key={fl.id} onClick={() => { setActiveFloorId(fl.id); setSelectedTableId(null); }}
-                            style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', background: activeFloorId === fl.id ? '#0d0d0d' : '#f3f4f6', color: activeFloorId === fl.id ? 'white' : '#374151', border: '1px solid', borderColor: activeFloorId === fl.id ? '#0d0d0d' : '#e5e7eb', transition: 'all 0.2s' }}>
-                            {fl.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Floor plan */}
-                    <div className="floorplan-container" style={{ aspectRatio: '2/1' }}>
-                      {tables.map(tb => (
-                        <div key={tb.id}
-                          className={`map-table-element ${
-                            tb.type === 'VIP_CABIN' 
-                              ? 'type-cabin' 
-                              : tb.type === 'MAJLIS_FLOOR' 
-                                ? 'type-majlis' 
-                                : 'type-standard'
-                          } ${selectedTableId === tb.id ? 'status-selected' : tb.status === 'AVAILABLE' ? 'status-available' : tb.status === 'RESERVED' ? 'status-reserved' : tb.status === 'OCCUPIED' ? 'status-occupied' : 'status-blocked'}`}
-                          style={{ left: `${tb.x}%`, top: `${tb.y}%`, width: `${tb.width}%`, height: `${tb.height}%` }}
-                          onClick={() => tb.status === 'AVAILABLE' && setSelectedTableId(tb.id === selectedTableId ? null : tb.id)}
-                        >
-                          {/* CAD Seats Chairs around table */}
-                          {renderSeatsForCustomer(tb.capacity)}
-                          
-                          <span style={{ fontSize: '10px', fontWeight: '800', zIndex: 10 }}>{tb.tableNumber}</span>
-                          <span style={{ fontSize: '8px', opacity: 0.75, zIndex: 10 }}>👥{tb.capacity}</span>
-                        </div>
-                      ))}
-                      <div className="absolute bottom-2 left-2 right-2 bg-black/85 p-1.5 rounded-lg border border-border-color flex justify-between text-[9px] items-center">
-                        <div className="flex gap-2">
-                          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-alpha border border-emerald"></span> Available</span>
-                          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-alpha border border-amber"></span> Reserved</span>
-                          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-ruby-alpha border border-ruby"></span> Occupied</span>
-                        </div>
-                        {selectedTableId && <span style={{ marginLeft: 'auto', fontWeight: '700', color: '#F4C430' }}>✓ Table {tables.find(t => t.id === selectedTableId)?.tableNumber} selected</span>}
-                      </div>
-                    </div>
-
-                    {surcharge.isPremium && (
-                      <div style={{ marginTop: '10px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', padding: '10px 14px', fontSize: '12px', color: '#92400e', fontWeight: '600' }}>
-                        ⚡ Peak-Hour Booking Fee: <strong>Rs. {surcharge.fee}</strong> applies for reservations within 2 hours.
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ padding: '16px', fontSize: '13px', color: '#4b5563', textAlign: 'center' }}>
-                    Staff will assign a table for you upon arrival. No reservation fee applies.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ============================
-                MENU — Yellow banners + item rows
-                ============================ */}
-            <div>
-              {groupedByCategory.map(({ cat, items }) => (
-                <div key={cat} className="menu-section animate-fade">
-                  {/* YELLOW CATEGORY BANNER */}
-                  <div className="cat-banner">
-                    <div className="cat-banner-left">
-                      <div className="cat-banner-title">{cat}</div>
-                      <div className="cat-banner-count">{items.length} {items.length === 1 ? 'item' : 'items'}</div>
-                    </div>
+                return (
+                  <div key={item.id} className="haandi-card">
                     <img
-                      src={items.find(i => i.imageUrl)?.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80'}
-                      alt={cat}
-                      className="cat-banner-img"
-                      onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80'; e.currentTarget.onerror = null; }}
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="haandi-card-img"
+                      onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80'; }}
                     />
-                  </div>
-
-                  {/* ITEM LIST ROWS */}
-                  <div className="item-list">
-                    {items.map(item => (
-                      <div key={item.id} className="item-row">
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className="item-img"
-                          onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80'; e.currentTarget.onerror = null; }}
-                        />
-                        <div className="item-info">
-                          <div className="item-name">{item.name}</div>
-                          {item.description && <div className="item-desc">{item.description}</div>}
-                        </div>
-                        <div className="item-right">
-                          <div className="item-price">Rs. {item.price.toLocaleString()}</div>
-                          <button className="item-add-btn" onClick={() => handleAddToCartClick(item)}>
-                            <Plus style={{ width: '13px', height: '13px' }} /> Add
-                          </button>
-                        </div>
+                    <div className="haandi-card-info">
+                      <div>
+                        <div className="haandi-card-name">{item.name}</div>
+                        {item.description && <div className="haandi-card-desc">{item.description}</div>}
                       </div>
-                    ))}
+
+                      <div className="haandi-card-bottom">
+                        <div>
+                          <div className="haandi-card-price">
+                            Rs. {item.price.toLocaleString()}
+                          </div>
+                          {item.variations && item.variations.length > 0 && (
+                            <div style={{ fontSize: '10px', color: 'var(--haandi-saffron)', fontWeight: '700' }}>
+                              Multiple Portions
+                            </div>
+                          )}
+                        </div>
+
+                        {inCart ? (
+                          <div className="haandi-qty-stepper">
+                            <button className="haandi-qty-btn" onClick={() => updateQuantity(cartIdx, -1)}>
+                              <Minus style={{ width: '12px', height: '12px' }} />
+                            </button>
+                            <span className="haandi-qty-count">{inCart.quantity}</span>
+                            <button className="haandi-qty-btn" onClick={() => updateQuantity(cartIdx, 1)}>
+                              <Plus style={{ width: '12px', height: '12px' }} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button className="haandi-add-btn" onClick={() => addToCart(item)}>
+                            <Plus style={{ width: '13px', height: '13px' }} />
+                            <span>Add</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ============================================================
+          INTERACTIVE DINE-IN TABLE BOOKING FLOORPLAN (When Dine-In Active)
+          ============================================================ */}
+      <div id="booking-section" style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 16px' }}>
+        <div style={{
+          background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)',
+          borderRadius: '20px', padding: '24px', boxShadow: 'var(--shadow-md)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--haandi-red)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Floor Layout & Majlis Suites
+              </div>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: '800', color: 'var(--text-dark)' }}>
+                Reserve Your Dining Table (Islamabad Branch)
+              </h3>
+            </div>
+
+            {/* Floor Tabs */}
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {floors.map(fl => (
+                <button
+                  key={fl.id}
+                  onClick={() => { setActiveFloorId(fl.id); setSelectedTableId(null); }}
+                  style={{
+                    padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700',
+                    border: 'none', cursor: 'pointer',
+                    background: activeFloorId === fl.id ? 'var(--haandi-red)' : 'var(--bg-cream-light)',
+                    color: activeFloorId === fl.id ? '#ffffff' : 'var(--text-muted)'
+                  }}
+                >
+                  {fl.name}
+                </button>
               ))}
             </div>
           </div>
 
-          {/* RIGHT: Cart Panel (desktop) */}
-          <div style={{ display: 'none' }} className="lg-cart-panel">
-            <CartContent
-              cart={cart} menuItems={allMenuItems} subtotal={subtotal} tax={tax}
-              deliveryFee={deliveryFee} premiumReservationFee={premiumReservationFee} grandTotal={grandTotal}
-              orderType={orderType} isReservingTable={isReservingTable} selectedTableId={selectedTableId}
-              tables={dbState.getTables()} bookingDate={bookingDate} bookingTime={bookingTime} guestCount={guestCount}
-              surcharge={surcharge} custName={custName} setCustName={setCustName}
-              custPhone={custPhone} setCustPhone={setCustPhone} deliveryAddr={deliveryAddr}
-              setDeliveryAddr={setDeliveryAddr}
-              selectedSector={selectedSector} setSelectedSector={setSelectedSector}
-              currentSector={currentSector} isWithinDeliveryRadius={isWithinDeliveryRadius}
-              gulbergSectors={GULBERG_SECTORS}
-              paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
-              updateQty={updateQty} removeFromCart={removeFromCart} handleCheckout={handleCheckout}
-            />
+          {/* Interactive Seating Layout Canvas */}
+          <div style={{
+            height: '280px', background: 'var(--bg-dark)', borderRadius: '14px',
+            position: 'relative', overflow: 'hidden', border: '1.5px solid var(--border-warm-dark)'
+          }}>
+            <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+
+            {tables.map(table => {
+              const isSelected = selectedTableId === table.id;
+              const isAvail = table.status === 'AVAILABLE';
+
+              return (
+                <div
+                  key={table.id}
+                  onClick={() => isAvail && setSelectedTableId(table.id)}
+                  style={{
+                    position: 'absolute',
+                    left: `${table.x}%`,
+                    top: `${table.y}%`,
+                    width: `${table.width}%`,
+                    height: `${table.height}%`,
+                    background: isSelected ? '#8B1E1E' : isAvail ? 'rgba(21,128,61,0.25)' : 'rgba(220,38,38,0.25)',
+                    border: `2px solid ${isSelected ? '#F4C430' : isAvail ? '#15803D' : '#DC2626'}`,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: isAvail ? 'pointer' : 'not-allowed',
+                    color: '#ffffff',
+                    boxShadow: isSelected ? '0 0 14px rgba(244,196,48,0.6)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{ fontWeight: '900', fontSize: '12px' }}>{table.tableNumber}</div>
+                  <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.8)' }}>{table.capacity} seats</div>
+                  {isSelected && <div style={{ fontSize: '8px', color: '#F4C430', fontWeight: '900' }}>SELECTED</div>}
+                </div>
+              );
+            })}
+
+            <div style={{
+              position: 'absolute', bottom: '8px', left: '8px', right: '8px',
+              background: 'rgba(26,18,11,0.9)', padding: '6px 12px', borderRadius: '8px',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#ffffff'
+            }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <span>🟢 Available</span>
+                <span>🔴 Occupied / Reserved</span>
+                <span>⭐ Selected Table</span>
+              </div>
+              {selectedTableId && (
+                <span style={{ color: '#F4C430', fontWeight: '800' }}>
+                  ✓ Table {tables.find(t => t.id === selectedTableId)?.tableNumber} selected
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Booking Inputs */}
+          <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Date</label>
+              <input
+                type="date"
+                value={bookingDate}
+                onChange={e => setBookingDate(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', background: 'var(--bg-cream-light)', fontSize: '12px' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Time</label>
+              <input
+                type="time"
+                value={bookingTime}
+                onChange={e => setBookingTime(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', background: 'var(--bg-cream-light)', fontSize: '12px' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Guests</label>
+              <select
+                value={guestCount}
+                onChange={e => setGuestCount(parseInt(e.target.value))}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', background: 'var(--bg-cream-light)', fontSize: '12px', fontWeight: '700' }}
+              >
+                {[1, 2, 4, 6, 8, 10, 12, 16].map(n => (
+                  <option key={n} value={n}>{n} Persons</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ============================
-          CART DRAWER (mobile + desktop overlay)
-          ============================ */}
-      {cartOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 900, display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setCartOpen(false)} />
-          <div style={{ position: 'relative', width: '100%', maxWidth: '420px', height: '100%', background: 'white', overflowY: 'auto', boxShadow: '-4px 0 30px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column' }} className="animate-slideup">
-            <div style={{ background: '#F4C430', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '2px solid #D4A017', flexShrink: 0 }}>
-              <ShoppingBag style={{ width: '20px', height: '20px', color: '#0d0d0d' }} />
-              <span style={{ fontWeight: '800', fontSize: '18px', color: '#0d0d0d', fontFamily: 'Playfair Display, serif', flex: 1 }}>Your Order</span>
-              <button onClick={() => setCartOpen(false)} style={{ background: 'rgba(0,0,0,0.1)', border: 'none', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                <X style={{ width: '18px', height: '18px', color: '#0d0d0d' }} />
-              </button>
+      {/* ============================================================
+          HERITAGE STORY & BRAND TRUST PILLARS
+          ============================================================ */}
+      <div style={{ maxWidth: '1200px', margin: '40px auto 60px', padding: '0 16px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--haandi-red)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+            The Haandi Heritage
+          </div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '26px', fontWeight: '800', color: 'var(--text-dark)' }}>
+            Why Dine with Haandi by Yumto?
+          </h2>
+        </div>
+
+        <div className="haandi-story-grid">
+          <div className="haandi-story-card">
+            <div className="haandi-story-icon">🏺</div>
+            <div className="haandi-story-title">Hand-Molded Earthen Pots</div>
+            <div className="haandi-story-desc">
+              Every Handi dish is slow-cooked in traditional earthenware that seals in natural juices and creates an authentic earthen aroma.
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-              <CartContent
-                cart={cart} menuItems={allMenuItems} subtotal={subtotal} tax={tax}
-                deliveryFee={deliveryFee} premiumReservationFee={premiumReservationFee} grandTotal={grandTotal}
-                orderType={orderType} isReservingTable={isReservingTable} selectedTableId={selectedTableId}
-                tables={dbState.getTables()} bookingDate={bookingDate} bookingTime={bookingTime} guestCount={guestCount}
-                surcharge={surcharge} custName={custName} setCustName={setCustName}
-                custPhone={custPhone} setCustPhone={setCustPhone} deliveryAddr={deliveryAddr}
-                setDeliveryAddr={setDeliveryAddr}
-                selectedSector={selectedSector} setSelectedSector={setSelectedSector}
-                currentSector={currentSector} isWithinDeliveryRadius={isWithinDeliveryRadius}
-                gulbergSectors={GULBERG_SECTORS}
-                paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod}
-                updateQty={updateQty} removeFromCart={removeFromCart} handleCheckout={handleCheckout}
-              />
+          </div>
+
+          <div className="haandi-story-card">
+            <div className="haandi-story-icon">🧈</div>
+            <div className="haandi-story-title">100% Pure Desi Ghee</div>
+            <div className="haandi-story-desc">
+              We never use artificial oils or frozen meat. Every Karahi and Handi is prepared fresh upon order using pure butter and whole spices.
+            </div>
+          </div>
+
+          <div className="haandi-story-card">
+            <div className="haandi-story-icon">🛵</div>
+            <div className="haandi-story-title">Strict 2.5 km Hot Delivery</div>
+            <div className="haandi-story-desc">
+              To guarantee that food arrives piping hot and clay-fresh, our fleet operates strictly within a 2.5 km radius of Civic Center.
+            </div>
+          </div>
+
+          <div className="haandi-story-card">
+            <div className="haandi-story-icon">🧾</div>
+            <div className="haandi-story-title">5% Incentivized Tax</div>
+            <div className="haandi-story-desc">
+              Enjoy 5% FBR sales tax on all digital card and online advance prepayments with instant digital receipt generation.
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* ============================
-          VARIATION PICKER MODAL
-          ============================ */}
+      {/* ============================================================
+          PORTION VARIATION PICKER MODAL
+          ============================================================ */}
       {selectedItemForVariation && selectedItemForVariation.variations && (
-        <div className="modal-backdrop">
-          <div className="modal-box animate-slideup" style={{ maxWidth: '380px' }}>
-            <div style={{ background: '#F4C430', padding: '20px', borderBottom: '2px solid #D4A017', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <img src={selectedItemForVariation.imageUrl} alt={selectedItemForVariation.name}
-                style={{ width: '56px', height: '56px', borderRadius: '10px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.5)', flexShrink: 0 }}
-                onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80'; }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9997, background: 'rgba(26,18,11,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: 'var(--bg-cream-light)', borderRadius: '20px', maxWidth: '380px', width: '100%', overflow: 'hidden', boxShadow: 'var(--shadow-xl)', border: '1.5px solid var(--border-warm)' }}>
+            <div style={{ background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)', padding: '16px 20px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontWeight: '800', fontSize: '16px', color: '#0d0d0d', fontFamily: 'Playfair Display, serif' }}>{selectedItemForVariation.name}</div>
-                <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.55)', marginTop: '2px' }}>Choose your portion size</div>
+                <div style={{ fontSize: '14px', fontWeight: '800' }}>{selectedItemForVariation.name}</div>
+                <div style={{ fontSize: '11px', color: 'var(--haandi-gold)' }}>Select Portion Size</div>
               </div>
+              <button onClick={() => setSelectedItemForVariation(null)} style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer' }}>
+                <X style={{ width: '18px', height: '18px' }} />
+              </button>
             </div>
+
             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {selectedItemForVariation.variations.map((v, i) => (
-                <button key={i} className="var-option-btn" onClick={() => addToCart(selectedItemForVariation, v)}>
+                <button
+                  key={i}
+                  onClick={() => addToCart(selectedItemForVariation, v)}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: '#ffffff', border: '1.5px solid var(--border-warm)', borderRadius: '12px',
+                    padding: '14px 16px', fontSize: '13px', fontWeight: '700', cursor: 'pointer',
+                    color: 'var(--text-dark)', transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--haandi-red)'; e.currentTarget.style.background = '#FFFDF9'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-warm)'; e.currentTarget.style.background = '#ffffff'; }}
+                >
                   <span>{v.name}</span>
-                  <span style={{ fontWeight: '800', color: '#0d0d0d' }}>Rs. {v.price.toLocaleString()}</span>
+                  <span style={{ color: 'var(--haandi-red)', fontWeight: '900' }}>Rs. {v.price.toLocaleString()}</span>
                 </button>
               ))}
-              <button onClick={() => setSelectedItemForVariation(null)}
-                style={{ marginTop: '4px', padding: '10px', background: 'transparent', border: '1px solid #e5e7eb', borderRadius: '10px', fontSize: '13px', color: '#6b7280', cursor: 'pointer', fontWeight: '600' }}>
+
+              <button
+                onClick={() => setSelectedItemForVariation(null)}
+                style={{ marginTop: '6px', padding: '10px', background: 'transparent', border: '1px solid var(--border-warm)', borderRadius: '10px', fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: '700' }}
+              >
                 Cancel
               </button>
             </div>
@@ -773,27 +863,186 @@ export const CustomerPortal: React.FC = () => {
         </div>
       )}
 
-      {/* ============================
+      {/* ============================================================
+          SLIDE-OVER CART & CHECKOUT DRAWER
+          ============================================================ */}
+      {cartOpen && (
+        <div className="haandi-drawer-backdrop" onClick={() => setCartOpen(false)}>
+          <div className="haandi-drawer-panel" onClick={e => e.stopPropagation()}>
+            {/* Drawer Header */}
+            <div style={{ background: 'var(--bg-dark)', padding: '16px 20px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--haandi-saffron)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <ShoppingBag style={{ width: '20px', height: '20px', color: 'var(--haandi-gold)' }} />
+                <div>
+                  <div style={{ fontWeight: '800', fontSize: '15px' }}>Your Handi Cart</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>{cartCount} {cartCount === 1 ? 'item' : 'items'} in order</div>
+                </div>
+              </div>
+              <button onClick={() => setCartOpen(false)} style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer' }}>
+                <X style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
+
+            {/* Cart Items List */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {cart.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '10px' }}>🍲</div>
+                  <div style={{ fontWeight: '800', fontSize: '14px', color: 'var(--text-dark)' }}>Your Handi is Empty</div>
+                  <div style={{ fontSize: '12px', marginTop: '4px' }}>Add your favorite Karahi, Handi or BBQ to begin</div>
+                </div>
+              ) : (
+                cart.map((item, idx) => (
+                  <div key={idx} style={{ background: '#ffffff', border: '1.5px solid var(--border-warm)', borderRadius: '12px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-dark)' }}>{item.name}</div>
+                      {item.variation && <div style={{ fontSize: '11px', color: 'var(--haandi-saffron)', fontWeight: '700' }}>[{item.variation}]</div>}
+                      <div style={{ fontSize: '13px', fontWeight: '900', color: 'var(--haandi-red)', marginTop: '2px' }}>
+                        Rs. {(item.price * item.quantity).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="haandi-qty-stepper">
+                        <button className="haandi-qty-btn" onClick={() => updateQuantity(idx, -1)}><Minus style={{ width: '10px', height: '10px' }} /></button>
+                        <span className="haandi-qty-count">{item.quantity}</span>
+                        <button className="haandi-qty-btn" onClick={() => updateQuantity(idx, 1)}><Plus style={{ width: '10px', height: '10px' }} /></button>
+                      </div>
+                      <button onClick={() => removeFromCart(idx)} style={{ background: 'none', border: 'none', color: 'var(--text-light)', cursor: 'pointer' }}>
+                        <Trash2 style={{ width: '15px', height: '15px' }} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Cart Checkout Summary */}
+            {cart.length > 0 && (
+              <div style={{ background: '#ffffff', borderTop: '2px solid var(--border-warm)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {/* Customer Details Inputs */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    value={custName}
+                    onChange={e => setCustName(e.target.value)}
+                    style={{ padding: '8px 10px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', fontSize: '12px', background: 'var(--bg-cream-light)' }}
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone (0330...)"
+                    value={custPhone}
+                    onChange={e => setCustPhone(e.target.value)}
+                    style={{ padding: '8px 10px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', fontSize: '12px', background: 'var(--bg-cream-light)' }}
+                  />
+                </div>
+
+                {orderType === 'DELIVERY' && (
+                  <input
+                    type="text"
+                    placeholder="House & Street in Gulberg Greens"
+                    value={deliveryAddr}
+                    onChange={e => setDeliveryAddr(e.target.value)}
+                    style={{ padding: '8px 10px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', fontSize: '12px', background: 'var(--bg-cream-light)' }}
+                  />
+                )}
+
+                {/* Prepayment Method (No COD) */}
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    onClick={() => setPaymentMethod('CARD')}
+                    style={{
+                      flex: 1, padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer',
+                      border: `1.5px solid ${paymentMethod === 'CARD' ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
+                      background: paymentMethod === 'CARD' ? 'var(--haandi-red-light)' : '#ffffff',
+                      color: paymentMethod === 'CARD' ? 'var(--haandi-red)' : 'var(--text-muted)'
+                    }}
+                  >
+                    💳 Card (5% Tax)
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod('ONLINE')}
+                    style={{
+                      flex: 1, padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer',
+                      border: `1.5px solid ${paymentMethod === 'ONLINE' ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
+                      background: paymentMethod === 'ONLINE' ? 'var(--haandi-red-light)' : '#ffffff',
+                      color: paymentMethod === 'ONLINE' ? 'var(--haandi-red)' : 'var(--text-muted)'
+                    }}
+                  >
+                    📱 Online / Raast
+                  </button>
+                </div>
+
+                {/* Calculations */}
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Subtotal:</span>
+                    <span>Rs. {subtotal.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Digital Sales Tax (5%):</span>
+                    <span>Rs. {tax.toLocaleString()}</span>
+                  </div>
+                  {deliveryFee > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Delivery (Gulberg Greens):</span>
+                      <span>Rs. {deliveryFee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {premiumReservationFee > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#B45309', fontWeight: 'bold' }}>
+                      <span>Peak Booking Fee:</span>
+                      <span>Rs. {premiumReservationFee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: '900', color: 'var(--haandi-red)', borderTop: '1px dashed var(--border-warm)', paddingTop: '6px' }}>
+                    <span>Grand Total:</span>
+                    <span>Rs. {grandTotal.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Checkout Submit */}
+                <button
+                  onClick={handleCheckout}
+                  style={{
+                    background: 'linear-gradient(135deg, var(--haandi-red) 0%, #B91C1C 100%)',
+                    color: '#ffffff', border: 'none', borderRadius: '12px', padding: '14px',
+                    fontWeight: '900', fontSize: '14px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    boxShadow: '0 4px 14px rgba(139,30,30,0.4)'
+                  }}
+                >
+                  <span>Pay Rs. {grandTotal.toLocaleString()} & Order</span>
+                  <ArrowRight style={{ width: '16px', height: '16px' }} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
           LIVE GPS TRACKING MODAL (OPENSTREETMAP)
-          ============================ */}
+          ============================================================ */}
       {(isOrderPlaced || showLiveTrackingModal) && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 9998,
-          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(5px)',
+          background: 'rgba(26,18,11,0.75)', backdropFilter: 'blur(5px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
         }}>
           <div style={{
-            background: '#ffffff', borderRadius: '20px', maxWidth: '580px', width: '100%',
-            overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.45)', border: '1.5px solid #EADBCC'
+            background: 'var(--bg-cream-light)', borderRadius: '24px', maxWidth: '600px', width: '100%',
+            overflow: 'hidden', boxShadow: 'var(--shadow-xl)', border: '1.5px solid var(--border-warm)'
           }}>
             <div style={{
               background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)',
-              padding: '16px 20px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+              padding: '18px 22px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
             }}>
               <div>
-                <div style={{ fontWeight: '800', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>🛵 Live Delivery Route Tracker</span>
-                  <span style={{ fontSize: '10px', background: '#E85D04', padding: '2px 6px', borderRadius: '6px' }}>OSM GPS</span>
+                <div style={{ fontWeight: '900', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>🛵 Live Order Delivery Tracker</span>
+                  <span style={{ fontSize: '10px', background: 'var(--haandi-saffron)', color: '#ffffff', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>OSM GPS</span>
                 </div>
                 <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginTop: '2px' }}>
                   {placedOrderId ? `Order #${placedOrderId.slice(-6).toUpperCase()}` : 'Live Delivery Route'} · Gulberg Greens, Islamabad
@@ -812,20 +1061,20 @@ export const CustomerPortal: React.FC = () => {
                 orderId={placedOrderId || 'ORD-ISB-2026'}
                 customerSector={selectedSector}
                 customerAddress={deliveryAddr ? `${deliveryAddr}, ${selectedSector}, Islamabad` : `${selectedSector}, Islamabad`}
-                height="320px"
+                height="340px"
                 showControls={true}
               />
             </div>
 
-            <div style={{ padding: '12px 20px', background: '#FBF8F3', borderTop: '1px solid #EADBCC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: '#6b7280' }}>
+            <div style={{ padding: '14px 22px', background: 'var(--bg-card)', borderTop: '1.5px solid var(--border-warm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 📍 Gulberg Greens Civic Center ➔ {selectedSector}
               </span>
               <button
                 onClick={() => { setIsOrderPlaced(false); setShowLiveTrackingModal(false); }}
                 style={{
-                  background: '#8B1E1E', color: '#ffffff', border: 'none', borderRadius: '8px',
-                  padding: '8px 18px', fontSize: '12px', fontWeight: '700', cursor: 'pointer'
+                  background: 'var(--haandi-red)', color: '#ffffff', border: 'none', borderRadius: '10px',
+                  padding: '8px 18px', fontSize: '12px', fontWeight: '800', cursor: 'pointer'
                 }}
               >
                 Close Tracker
@@ -835,254 +1084,70 @@ export const CustomerPortal: React.FC = () => {
         </div>
       )}
 
-      {/* ============================
+      {/* ============================================================
+          LOCATION SECTOR & 2.5 KM BOUNDARY MODAL
+          ============================================================ */}
+      {showSectorModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(26,18,11,0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: 'var(--bg-cream-light)', borderRadius: '24px', maxWidth: '480px', width: '100%', overflow: 'hidden', border: '1.5px solid var(--border-warm)', boxShadow: 'var(--shadow-xl)' }}>
+            <div style={{ background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)', padding: '18px 22px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: '800', fontSize: '15px' }}>📍 Single Location & Delivery Zone</div>
+                <div style={{ fontSize: '11px', color: 'var(--haandi-gold)' }}>Gulberg Greens Civic Center, Islamabad</div>
+              </div>
+              <button onClick={() => setShowSectorModal(false)} style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer' }}>
+                <X style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
+
+            <div style={{ padding: '20px' }}>
+              <div style={{ background: '#ffffff', border: '1.5px solid var(--border-warm)', borderRadius: '14px', padding: '14px', marginBottom: '16px' }}>
+                <div style={{ fontWeight: '800', fontSize: '14px', color: 'var(--text-dark)' }}>Haandi by Yumto - Islamabad</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Civic Center, Executive Block, Gulberg Greens, Islamabad</div>
+                <div style={{ fontSize: '12px', color: 'var(--haandi-red)', fontWeight: '700', marginTop: '4px' }}>📞 0330 0500600 · NTN/GST: 4585147-3</div>
+              </div>
+
+              <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '8px' }}>
+                Eligible Delivery Sectors (Within 2.5 km):
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {GULBERG_SECTORS.map(s => (
+                  <div key={s.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-warm)', fontSize: '12px' }}>
+                    <span>{s.name}</span>
+                    <span style={{ fontWeight: '800', color: s.distanceKm <= 2.5 ? 'var(--emerald)' : '#DC2626' }}>
+                      {s.distanceKm} km {s.distanceKm <= 2.5 ? '✓' : '✗'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ padding: '12px 20px', background: 'var(--bg-card)', borderTop: '1px solid var(--border-warm)', textAlign: 'right' }}>
+              <button
+                onClick={() => setShowSectorModal(false)}
+                style={{ background: 'var(--haandi-red)', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
           TOAST NOTIFICATION
-          ============================ */}
+          ============================================================ */}
       {toast && (
         <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 1000,
-          background: toast.type === 'error' ? '#dc2626' : toast.type === 'warning' ? '#f59e0b' : toast.type === 'info' ? '#2563eb' : '#16a34a',
-          color: 'white',
-          padding: '12px 20px',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          fontSize: '13px',
-          fontWeight: '600',
-          animation: 'slideUp 0.3s ease-out'
+          position: 'fixed', bottom: '24px', right: '24px', zIndex: 10000,
+          background: toast.type === 'error' ? '#DC2626' : toast.type === 'warning' ? '#F59E0B' : toast.type === 'info' ? '#2563EB' : 'var(--emerald)',
+          color: '#ffffff', padding: '12px 20px', borderRadius: '14px', boxShadow: 'var(--shadow-lg)',
+          display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: '700', animation: 'fadeIn 0.25s ease-out'
         }}>
-          {toast.type === 'success' && <span style={{ fontSize: '16px' }}>✓</span>}
-          {toast.type === 'error' && <span style={{ fontSize: '16px' }}>⚠</span>}
           <span>{toast.message}</span>
         </div>
       )}
-    </>
-  );
-};
-
-// ============================================================
-// CART CONTENT — Reusable cart component
-// ============================================================
-interface CartContentProps {
-  cart: OrderItem[];
-  menuItems: MenuItem[];
-  subtotal: number; tax: number; deliveryFee: number; premiumReservationFee: number; grandTotal: number;
-  orderType: OrderType; isReservingTable: boolean; selectedTableId: string | null;
-  tables: any[]; bookingDate: string; bookingTime: string; guestCount: number;
-  surcharge: { isPremium: boolean; fee: number };
-  custName: string; setCustName: (v: string) => void;
-  custPhone: string; setCustPhone: (v: string) => void;
-  deliveryAddr: string; setDeliveryAddr: (v: string) => void;
-  selectedSector: string; setSelectedSector: (v: string) => void;
-  currentSector: { name: string; distanceKm: number };
-  isWithinDeliveryRadius: boolean;
-  gulbergSectors: { name: string; distanceKm: number }[];
-  paymentMethod: 'CARD' | 'ONLINE'; setPaymentMethod: (v: 'CARD' | 'ONLINE') => void;
-  updateQty: (id: string, variation: string | undefined, amount: number) => void;
-  removeFromCart: (id: string, variation?: string) => void;
-  handleCheckout: (e: React.FormEvent) => void;
-}
-
-const CartContent: React.FC<CartContentProps> = ({
-  cart, menuItems, subtotal, tax, deliveryFee, premiumReservationFee, grandTotal,
-  orderType, isReservingTable, selectedTableId, tables, bookingDate, bookingTime, guestCount, surcharge,
-  custName, setCustName, custPhone, setCustPhone, deliveryAddr, setDeliveryAddr,
-  selectedSector, setSelectedSector, currentSector, isWithinDeliveryRadius, gulbergSectors,
-  paymentMethod, setPaymentMethod, updateQty, removeFromCart, handleCheckout
-}) => {
-  const isEmpty = cart.length === 0 && !isReservingTable;
-  const isDeliveryBlocked = orderType === 'DELIVERY' && !isWithinDeliveryRadius;
-
-  return (
-    <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* Cart items */}
-      {cart.length === 0 && !isReservingTable ? (
-        <div style={{ textAlign: 'center', padding: '32px 16px', color: '#9ca3af' }}>
-          <ShoppingBag style={{ width: '40px', height: '40px', margin: '0 auto 12px', opacity: 0.4 }} />
-          <div style={{ fontWeight: '600', marginBottom: '4px' }}>Your cart is empty</div>
-          <div style={{ fontSize: '12px' }}>Add dishes from the Haandi menu to get started</div>
-        </div>
-      ) : (
-        <>
-          {cart.map((item, idx) => {
-            const menuItem = menuItems.find(m => m.id === item.menuItemId);
-            return (
-              <div key={`${item.menuItemId}-${item.variation || ''}-${idx}`} className="cart-item-row">
-                {menuItem && (
-                  <img src={menuItem.imageUrl} alt={item.name} className="cart-item-img"
-                    onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80'; e.currentTarget.onerror = null; }} />
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#111827', lineHeight: '1.3' }}>{item.name}</div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>Rs. {item.price.toLocaleString()} each</div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0 }}>
-                  <div className="cart-qty-ctrl">
-                    <button type="button" className="cart-qty-btn" onClick={() => updateQty(item.menuItemId, item.variation, -1)}><Minus style={{ width: '10px', height: '10px' }} /></button>
-                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#111827', minWidth: '20px', textAlign: 'center' }}>{item.quantity}</span>
-                    <button type="button" className="cart-qty-btn" onClick={() => updateQty(item.menuItemId, item.variation, 1)}><Plus style={{ width: '10px', height: '10px' }} /></button>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: '800', color: '#1A120B' }}>Rs. {(item.price * item.quantity).toLocaleString()}</span>
-                    <button type="button" onClick={() => removeFromCart(item.menuItemId, item.variation)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '2px', display: 'flex' }}>
-                      <Trash style={{ width: '13px', height: '13px' }} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Reservation summary */}
-          {isReservingTable && selectedTableId && (
-            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', padding: '12px', fontSize: '12px', color: '#92400e' }}>
-              <div style={{ fontWeight: '700', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Calendar style={{ width: '13px', height: '13px' }} /> Reservation Summary
-              </div>
-              <div>Table: <strong>{tables.find(t => t.id === selectedTableId)?.tableNumber}</strong></div>
-              <div>Date & Time: <strong>{bookingDate} @ {bookingTime}</strong></div>
-              <div>Guests: <strong>{guestCount}</strong></div>
-            </div>
-          )}
-
-          {/* Price breakdown */}
-          <div style={{ borderTop: '2px solid rgba(232,93,4,0.3)', paddingTop: '14px' }}>
-            <div className="price-row"><span>Subtotal</span><span>Rs. {subtotal.toLocaleString()}</span></div>
-            <div className="price-row" style={{ color: '#15803d' }}>
-              <span>Sales Tax (5% FBR Digital)</span>
-              <span>Rs. {tax.toLocaleString()}</span>
-            </div>
-            {orderType === 'DELIVERY' && <div className="price-row"><span>Delivery Fee</span><span>Rs. {deliveryFee}</span></div>}
-            {isReservingTable && surcharge.isPremium && <div className="price-row" style={{ color: '#92400e' }}><span>Peak Booking Fee</span><span>Rs. {premiumReservationFee}</span></div>}
-            <div className="price-row total" style={{ color: '#8B1E1E' }}><span>Total Payable</span><span>Rs. {grandTotal.toLocaleString()}</span></div>
-          </div>
-
-          {/* Customer form */}
-          <div>
-            <div style={{ fontWeight: '700', fontSize: '13px', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
-              <User style={{ width: '13px', height: '13px', display: 'inline', marginRight: '5px' }} />Customer & Address
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <input className="form-input" placeholder="Full Name *" value={custName} onChange={e => setCustName(e.target.value)} />
-              <input className="form-input" placeholder="Phone Number *" value={custPhone} onChange={e => setCustPhone(e.target.value)} />
-              
-              {/* Delivery Zone Selection (2.5 km limit) */}
-              {orderType === 'DELIVERY' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
-                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#4b5563', textTransform: 'uppercase' }}>
-                    Gulberg Greens Sector / Block * (Max 2.5 km)
-                  </label>
-                  <select
-                    className="form-input"
-                    value={selectedSector}
-                    onChange={e => setSelectedSector(e.target.value)}
-                  >
-                    {gulbergSectors.map(s => (
-                      <option key={s.name} value={s.name}>
-                        {s.name} ({s.distanceKm} km) {s.distanceKm > 2.5 ? '— ❌ Exceeds 2.5 km' : '— 🟢 Eligible'}
-                      </option>
-                    ))}
-                  </select>
-
-                  {!isWithinDeliveryRadius ? (
-                    <div style={{
-                      background: '#fef2f2', border: '1px solid #f87171', borderRadius: '8px',
-                      padding: '8px 12px', fontSize: '11px', color: '#b91c1c', fontWeight: '600'
-                    }}>
-                      ⚠️ Delivery is strictly limited to within 2.5 km of Gulberg Greens Civic Center. Please choose an eligible address or switch to Pickup / Dine-In.
-                    </div>
-                  ) : (
-                    <div style={{
-                      background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px',
-                      padding: '6px 10px', fontSize: '11px', color: '#15803d', fontWeight: '600'
-                    }}>
-                      🟢 Delivery address is {currentSector.distanceKm} km away (Within 2.5 km Zone)
-                    </div>
-                  )}
-
-                  <textarea
-                    className="form-input"
-                    placeholder="House #, Street / Plaza & Landmark *"
-                    value={deliveryAddr}
-                    onChange={e => setDeliveryAddr(e.target.value)}
-                    rows={2}
-                    style={{ resize: 'none' }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Advance Payment Method (No Cash / COD) */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <div style={{ fontWeight: '700', fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Advance Prepayment
-              </div>
-              <span style={{ fontSize: '10px', fontWeight: '800', color: '#8B1E1E', background: '#fee2e2', padding: '1px 6px', borderRadius: '6px' }}>
-                No COD
-              </span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('CARD')}
-                style={{
-                  padding: '10px 8px', border: '2px solid', borderRadius: '10px', fontSize: '11px', fontWeight: '700',
-                  cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
-                  background: paymentMethod === 'CARD' ? '#8B1E1E' : '#f9fafb',
-                  borderColor: paymentMethod === 'CARD' ? '#8B1E1E' : '#e5e7eb',
-                  color: paymentMethod === 'CARD' ? '#ffffff' : '#374151'
-                }}
-              >
-                💳 Debit / Credit Card
-                <div style={{ fontSize: '9px', opacity: 0.8, marginTop: '2px' }}>5% Sales Tax</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('ONLINE')}
-                style={{
-                  padding: '10px 8px', border: '2px solid', borderRadius: '10px', fontSize: '11px', fontWeight: '700',
-                  cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
-                  background: paymentMethod === 'ONLINE' ? '#8B1E1E' : '#f9fafb',
-                  borderColor: paymentMethod === 'ONLINE' ? '#8B1E1E' : '#e5e7eb',
-                  color: paymentMethod === 'ONLINE' ? '#ffffff' : '#374151'
-                }}
-              >
-                📱 Raast / Transfer
-                <div style={{ fontSize: '9px', opacity: 0.8, marginTop: '2px' }}>5% Sales Tax</div>
-              </button>
-            </div>
-
-            <div style={{ marginTop: '8px', fontSize: '10px', color: '#6b7280', lineHeight: 1.4 }}>
-              🔒 Prepayment is mandatory for all delivery orders and table bookings. Cash on delivery (COD) is not accepted.
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isEmpty || isDeliveryBlocked}
-            className="checkout-btn"
-            style={{
-              background: isDeliveryBlocked ? '#9ca3af' : 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)',
-              cursor: isDeliveryBlocked ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {isDeliveryBlocked
-              ? 'Delivery Not Available (> 2.5 km)'
-              : isReservingTable
-                ? `Prepay Booking & Order — Rs. ${grandTotal.toLocaleString()}`
-                : `Pay & Place Order — Rs. ${grandTotal.toLocaleString()}`}
-          </button>
-        </>
-      )}
-    </form>
+    </div>
   );
 };

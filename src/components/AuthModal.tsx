@@ -93,10 +93,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     >
       <div
         style={{
-          background: '#ffffff', borderRadius: '20px',
+          background: '#FDFBF7', borderRadius: '20px',
           maxWidth: '460px', width: '100%',
-          overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
-          border: '1px solid #EADBCC'
+          overflow: 'hidden', boxShadow: '0 25px 60px rgba(26,18,11,0.35)',
+          border: '1.5px solid #EADBCC'
         }}
         onClick={e => e.stopPropagation()}
       >
