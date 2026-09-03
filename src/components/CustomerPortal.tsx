@@ -1,33 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '../store/mockDb';
 import type { MenuItem, OrderType, OrderItem } from '../types';
 import {
-  MapPin, ShoppingBag, Calendar,
-  Trash2, Plus, Minus, ChevronLeft, ChevronRight, X, Navigation,
-  Utensils, Sparkles, ArrowRight, Flame
+  MapPin, ShoppingBag,
+  Trash2, Plus, Minus, X, Navigation,
+  Utensils, Sparkles, ArrowRight
 } from 'lucide-react';
 import { LiveTrackingMap } from './LiveTrackingMap';
-
-const HERO_BANNERS = [
-  {
-    src: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=1400&q=80',
-    tag: 'Authentic Heritage',
-    title: 'Clay Pot Handi Masterpieces',
-    subtitle: 'Slow-simmered in traditional clay earthenware with rich desi spices, pure butter & aromatic ginger',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=1400&q=80',
-    tag: 'Sizzling Wok',
-    title: 'Desi Murgh & Shinwari Karahi',
-    subtitle: 'Flash-seared over high flame with fresh tomatoes, green chillies, crushed coriander & black pepper',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1400&q=80',
-    tag: 'Charcoal Grills',
-    title: 'Royal Charcoal BBQ & Platters',
-    subtitle: 'Flame-grilled Seekh Kababs, velvety Malai Boti, Chicken Tikka & Shehnsha Royal Platters',
-  },
-];
 
 export const CustomerPortal: React.FC = () => {
   const [dbState, setDbState] = useState(db);
@@ -103,22 +82,6 @@ export const CustomerPortal: React.FC = () => {
   const [inquiryType, setInquiryType] = useState('Catering & Outdoor Handi');
   const [inquiryGuests, setInquiryGuests] = useState('50');
   const [inquiryMsg, setInquiryMsg] = useState('');
-
-  // Hero carousel
-  const [heroIdx, setHeroIdx] = useState(0);
-  const heroTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const startHeroTimer = () => {
-    if (heroTimer.current) clearInterval(heroTimer.current);
-    heroTimer.current = setInterval(() => {
-      setHeroIdx(prev => (prev + 1) % HERO_BANNERS.length);
-    }, 5500);
-  };
-
-  useEffect(() => {
-    startHeroTimer();
-    return () => { if (heroTimer.current) clearInterval(heroTimer.current); };
-  }, []);
 
   // Database Data (Single Islamabad Branch)
   const menu = dbState.getMenu();
@@ -383,117 +346,39 @@ export const CustomerPortal: React.FC = () => {
       </nav>
 
       {/* ============================================================
-          HERO CAROUSEL SECTION
+          MINIMAL HERO BANNER & LOCATION STRIP
           ============================================================ */}
-      <div className="haandi-hero-wrap">
-        <div className="haandi-hero-slide">
-          <img
-            key={heroIdx}
-            src={HERO_BANNERS[heroIdx].src}
-            alt={HERO_BANNERS[heroIdx].title}
-          />
-          <div className="haandi-hero-overlay" />
-          <div className="haandi-hero-content animate-fade">
-            <div className="haandi-hero-pill">
-              ★ {HERO_BANNERS[heroIdx].tag} ★
+      <div style={{
+        background: 'linear-gradient(135deg, #1A120B 0%, #2A1F17 100%)',
+        color: '#ffffff', padding: '24px 16px', borderBottom: '2px solid var(--haandi-saffron)'
+      }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(232,93,4,0.2)', border: '1px solid var(--haandi-saffron)', padding: '3px 10px', borderRadius: '99px', fontSize: '11px', color: 'var(--haandi-gold)', fontWeight: '800', marginBottom: '8px' }}>
+              <span>🏺 Authentic Desi Earthenware Cuisine</span>
             </div>
-            <h1>{HERO_BANNERS[heroIdx].title}</h1>
-            <p>{HERO_BANNERS[heroIdx].subtitle}</p>
-
-            <div className="haandi-hero-actions">
-              <button
-                className="haandi-btn-primary"
-                onClick={() => document.getElementById('menu-section')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                <Flame style={{ width: '16px', height: '16px' }} />
-                <span>Explore Handi Menu</span>
-              </button>
-              <button
-                className="haandi-btn-outline"
-                onClick={() => setShowDiningModeModal(true)}
-              >
-                <Calendar style={{ width: '16px', height: '16px' }} />
-                <span>Choose Delivery / Dine-In / Takeaway</span>
-              </button>
-            </div>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: '900', color: '#ffffff', margin: '0 0 4px 0' }}>
+              Slow-Cooked Clay Pot Handi & Charcoal BBQ
+            </h1>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0 }}>
+              Civic Center, Executive Block, Gulberg Greens, Islamabad · 0330 0500600
+            </p>
           </div>
 
-          {/* Carousel Arrows */}
           <button
-            onClick={() => { setHeroIdx(p => (p - 1 + HERO_BANNERS.length) % HERO_BANNERS.length); startHeroTimer(); }}
+            onClick={() => setShowDiningModeModal(true)}
             style={{
-              position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
-              background: 'rgba(26,18,11,0.6)', border: '1px solid rgba(255,255,255,0.2)',
-              borderRadius: '50%', width: '40px', height: '40px', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', zIndex: 3
+              background: 'linear-gradient(135deg, var(--haandi-red) 0%, #E85D04 100%)',
+              color: '#ffffff', border: 'none', borderRadius: '12px', padding: '10px 18px',
+              fontSize: '13px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+              boxShadow: '0 4px 14px rgba(232,93,4,0.4)'
             }}
           >
-            <ChevronLeft style={{ width: '20px', height: '20px' }} />
-          </button>
-          <button
-            onClick={() => { setHeroIdx(p => (p + 1) % HERO_BANNERS.length); startHeroTimer(); }}
-            style={{
-              position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
-              background: 'rgba(26,18,11,0.6)', border: '1px solid rgba(255,255,255,0.2)',
-              borderRadius: '50%', width: '40px', height: '40px', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', zIndex: 3
-            }}
-          >
-            <ChevronRight style={{ width: '20px', height: '20px' }} />
+            <span>{isReservingTable ? '🪑 Dine-In' : orderType === 'DELIVERY' ? `🛵 Delivery (${selectedSector.split(',')[0]})` : '🛍️ Takeaway'}</span>
+            <span style={{ fontSize: '10px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>Change</span>
           </button>
         </div>
       </div>
-
-      {/* ============================================================
-          INTERACTIVE DINING MODE & 2.5 KM RADIUS SELECTOR
-          ============================================================ */}
-      <div className="haandi-mode-container">
-        <div className="haandi-mode-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>Order Mode:</span>
-              <span style={{ color: 'var(--haandi-red)', fontWeight: '900' }}>
-                {isReservingTable ? '🪑 Dine-In & Majlis' : orderType === 'DELIVERY' ? '🛵 Delivery (2.5 km)' : '🛍️ Takeaway / Pickup'}
-              </span>
-            </div>
-
-            <button
-              onClick={() => setShowDiningModeModal(true)}
-              style={{
-                background: 'linear-gradient(135deg, var(--haandi-red) 0%, #1A120B 100%)',
-                color: '#ffffff', border: '1px solid var(--haandi-saffron)',
-                borderRadius: '99px', padding: '5px 14px', fontSize: '11px', fontWeight: '800',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-                boxShadow: '0 2px 8px rgba(139,30,30,0.3)'
-              }}
-            >
-              <span>⚙️ Change Mode Popup</span>
-            </button>
-          </div>
-
-          <div className="haandi-mode-tabs">
-            <button
-              className={`haandi-mode-pill ${orderType === 'DELIVERY' && !isReservingTable ? 'active' : ''}`}
-              onClick={() => setShowDiningModeModal(true)}
-            >
-              <span>🛵 Delivery</span>
-              <span style={{ fontSize: '10px', opacity: 0.8 }}>(2.5 km)</span>
-            </button>
-            <button
-              className={`haandi-mode-pill ${orderType === 'PICK_UP' && !isReservingTable ? 'active' : ''}`}
-              onClick={() => setShowDiningModeModal(true)}
-            >
-              <span>🛍️ Takeaway</span>
-              <span style={{ fontSize: '10px', opacity: 0.8 }}>(Civic Center)</span>
-            </button>
-            <button
-              className={`haandi-mode-pill ${isReservingTable ? 'active' : ''}`}
-              onClick={() => setShowDiningModeModal(true)}
-            >
-              <span>🪑 Dine-In</span>
-              <span style={{ fontSize: '10px', opacity: 0.8 }}>(Book Table)</span>
-            </button>
-          </div>
 
           {/* Delivery Sector Selector */}
           {orderType === 'DELIVERY' && (
@@ -542,8 +427,6 @@ export const CustomerPortal: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
-      </div>
 
       {/* ============================================================
           SIGNATURE SPECIALS SHOWCASE (Creamy Cards with Fire Badges)
