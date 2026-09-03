@@ -88,7 +88,7 @@ export const CustomerPortal: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'ONLINE'>('CARD');
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
-  const [showDiningModeModal, setShowDiningModeModal] = useState(false);
+  const [showDiningModeModal, setShowDiningModeModal] = useState(true);
   const [showLiveTrackingModal, setShowLiveTrackingModal] = useState(false);
   const [showSectorModal, setShowSectorModal] = useState(false);
 
@@ -362,14 +362,10 @@ export const CustomerPortal: React.FC = () => {
               </button>
               <button
                 className="haandi-btn-outline"
-                onClick={() => {
-                  setOrderType('DINE_IN');
-                  setIsReservingTable(true);
-                  document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={() => setShowDiningModeModal(true)}
               >
                 <Calendar style={{ width: '16px', height: '16px' }} />
-                <span>Book VIP Majlis / Table</span>
+                <span>Choose Delivery / Dine-In / Takeaway</span>
               </button>
             </div>
           </div>
@@ -430,25 +426,21 @@ export const CustomerPortal: React.FC = () => {
           <div className="haandi-mode-tabs">
             <button
               className={`haandi-mode-pill ${orderType === 'DELIVERY' && !isReservingTable ? 'active' : ''}`}
-              onClick={() => { setOrderType('DELIVERY'); setIsReservingTable(false); }}
+              onClick={() => setShowDiningModeModal(true)}
             >
               <span>🛵 Delivery</span>
               <span style={{ fontSize: '10px', opacity: 0.8 }}>(2.5 km)</span>
             </button>
             <button
               className={`haandi-mode-pill ${orderType === 'PICK_UP' && !isReservingTable ? 'active' : ''}`}
-              onClick={() => { setOrderType('PICK_UP'); setIsReservingTable(false); }}
+              onClick={() => setShowDiningModeModal(true)}
             >
               <span>🛍️ Takeaway</span>
               <span style={{ fontSize: '10px', opacity: 0.8 }}>(Civic Center)</span>
             </button>
             <button
               className={`haandi-mode-pill ${isReservingTable ? 'active' : ''}`}
-              onClick={() => {
-                setOrderType('DINE_IN');
-                setIsReservingTable(true);
-                document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => setShowDiningModeModal(true)}
             >
               <span>🪑 Dine-In</span>
               <span style={{ fontSize: '10px', opacity: 0.8 }}>(Book Table)</span>
@@ -1167,43 +1159,78 @@ export const CustomerPortal: React.FC = () => {
             </div>
 
             {/* 3 Interactive Mode Cards */}
-            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '70vh', overflowY: 'auto' }}>
               
               {/* Option 1: Delivery */}
               <div
-                onClick={() => {
-                  setOrderType('DELIVERY');
-                  setIsReservingTable(false);
-                  setShowDiningModeModal(false);
-                  showToast('🛵 Delivery mode active (2.5 km Gulberg Greens)');
-                }}
                 style={{
-                  background: orderType === 'DELIVERY' && !isReservingTable ? '#FDF8F0' : '#ffffff',
+                  background: orderType === 'DELIVERY' && !isReservingTable ? '#FFF9F5' : '#ffffff',
                   border: `2px solid ${orderType === 'DELIVERY' && !isReservingTable ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
-                  borderRadius: '16px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px',
-                  transition: 'all 0.2s', boxShadow: orderType === 'DELIVERY' && !isReservingTable ? '0 4px 14px rgba(139,30,30,0.15)' : 'none'
+                  borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px',
+                  boxShadow: orderType === 'DELIVERY' && !isReservingTable ? '0 4px 14px rgba(139,30,30,0.15)' : 'none'
                 }}
               >
-                <div style={{
-                  width: '46px', height: '46px', borderRadius: '14px',
-                  background: 'var(--haandi-red-light)', color: 'var(--haandi-red)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px'
-                }}>
-                  🛵
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-dark)' }}>
-                      Doorstep Delivery
-                    </span>
-                    <span style={{ fontSize: '11px', fontWeight: '800', background: 'var(--emerald-light)', color: 'var(--emerald)', padding: '2px 8px', borderRadius: '6px' }}>
-                      30-40 Mins
-                    </span>
+                <div
+                  onClick={() => {
+                    setOrderType('DELIVERY');
+                    setIsReservingTable(false);
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}
+                >
+                  <div style={{
+                    width: '46px', height: '46px', borderRadius: '14px',
+                    background: 'var(--haandi-red-light)', color: 'var(--haandi-red)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px'
+                  }}>
+                    🛵
                   </div>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                    Delivered hot in sealed clay pots within 2.5 km of Civic Center.
-                  </p>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-dark)' }}>
+                        Doorstep Delivery
+                      </span>
+                      <span style={{ fontSize: '11px', fontWeight: '800', background: 'var(--emerald-light)', color: 'var(--emerald)', padding: '2px 8px', borderRadius: '6px' }}>
+                        30-40 Mins
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      Delivered piping hot in sealed earthenware within 2.5 km of Civic Center.
+                    </p>
+                  </div>
                 </div>
+
+                {/* Sector Selector inside modal when delivery selected */}
+                {orderType === 'DELIVERY' && !isReservingTable && (
+                  <div style={{ borderTop: '1px dashed var(--border-warm)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)' }}>Select Your Gulberg Greens Sector:</label>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <select
+                        value={selectedSector}
+                        onChange={e => setSelectedSector(e.target.value)}
+                        style={{
+                          flex: 1, background: '#ffffff', border: `1.5px solid ${isWithinDeliveryRadius ? 'var(--border-warm)' : '#EF4444'}`,
+                          borderRadius: '8px', padding: '8px 10px', fontSize: '12px', fontWeight: '700'
+                        }}
+                      >
+                        {GULBERG_SECTORS.map(s => (
+                          <option key={s.name} value={s.name}>{s.name} ({s.distanceKm} km)</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          setShowDiningModeModal(false);
+                          showToast(`🛵 Delivery to ${selectedSector} confirmed!`);
+                        }}
+                        style={{
+                          background: 'var(--haandi-red)', color: '#ffffff', border: 'none',
+                          borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontWeight: '800', cursor: 'pointer'
+                        }}
+                      >
+                        Select
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Option 2: Takeaway */}
@@ -1212,10 +1239,10 @@ export const CustomerPortal: React.FC = () => {
                   setOrderType('PICK_UP');
                   setIsReservingTable(false);
                   setShowDiningModeModal(false);
-                  showToast('🛍️ Takeaway / Pickup mode active');
+                  showToast('🛍️ Takeaway / Pickup mode selected');
                 }}
                 style={{
-                  background: orderType === 'PICK_UP' && !isReservingTable ? '#FDF8F0' : '#ffffff',
+                  background: orderType === 'PICK_UP' && !isReservingTable ? '#FFF9F5' : '#ffffff',
                   border: `2px solid ${orderType === 'PICK_UP' && !isReservingTable ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
                   borderRadius: '16px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px',
                   transition: 'all 0.2s', boxShadow: orderType === 'PICK_UP' && !isReservingTable ? '0 4px 14px rgba(139,30,30,0.15)' : 'none'
@@ -1238,7 +1265,7 @@ export const CustomerPortal: React.FC = () => {
                     </span>
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                    Piping hot pickup from Civic Center, Executive Block.
+                    Piping hot pickup from Civic Center, Executive Block, Gulberg Greens.
                   </p>
                 </div>
               </div>
@@ -1253,7 +1280,7 @@ export const CustomerPortal: React.FC = () => {
                   showToast('🪑 Dine-In selected · Pick your table on the floor plan');
                 }}
                 style={{
-                  background: isReservingTable ? '#FDF8F0' : '#ffffff',
+                  background: isReservingTable ? '#FFF9F5' : '#ffffff',
                   border: `2px solid ${isReservingTable ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
                   borderRadius: '16px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px',
                   transition: 'all 0.2s', boxShadow: isReservingTable ? '0 4px 14px rgba(139,30,30,0.15)' : 'none'
@@ -1276,7 +1303,7 @@ export const CustomerPortal: React.FC = () => {
                     </span>
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                    Reserve your table or authentic earthen Majlis in real time.
+                    Reserve your table or authentic earthen Majlis on our live floor plan.
                   </p>
                 </div>
               </div>
