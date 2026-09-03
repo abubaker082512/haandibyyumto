@@ -88,6 +88,7 @@ export const CustomerPortal: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'ONLINE'>('CARD');
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+  const [showDiningModeModal, setShowDiningModeModal] = useState(false);
   const [showLiveTrackingModal, setShowLiveTrackingModal] = useState(false);
   const [showSectorModal, setShowSectorModal] = useState(false);
 
@@ -111,6 +112,7 @@ export const CustomerPortal: React.FC = () => {
   const menu = dbState.getMenu();
   const floors = dbState.getFloors('br-isb');
   const tables = dbState.getTables('br-isb', activeFloorId);
+  const settings = dbState.getSettings();
 
   // Categories list
   const allCategories = ['All', ...Array.from(new Set(menu.map(i => i.category)))];
@@ -181,8 +183,9 @@ export const CustomerPortal: React.FC = () => {
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const deliveryFee = orderType === 'DELIVERY' ? 150 : 0;
 
-  // 5% digital tax on Card/Online prepayment
-  const tax = Math.round(subtotal * 0.05);
+  // Dynamic Sales Tax: Only applied and shown if Admin Master Toggle is ACTIVE
+  const taxCalc = dbState.calculateSalesTax(subtotal, paymentMethod);
+  const tax = settings.isTaxActive ? taxCalc.taxAmount : 0;
   const premiumReservationFee = 0;
   const grandTotal = subtotal + tax + deliveryFee + premiumReservationFee;
 
@@ -252,7 +255,7 @@ export const CustomerPortal: React.FC = () => {
           <span style={{ opacity: 0.5 }}>•</span>
           <span>Strict 2.5 km Delivery Zone (Gulberg Greens, Islamabad)</span>
           <span style={{ opacity: 0.5 }}>•</span>
-          <span>5% Digital FBR Sales Tax</span>
+          <span>{settings.isTaxActive ? `${settings.salesTaxCardPercent}% Digital FBR Sales Tax` : '0% System Sales Tax Exemption'}</span>
         </div>
       </div>
 
@@ -261,16 +264,28 @@ export const CustomerPortal: React.FC = () => {
           ============================================================ */}
       <nav className="haandi-navbar">
         <div className="haandi-navbar-inner">
-          {/* Left: Location & Radius Badge */}
-          <button
-            className="haandi-location-pill"
-            onClick={() => setShowSectorModal(true)}
-            title="View Delivery Boundary & Sector Details"
-          >
-            <MapPin style={{ width: '14px', height: '14px', color: 'var(--haandi-saffron)' }} />
-            <span>Gulberg Greens, Islamabad</span>
-            <span style={{ color: 'var(--haandi-gold)', fontSize: '10px', fontWeight: '800' }}>2.5 km</span>
-          </button>
+          {/* Center/Right: Location & Dining Mode Popup Pill */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              className="haandi-location-pill"
+              onClick={() => setShowDiningModeModal(true)}
+              title="Select Delivery, Takeaway, or Dine-In Mode"
+              style={{ cursor: 'pointer' }}
+            >
+              <span>{isReservingTable ? '🪑 Dine-In' : orderType === 'DELIVERY' ? '🛵 Delivery' : '🛍️ Takeaway'}</span>
+              <span style={{ color: 'var(--haandi-gold)', fontSize: '10px', fontWeight: '800' }}>Change</span>
+            </button>
+
+            <button
+              className="haandi-location-pill"
+              onClick={() => setShowSectorModal(true)}
+              title="View Delivery Boundary & Sector Details"
+            >
+              <MapPin style={{ width: '14px', height: '14px', color: 'var(--haandi-saffron)' }} />
+              <span className="hidden sm:inline">Gulberg Greens</span>
+              <span style={{ color: 'var(--haandi-gold)', fontSize: '10px', fontWeight: '800' }}>2.5 km</span>
+            </button>
+          </div>
 
           {/* Center: Haandi Brand Logo */}
           <a href="#menu-section" className="haandi-logo-badge">
@@ -390,23 +405,45 @@ export const CustomerPortal: React.FC = () => {
           ============================================================ */}
       <div className="haandi-mode-container">
         <div className="haandi-mode-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>Order Mode:</span>
+              <span style={{ color: 'var(--haandi-red)', fontWeight: '900' }}>
+                {isReservingTable ? '🪑 Dine-In & Majlis' : orderType === 'DELIVERY' ? '🛵 Delivery (2.5 km)' : '🛍️ Takeaway / Pickup'}
+              </span>
+            </div>
+
+            <button
+              onClick={() => setShowDiningModeModal(true)}
+              style={{
+                background: 'linear-gradient(135deg, var(--haandi-red) 0%, #1A120B 100%)',
+                color: '#ffffff', border: '1px solid var(--haandi-saffron)',
+                borderRadius: '99px', padding: '5px 14px', fontSize: '11px', fontWeight: '800',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                boxShadow: '0 2px 8px rgba(139,30,30,0.3)'
+              }}
+            >
+              <span>⚙️ Change Mode Popup</span>
+            </button>
+          </div>
+
           <div className="haandi-mode-tabs">
             <button
-              className={`haandi-mode-pill ${orderType === 'DELIVERY' ? 'active' : ''}`}
+              className={`haandi-mode-pill ${orderType === 'DELIVERY' && !isReservingTable ? 'active' : ''}`}
               onClick={() => { setOrderType('DELIVERY'); setIsReservingTable(false); }}
             >
               <span>🛵 Delivery</span>
               <span style={{ fontSize: '10px', opacity: 0.8 }}>(2.5 km)</span>
             </button>
             <button
-              className={`haandi-mode-pill ${orderType === 'PICK_UP' ? 'active' : ''}`}
+              className={`haandi-mode-pill ${orderType === 'PICK_UP' && !isReservingTable ? 'active' : ''}`}
               onClick={() => { setOrderType('PICK_UP'); setIsReservingTable(false); }}
             >
               <span>🛍️ Takeaway</span>
               <span style={{ fontSize: '10px', opacity: 0.8 }}>(Civic Center)</span>
             </button>
             <button
-              className={`haandi-mode-pill ${orderType === 'DINE_IN' ? 'active' : ''}`}
+              className={`haandi-mode-pill ${isReservingTable ? 'active' : ''}`}
               onClick={() => {
                 setOrderType('DINE_IN');
                 setIsReservingTable(true);
@@ -809,9 +846,11 @@ export const CustomerPortal: React.FC = () => {
 
           <div className="haandi-story-card">
             <div className="haandi-story-icon">🧾</div>
-            <div className="haandi-story-title">5% Incentivized Tax</div>
+            <div className="haandi-story-title">{settings.isTaxActive ? `${settings.salesTaxCardPercent}% Incentivized Tax` : '0% Tax Free'}</div>
             <div className="haandi-story-desc">
-              Enjoy 5% FBR sales tax on all digital card and online advance prepayments with instant digital receipt generation.
+              {settings.isTaxActive 
+                ? 'Enjoy 5% FBR sales tax on all digital card and online advance prepayments with instant digital receipt generation.'
+                : 'Enjoy 0% sales tax currently active across all orders with authentic digital receipts.'}
             </div>
           </div>
         </div>
@@ -959,7 +998,7 @@ export const CustomerPortal: React.FC = () => {
                       color: paymentMethod === 'CARD' ? 'var(--haandi-red)' : 'var(--text-muted)'
                     }}
                   >
-                    💳 Card (5% Tax)
+                    💳 Card {settings.isTaxActive ? `(${settings.salesTaxCardPercent}% Tax)` : ''}
                   </button>
                   <button
                     onClick={() => setPaymentMethod('ONLINE')}
@@ -980,10 +1019,12 @@ export const CustomerPortal: React.FC = () => {
                     <span>Subtotal:</span>
                     <span>Rs. {subtotal.toLocaleString()}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Digital Sales Tax (5%):</span>
-                    <span>Rs. {tax.toLocaleString()}</span>
-                  </div>
+                  {settings.isTaxActive && tax > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Digital Sales Tax ({taxCalc.taxRate}%):</span>
+                      <span>Rs. {tax.toLocaleString()}</span>
+                    </div>
+                  )}
                   {deliveryFee > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Delivery (Gulberg Greens):</span>
@@ -1078,6 +1119,183 @@ export const CustomerPortal: React.FC = () => {
                 }}
               >
                 Close Tracker
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          DINING MODE SELECTION POPUP MODAL (DELIVERY, TAKEAWAY, DINE-IN)
+          ============================================================ */}
+      {showDiningModeModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9998,
+          background: 'rgba(26,18,11,0.75)', backdropFilter: 'blur(5px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+        }}>
+          <div style={{
+            background: 'var(--bg-cream-light)', borderRadius: '24px', maxWidth: '500px', width: '100%',
+            overflow: 'hidden', boxShadow: 'var(--shadow-xl)', border: '2px solid var(--border-warm)',
+            animation: 'fadeIn 0.25s ease-out'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)',
+              padding: '18px 22px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              borderBottom: '2px solid var(--haandi-saffron)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#FDFBF7', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/logo.png" alt="Haandi" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                </div>
+                <div>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: '900', color: '#ffffff' }}>
+                    Select Dining Mode
+                  </h3>
+                  <p style={{ fontSize: '11px', color: 'var(--haandi-gold)' }}>
+                    Haandi by Yumto · Gulberg Greens, Islamabad
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDiningModeModal(false)}
+                style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', padding: '4px' }}
+              >
+                <X style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
+
+            {/* 3 Interactive Mode Cards */}
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              
+              {/* Option 1: Delivery */}
+              <div
+                onClick={() => {
+                  setOrderType('DELIVERY');
+                  setIsReservingTable(false);
+                  setShowDiningModeModal(false);
+                  showToast('🛵 Delivery mode active (2.5 km Gulberg Greens)');
+                }}
+                style={{
+                  background: orderType === 'DELIVERY' && !isReservingTable ? '#FDF8F0' : '#ffffff',
+                  border: `2px solid ${orderType === 'DELIVERY' && !isReservingTable ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
+                  borderRadius: '16px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px',
+                  transition: 'all 0.2s', boxShadow: orderType === 'DELIVERY' && !isReservingTable ? '0 4px 14px rgba(139,30,30,0.15)' : 'none'
+                }}
+              >
+                <div style={{
+                  width: '46px', height: '46px', borderRadius: '14px',
+                  background: 'var(--haandi-red-light)', color: 'var(--haandi-red)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px'
+                }}>
+                  🛵
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-dark)' }}>
+                      Doorstep Delivery
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: '800', background: 'var(--emerald-light)', color: 'var(--emerald)', padding: '2px 8px', borderRadius: '6px' }}>
+                      30-40 Mins
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Delivered hot in sealed clay pots within 2.5 km of Civic Center.
+                  </p>
+                </div>
+              </div>
+
+              {/* Option 2: Takeaway */}
+              <div
+                onClick={() => {
+                  setOrderType('PICK_UP');
+                  setIsReservingTable(false);
+                  setShowDiningModeModal(false);
+                  showToast('🛍️ Takeaway / Pickup mode active');
+                }}
+                style={{
+                  background: orderType === 'PICK_UP' && !isReservingTable ? '#FDF8F0' : '#ffffff',
+                  border: `2px solid ${orderType === 'PICK_UP' && !isReservingTable ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
+                  borderRadius: '16px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px',
+                  transition: 'all 0.2s', boxShadow: orderType === 'PICK_UP' && !isReservingTable ? '0 4px 14px rgba(139,30,30,0.15)' : 'none'
+                }}
+              >
+                <div style={{
+                  width: '46px', height: '46px', borderRadius: '14px',
+                  background: 'var(--haandi-saffron-light)', color: 'var(--haandi-saffron)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px'
+                }}>
+                  🛍️
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-dark)' }}>
+                      Takeaway / Self-Pickup
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: '800', background: 'var(--haandi-saffron-light)', color: 'var(--haandi-saffron)', padding: '2px 8px', borderRadius: '6px' }}>
+                      20-25 Mins
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Piping hot pickup from Civic Center, Executive Block.
+                  </p>
+                </div>
+              </div>
+
+              {/* Option 3: Dine-In & Table Reservation */}
+              <div
+                onClick={() => {
+                  setOrderType('DINE_IN');
+                  setIsReservingTable(true);
+                  setShowDiningModeModal(false);
+                  document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
+                  showToast('🪑 Dine-In selected · Pick your table on the floor plan');
+                }}
+                style={{
+                  background: isReservingTable ? '#FDF8F0' : '#ffffff',
+                  border: `2px solid ${isReservingTable ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
+                  borderRadius: '16px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px',
+                  transition: 'all 0.2s', boxShadow: isReservingTable ? '0 4px 14px rgba(139,30,30,0.15)' : 'none'
+                }}
+              >
+                <div style={{
+                  width: '46px', height: '46px', borderRadius: '14px',
+                  background: 'rgba(244,196,48,0.2)', color: '#D97706',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px'
+                }}>
+                  🪑
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-dark)' }}>
+                      Dine-In & VIP Majlis
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: '800', background: 'rgba(244,196,48,0.2)', color: '#D97706', padding: '2px 8px', borderRadius: '6px' }}>
+                      Floor Seating
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Reserve your table or authentic earthen Majlis in real time.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{ padding: '14px 20px', background: 'var(--bg-card)', borderTop: '1px solid var(--border-warm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                Active: <strong style={{ color: 'var(--haandi-red)' }}>{isReservingTable ? '🪑 Dine-In Table' : orderType === 'DELIVERY' ? '🛵 Delivery' : '🛍️ Takeaway'}</strong>
+              </span>
+              <button
+                onClick={() => setShowDiningModeModal(false)}
+                style={{
+                  background: 'var(--haandi-red)', color: '#ffffff', border: 'none', borderRadius: '8px',
+                  padding: '8px 18px', fontSize: '12px', fontWeight: '800', cursor: 'pointer'
+                }}
+              >
+                Done
               </button>
             </div>
           </div>
