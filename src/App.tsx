@@ -161,6 +161,55 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </div>
+
+        {/* ================================================================
+            PORTAL SWITCHER STRIP (Desktop & Mobile Touch Friendly)
+            ================================================================ */}
+        <div style={{
+          background: '#281D14',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          overflowX: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '6px 16px',
+          gap: '8px',
+          scrollbarWidth: 'none'
+        }}>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: '800', whiteSpace: 'nowrap', marginRight: '4px' }}>
+            Portals:
+          </div>
+          {[
+            { path: '/', label: 'Customer App', icon: '🍲' },
+            { path: '/manager', label: 'Manager Tablet', icon: '📋' },
+            { path: '/pos', label: 'POS Terminal', icon: '🏦' },
+            { path: '/kitchen', label: 'Kitchen KDS', icon: '👨‍🍳' },
+            { path: '/rider', label: 'Rider App', icon: '🛵' },
+            { path: '/admin', label: 'Owner HQ', icon: '👑' }
+          ].map(p => (
+            <Link
+              key={p.path}
+              to={p.path}
+              style={{
+                textDecoration: 'none',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: '800',
+                color: '#ffffff',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s'
+              }}
+            >
+              <span>{p.icon}</span>
+              <span>{p.label}</span>
+            </Link>
+          ))}
+        </div>
       </div>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />

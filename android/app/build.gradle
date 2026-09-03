@@ -22,6 +22,51 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    flavorDimensions "default"
+    productFlavors {
+        superapp {
+            dimension "default"
+            applicationId "com.haandi.yumto"
+            resValue "string", "app_name", "Haandi SuperApp"
+            resValue "string", "title_activity_main", "Haandi SuperApp"
+        }
+        customer {
+            dimension "default"
+            applicationId "com.haandi.yumto.customer"
+            resValue "string", "app_name", "Haandi Customer"
+            resValue "string", "title_activity_main", "Haandi Customer"
+        }
+        manager {
+            dimension "default"
+            applicationId "com.haandi.yumto.manager"
+            resValue "string", "app_name", "Haandi Manager"
+            resValue "string", "title_activity_main", "Haandi Manager"
+        }
+        pos {
+            dimension "default"
+            applicationId "com.haandi.yumto.pos"
+            resValue "string", "app_name", "Haandi POS"
+            resValue "string", "title_activity_main", "Haandi POS"
+        }
+        kitchen {
+            dimension "default"
+            applicationId "com.haandi.yumto.kitchen"
+            resValue "string", "app_name", "Haandi Kitchen KDS"
+            resValue "string", "title_activity_main", "Haandi Kitchen KDS"
+        }
+        rider {
+            dimension "default"
+            applicationId "com.haandi.yumto.rider"
+            resValue "string", "app_name", "Haandi Rider"
+            resValue "string", "title_activity_main", "Haandi Rider"
+        }
+        owner {
+            dimension "default"
+            applicationId "com.haandi.yumto.owner"
+            resValue "string", "app_name", "Haandi Owner HQ"
+            resValue "string", "title_activity_main", "Haandi Owner HQ"
+        }
+    }
 }
 
 repositories {
