@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../store/mockDb';
-import type { OrderItem, MenuItem, CashierShift, HeldOrder } from '../types';
+import type { Order, OrderItem, MenuItem, CashierShift, HeldOrder, Table } from '../types';
 import {
   ShoppingCart, Search, Minus, Plus, Trash2,
   Clock, ReceiptText, ChevronDown,
@@ -497,61 +497,158 @@ const VariationPicker: React.FC<VariationPickerProps> = ({ item, onSelect, onClo
 );
 
 // ─── Held Orders Panel ───────────────────────────────────────────────────────
+// ─── Held Orders & Active Table Tabs Panel ──────────────────────────────────
 interface HeldPanelProps {
   heldOrders: HeldOrder[];
-  onRecall: (order: HeldOrder) => void;
-  onDelete: (id: string) => void;
+  tableOrders: Order[];
+  tables: Table[];
+  onRecallHeld: (order: HeldOrder) => void;
+  onRecallTableOrder: (order: Order) => void;
+  onDeleteHeld: (id: string) => void;
   onClose: () => void;
 }
-const HeldPanel: React.FC<HeldPanelProps> = ({ heldOrders, onRecall, onDelete, onClose }) => (
-  <div style={{ position: 'fixed', inset: 0, zIndex: 9997, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-    <div style={{ background: '#fff', borderRadius: '16px', maxWidth: '440px', width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-      <div style={{ background: '#1A120B', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: '#E85D04', fontWeight: '800', fontSize: '14px' }}>
-          ⏸️ Parked / Held Tickets ({heldOrders.length})
-        </span>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}><X /></button>
-      </div>
-      <div style={{ padding: '16px', maxHeight: '450px', overflowY: 'auto' }}>
-        {heldOrders.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '30px 0', color: '#9ca3af', fontSize: '13px' }}>
-            No parked tickets right now
+const HeldPanel: React.FC<HeldPanelProps> = ({ heldOrders, tableOrders, tables, onRecallHeld, onRecallTableOrder, onDeleteHeld, onClose }) => {
+  const [tabType, setTabType] = useState<'TABLES' | 'COUNTER'>('TABLES');
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9997, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div style={{ background: '#FDFBF7', borderRadius: '18px', maxWidth: '480px', width: '100%', overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.4)', border: '1.5px solid #EADBCC' }}>
+        <div style={{ background: '#1A120B', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #E85D04' }}>
+          <div>
+            <div style={{ color: '#E85D04', fontWeight: '800', fontSize: '14px' }}>
+              ⏸️ Parked Tickets & Table Tabs
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>
+              Recall running table tabs or held tickets for instant 80mm printing & payment
+            </div>
           </div>
-        ) : (
-          heldOrders.map(h => {
-            const hSubtotal = h.items.reduce((acc, i) => acc + i.price * i.quantity, 0);
-            return (
-              <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '10px', marginBottom: '8px', background: '#f9fafb' }}>
-                <div>
-                  <div style={{ fontWeight: '800', fontSize: '13px', color: '#111827' }}>
-                    {h.label || `Ticket #${h.id.slice(-4)}`}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#6b7280' }}>
-                    {h.items.length} items · {fmtMoney(hSubtotal)} · {fmtTime(h.heldAt)}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button
-                    onClick={() => onRecall(h)}
-                    style={{ background: '#8B1E1E', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontWeight: '700', fontSize: '11px', cursor: 'pointer' }}
-                  >
-                    Recall
-                  </button>
-                  <button
-                    onClick={() => onDelete(h.id)}
-                    style={{ background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer' }}
-                  >
-                    <Trash2 style={{ width: '12px', height: '12px' }} />
-                  </button>
-                </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}><X /></button>
+        </div>
+
+        {/* Tab switcher */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: '#F5EFE6', borderBottom: '1px solid #EADBCC' }}>
+          <button
+            onClick={() => setTabType('TABLES')}
+            style={{
+              padding: '10px', fontSize: '12px', fontWeight: '800', border: 'none', cursor: 'pointer',
+              background: tabType === 'TABLES' ? '#8B1E1E' : 'transparent',
+              color: tabType === 'TABLES' ? '#ffffff' : '#6b7280'
+            }}
+          >
+            🪑 Running Table Tabs ({tableOrders.length})
+          </button>
+          <button
+            onClick={() => setTabType('COUNTER')}
+            style={{
+              padding: '10px', fontSize: '12px', fontWeight: '800', border: 'none', cursor: 'pointer',
+              background: tabType === 'COUNTER' ? '#8B1E1E' : 'transparent',
+              color: tabType === 'COUNTER' ? '#ffffff' : '#6b7280'
+            }}
+          >
+            ⏸️ Counter Held ({heldOrders.length})
+          </button>
+        </div>
+
+        <div style={{ padding: '16px', maxHeight: '420px', overflowY: 'auto' }}>
+          {tabType === 'TABLES' ? (
+            tableOrders.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '30px 0', color: '#9ca3af', fontSize: '13px' }}>
+                No active table orders right now
               </div>
-            );
-          })
-        )}
+            ) : (
+              tableOrders.map(tOrder => {
+                const tableObj = tables.find(t => t.id === tOrder.tableId);
+                const tableLabel = tableObj ? `Table ${tableObj.tableNumber}` : (tOrder.tableId || 'Table');
+                const tSubtotal = tOrder.items.reduce((acc, i) => acc + i.price * i.quantity, 0);
+
+                return (
+                  <div
+                    key={tOrder.id}
+                    style={{
+                      background: tOrder.isBillRequested ? '#FEFCE8' : '#ffffff',
+                      border: `1.5px solid ${tOrder.isBillRequested ? '#F59E0B' : '#EADBCC'}`,
+                      borderRadius: '12px', padding: '12px', marginBottom: '10px',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontWeight: '900', fontSize: '14px', color: '#1A120B' }}>
+                          {tableLabel}
+                        </span>
+                        {tOrder.isBillRequested && (
+                          <span style={{ background: '#F59E0B', color: '#1A120B', fontSize: '9px', fontWeight: '900', padding: '2px 6px', borderRadius: '4px' }}>
+                            BILL REQUESTED
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#8B1E1E', fontWeight: '700', marginTop: '2px' }}>
+                        👤 Parked / Taken by: {tOrder.waiterName || tOrder.userName || 'Manager Bilal'}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
+                        {tOrder.items.length} items · Subtotal: {fmtMoney(tSubtotal)}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => onRecallTableOrder(tOrder)}
+                      style={{
+                        background: '#8B1E1E', color: '#ffffff', border: 'none', borderRadius: '8px',
+                        padding: '8px 14px', fontWeight: '800', fontSize: '12px', cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(139,30,30,0.3)'
+                      }}
+                    >
+                      Recall & Print Bill
+                    </button>
+                  </div>
+                );
+              })
+            )
+          ) : (
+            heldOrders.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '30px 0', color: '#9ca3af', fontSize: '13px' }}>
+                No counter held tickets
+              </div>
+            ) : (
+              heldOrders.map(h => {
+                const hSubtotal = h.items.reduce((acc, i) => acc + i.price * i.quantity, 0);
+                return (
+                  <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '10px', marginBottom: '8px', background: '#ffffff' }}>
+                    <div>
+                      <div style={{ fontWeight: '800', fontSize: '13px', color: '#111827' }}>
+                        {h.label || `Ticket #${h.id.slice(-4)}`}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#8B1E1E', fontWeight: '700' }}>
+                        Parked by: {h.parkedBy || 'Cashier'}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                        {h.items.length} items · {fmtMoney(hSubtotal)} · {fmtTime(h.heldAt)}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        onClick={() => onRecallHeld(h)}
+                        style={{ background: '#8B1E1E', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontWeight: '700', fontSize: '11px', cursor: 'pointer' }}
+                      >
+                        Recall
+                      </button>
+                      <button
+                        onClick={() => onDeleteHeld(h.id)}
+                        style={{ background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer' }}
+                      >
+                        <Trash2 style={{ width: '12px', height: '12px' }} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Main CashierPortal Component ───────────────────────────────────────────
 export const CashierPortal: React.FC = () => {
@@ -702,6 +799,14 @@ export const CashierPortal: React.FC = () => {
     showToast('Ticket parked successfully', 'success');
   };
 
+  const allTables = dbState.getTables(selectedBranchId);
+  const activeTableOrders = dbState.getOrders(selectedBranchId).filter(o =>
+    o.orderType === 'DINE_IN' &&
+    o.tableId &&
+    o.status !== 'COMPLETED' &&
+    o.status !== 'CANCELLED'
+  );
+
   const handleRecall = (held: HeldOrder) => {
     setCart(held.items);
     setOrderType(held.orderType as any);
@@ -709,6 +814,15 @@ export const CashierPortal: React.FC = () => {
     db.deleteHeldOrder(held.id);
     setShowHeldPanel(false);
     showToast('Ticket recalled into cart', 'info');
+  };
+
+  const handleRecallTableOrder = (tableOrder: Order) => {
+    setCart([...tableOrder.items]);
+    setOrderType('DINE_IN');
+    if (tableOrder.tableId) setSelectedTableId(tableOrder.tableId);
+    setShowHeldPanel(false);
+    const tblObj = allTables.find(t => t.id === tableOrder.tableId);
+    showToast(`Recalled Table ${tblObj?.tableNumber || tableOrder.tableId} (${tableOrder.items.length} items) for bill settlement`);
   };
 
   // ── Complete & Print Receipt
@@ -810,8 +924,11 @@ export const CashierPortal: React.FC = () => {
       {showHeldPanel && (
         <HeldPanel
           heldOrders={heldOrders}
-          onRecall={handleRecall}
-          onDelete={(id) => { db.deleteHeldOrder(id); showToast('Ticket deleted', 'info'); }}
+          tableOrders={activeTableOrders}
+          tables={allTables}
+          onRecallHeld={handleRecall}
+          onRecallTableOrder={handleRecallTableOrder}
+          onDeleteHeld={(id) => { db.deleteHeldOrder(id); showToast('Ticket deleted', 'info'); }}
           onClose={() => setShowHeldPanel(false)}
         />
       )}

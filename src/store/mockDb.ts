@@ -1,6 +1,6 @@
 import { HAANDI_MENU } from './menuData';
 import { useState, useEffect } from 'react';
-import type { Branch, Floor, Table, MenuItem, Reservation, Order, UserProfile, OrderStatus, TableStatus, CashierShift, HeldOrder } from '../types';
+import type { Branch, Floor, Table, MenuItem, Reservation, Order, OrderItem, UserProfile, OrderStatus, TableStatus, CashierShift, HeldOrder, SystemSettings } from '../types';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -115,6 +115,15 @@ const INITIAL_ORDERS: Order[] = [
   }
 ];
 
+const DEFAULT_SETTINGS: SystemSettings = {
+  isTaxActive: true,
+  salesTaxCardPercent: 5,
+  salesTaxCashPercent: 16,
+  deliveryRadiusKm: 2.5,
+  singleBranchId: 'br-isb',
+  advancePrepaymentOnly: true,
+};
+
 class MockDatabase {
   private listeners: (() => void)[] = [];
 
@@ -129,6 +138,9 @@ class MockDatabase {
     localStorage.setItem('yumto_floors', JSON.stringify(INITIAL_FLOORS));
     localStorage.setItem('yumto_tables', JSON.stringify(INITIAL_TABLES));
     localStorage.setItem('yumto_menu', JSON.stringify(INITIAL_MENU));
+    if (!localStorage.getItem('yumto_settings')) {
+      localStorage.setItem('yumto_settings', JSON.stringify(DEFAULT_SETTINGS));
+    }
     if (!localStorage.getItem('yumto_reservations')) {
       localStorage.setItem('yumto_reservations', JSON.stringify(INITIAL_RESERVATIONS));
     }
@@ -156,13 +168,36 @@ class MockDatabase {
     this.listeners.forEach(l => l());
   }
 
-  // FBR Sales Tax Rule: 5% for Card/Digital, 16% for Cash
+  // System Settings & Global Tax Toggle
+  getSettings(): SystemSettings {
+    const raw = localStorage.getItem('yumto_settings');
+    if (!raw) return DEFAULT_SETTINGS;
+    try {
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
+  }
+
+  updateSettings(partial: Partial<SystemSettings>): SystemSettings {
+    const current = this.getSettings();
+    const updated = { ...current, ...partial };
+    localStorage.setItem('yumto_settings', JSON.stringify(updated));
+    this.notify();
+    return updated;
+  }
+
+  // FBR Sales Tax Rule: Controlled by isTaxActive toggle
   calculateSalesTax(subtotal: number, paymentMethod: string): { taxRate: number; taxAmount: number } {
+    const settings = this.getSettings();
+    if (!settings.isTaxActive) {
+      return { taxRate: 0, taxAmount: 0 };
+    }
     const isDigital = paymentMethod === 'CARD' || paymentMethod === 'ONLINE';
-    const taxRate = isDigital ? 0.05 : 0.16;
+    const rate = isDigital ? (settings.salesTaxCardPercent / 100) : (settings.salesTaxCashPercent / 100);
     return {
-      taxRate: isDigital ? 5 : 16,
-      taxAmount: Math.round(subtotal * taxRate)
+      taxRate: isDigital ? settings.salesTaxCardPercent : settings.salesTaxCashPercent,
+      taxAmount: Math.round(subtotal * rate)
     };
   }
 
@@ -480,6 +515,117 @@ class MockDatabase {
       }
       localStorage.setItem('yumto_shifts', JSON.stringify(shifts));
     }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Dine-In Table Tabs & Live Manager/Frontdesk Order Taking
+  // ─────────────────────────────────────────────────────────────────────────
+
+  getOrderByTableId(tableId: string): Order | undefined {
+    const orders = this.getOrders();
+    return orders.find(o => o.tableId === tableId && o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
+  }
+
+  addOrUpdateTableOrder(params: {
+    tableId: string;
+    branchId?: string;
+    items: OrderItem[];
+    waiterOrManagerName: string;
+    customerName?: string;
+    customerPhone?: string;
+    discountPercent?: number;
+    discountAmount?: number;
+  }): Order {
+    const branchId = params.branchId || 'br-isb';
+    const subtotal = params.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const discPct = params.discountPercent || 0;
+    const discAmt = params.discountAmount || Math.round((subtotal * discPct) / 100);
+    const discounted = Math.max(0, subtotal - discAmt);
+    const taxCalc = this.calculateSalesTax(discounted, 'CASH');
+    const total = discounted + taxCalc.taxAmount;
+
+    const existing = this.getOrderByTableId(params.tableId);
+    let order: Order;
+
+    if (existing) {
+      existing.items = params.items;
+      existing.subtotal = subtotal;
+      existing.discountPercent = discPct;
+      existing.discountAmount = discAmt;
+      existing.tax = taxCalc.taxAmount;
+      existing.total = total;
+      if (params.customerName) existing.userName = params.customerName;
+      if (params.customerPhone) existing.userPhone = params.customerPhone;
+      existing.waiterName = params.waiterOrManagerName;
+      existing.status = existing.status === 'READY' ? 'READY' : 'PREPARING';
+
+      const orders = this.getOrders();
+      const idx = orders.findIndex(o => o.id === existing.id);
+      if (idx !== -1) orders[idx] = existing;
+      localStorage.setItem('yumto_orders', JSON.stringify(orders));
+      order = existing;
+    } else {
+      order = {
+        id: 'ord-tbl-' + generateId(),
+        branchId,
+        userId: 'u-table',
+        userName: params.customerName || 'Table Guest',
+        userPhone: params.customerPhone || '0330-0500600',
+        orderType: 'DINE_IN',
+        tableId: params.tableId,
+        status: 'PREPARING',
+        paymentStatus: 'PENDING',
+        paymentMethod: 'CASH',
+        items: params.items,
+        subtotal,
+        discountPercent: discPct,
+        discountAmount: discAmt,
+        tax: taxCalc.taxAmount,
+        deliveryFee: 0,
+        premiumReservationFee: 0,
+        total,
+        waiterName: params.waiterOrManagerName,
+        createdAt: new Date().toISOString()
+      };
+      const orders = this.getOrders();
+      orders.unshift(order);
+      localStorage.setItem('yumto_orders', JSON.stringify(orders));
+    }
+
+    // Mark table as OCCUPIED
+    this.updateTableStatus(params.tableId, 'OCCUPIED');
+    this.notify();
+    return order;
+  }
+
+  transferTable(fromTableId: string, toTableId: string): boolean {
+    const order = this.getOrderByTableId(fromTableId);
+    if (!order) return false;
+
+    // Update order tableId
+    order.tableId = toTableId;
+    const orders = this.getOrders();
+    const idx = orders.findIndex(o => o.id === order.id);
+    if (idx !== -1) orders[idx] = order;
+    localStorage.setItem('yumto_orders', JSON.stringify(orders));
+
+    // Release old table, occupy new table
+    this.updateTableStatus(fromTableId, 'AVAILABLE');
+    this.updateTableStatus(toTableId, 'OCCUPIED');
+    this.notify();
+    return true;
+  }
+
+  markTableBillRequested(tableId: string): Order | null {
+    const order = this.getOrderByTableId(tableId);
+    if (!order) return null;
+    order.isBillRequested = true;
+    const orders = this.getOrders();
+    const idx = orders.findIndex(o => o.id === order.id);
+    if (idx !== -1) orders[idx] = order;
+    localStorage.setItem('yumto_orders', JSON.stringify(orders));
+    this.notify();
+    return order;
   }
 
   // ─────────────────────────────────────────────────────────────────────────

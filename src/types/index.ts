@@ -113,6 +113,8 @@ export interface Order {
   deliveryAddress?: string;
   riderId?: string; // assigned delivery driver ID
   cashierId?: string; // cashier who processed the order at POS
+  waiterName?: string; // server / manager who took the table order
+  isBillRequested?: boolean; // flag for cashier POS terminal
   splitPayment?: SplitPayment; // multi-tender split details
   createdAt: string;
 }
@@ -129,7 +131,15 @@ export interface UserProfile {
 // POS-Specific Types
 // ──────────────────────────────────────────────────────────────────────────────
 
-/** Multi-tender split payment details for POS transactions */
+export interface SystemSettings {
+  isTaxActive: boolean; // Master toggle for entire Haandi system
+  salesTaxCardPercent: number; // default 5%
+  salesTaxCashPercent: number; // default 16%
+  deliveryRadiusKm: number; // default 2.5 km
+  singleBranchId: string; // 'br-isb'
+  advancePrepaymentOnly: boolean;
+}
+
 export interface SplitPayment {
   cashAmount: number;
   cardAmount: number;
@@ -141,6 +151,10 @@ export interface HeldOrder {
   label: string; // e.g. "Table 4 - Ahmed" or "Takeaway #3"
   branchId: string;
   cashierId: string;
+  parkedBy?: string; // e.g. "Manager Bilal", "Frontdesk Staff", "Cashier Nadia"
+  tableNumber?: string;
+  customerName?: string;
+  customerPhone?: string;
   orderType: OrderType;
   tableId?: string;
   items: OrderItem[];

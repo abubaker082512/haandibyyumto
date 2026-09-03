@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../store/mockDb';
 import type { MenuItem } from '../types';
 import { 
-  Plus, Edit2, Trash2, Shield, DollarSign, 
-  ShoppingBag, Calendar, Layers, Check, X
+  Plus, Edit2, Trash2, DollarSign, 
+  ShoppingBag, Calendar, Layers, X,
+  Percent, Sparkles, ToggleLeft, ToggleRight
 } from 'lucide-react';
 
 export const OwnerPortal: React.FC = () => {
@@ -17,12 +18,12 @@ export const OwnerPortal: React.FC = () => {
   }, []);
 
   const menu = dbState.getMenu();
-  const branches = dbState.getBranches();
   const orders = dbState.getOrders();
   const reservations = dbState.getReservations();
+  const settings = dbState.getSettings();
 
   // Dashboard Tabs
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'MENU' | 'BRANCHES'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'TAX_CONTROL' | 'MENU' | 'BRANCHES'>('OVERVIEW');
 
   // Dialog / Form States
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -31,20 +32,21 @@ export const OwnerPortal: React.FC = () => {
   // Form Fields (Menu Item)
   const [name, setName] = useState('');
   const [price, setPrice] = useState(0);
-  const [category, setCategory] = useState('Mandi Platters');
+  const [category, setCategory] = useState('Handi Special');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [branchesAvailable, setBranchesAvailable] = useState<string[]>([]);
   const [isAvailable, setIsAvailable] = useState(true);
 
-  // Branch Form States
-  const [isBranchFormOpen, setIsBranchFormOpen] = useState(false);
-  const [branchName, setBranchName] = useState('');
-  const [branchCity, setBranchCity] = useState('Islamabad');
-  const [branchAddress, setBranchAddress] = useState('');
-  const [branchPhone, setBranchPhone] = useState('');
-  const [branchFee, setBranchFee] = useState(500);
-  const [branchSurcharge, setBranchSurcharge] = useState(true);
+  // Tax Settings Message
+  const [taxMessage, setTaxMessage] = useState<string | null>(null);
+
+  const toggleGlobalTax = () => {
+    const newTaxState = !settings.isTaxActive;
+    db.updateSettings({ isTaxActive: newTaxState });
+    setTaxMessage(newTaxState ? '✓ Sales Tax ACTIVATED (5% Card / 16% Cash)' : '⚠ Sales Tax DEACTIVATED (0% System-Wide Tax Exemption)');
+    setTimeout(() => setTaxMessage(null), 3500);
+  };
 
   // Stats calculation
   const completedOrders = orders.filter(o => o.status === 'COMPLETED');
@@ -71,10 +73,10 @@ export const OwnerPortal: React.FC = () => {
     setEditingItem(null);
     setName('');
     setPrice(0);
-    setCategory('Mandi Platters');
+    setCategory('Handi Special');
     setDescription('');
-    setImageUrl('https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=400&q=80');
-    setBranchesAvailable(branches.map(b => b.id)); // Default all branches
+    setImageUrl('https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=400&q=80');
+    setBranchesAvailable(['br-isb']);
     setIsAvailable(true);
     setIsFormOpen(true);
   };
@@ -85,14 +87,6 @@ export const OwnerPortal: React.FC = () => {
     }
   };
 
-  const handleBranchToggle = (branchId: string) => {
-    setBranchesAvailable(prev => 
-      prev.includes(branchId) 
-        ? prev.filter(id => id !== branchId) 
-        : [...prev, branchId]
-    );
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || price <= 0 || !category) {
@@ -100,610 +94,466 @@ export const OwnerPortal: React.FC = () => {
       return;
     }
 
-    const itemData = {
-      name,
-      price,
-      description,
-      category,
-      imageUrl,
-      branchesAvailable,
-      isAvailable
-    };
-
     if (editingItem) {
-      dbState.updateMenuItem({ ...itemData, id: editingItem.id });
+      dbState.updateMenuItem({
+        id: editingItem.id,
+        name,
+        price,
+        category,
+        description,
+        imageUrl,
+        branchesAvailable,
+        isAvailable
+      });
     } else {
-      dbState.addMenuItem(itemData);
+      dbState.addMenuItem({
+        name,
+        price,
+        category,
+        description,
+        imageUrl,
+        branchesAvailable,
+        isAvailable
+      });
     }
 
     setIsFormOpen(false);
-    setEditingItem(null);
-  };
-
-  const toggleItemAvailability = (item: MenuItem) => {
-    dbState.updateMenuItem({
-      ...item,
-      isAvailable: !item.isAvailable
-    });
-  };
-
-  const handleBranchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!branchName.trim() || !branchAddress.trim() || !branchPhone.trim()) {
-      alert("Please fill in all fields.");
-      return;
-    }
-    dbState.addBranch({
-      name: branchName,
-      city: branchCity,
-      address: branchAddress,
-      phone: branchPhone,
-      premiumBookingFee: branchFee,
-      activeSurchargeToggle: branchSurcharge
-    });
-    setBranchName('');
-    setBranchAddress('');
-    setBranchPhone('');
-    setIsBranchFormOpen(false);
-  };
-
-  const handleDeleteBranch = (id: string) => {
-    if (branches.length <= 1) {
-      alert("At least one branch must remain in the system.");
-      return;
-    }
-    if (confirm("Are you sure you want to delete this branch? All table layouts and configurations for it will be removed.")) {
-      dbState.deleteBranch(id);
-    }
   };
 
   return (
-    <div className="animate-fade container py-6 flex flex-col items-center justify-center">
-      
-      {/* Laptop Mockup Wrapper */}
-      <div className="device-laptop-frame bg-bg-secondary p-4 relative text-left">
-        {/* Header toolbar */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border-color/40 bg-bg-tertiary mb-3 rounded">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500 opacity-80" />
-          <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 opacity-80" />
-          <span className="w-2.5 h-2.5 rounded-full bg-green-500 opacity-80" />
-          <span className="text-[10px] text-text-secondary ml-3 font-semibold">https://admin.yumtomandi.com/dashboard</span>
-        </div>
-
-        {/* Header section */}
-        <div className="gold-card flex flex-col md:flex-row md:items-center justify-between gap-3 p-3">
-        <div className="space-y-0.5">
-          <h2 className="text-base font-bold flex items-center gap-1.5" style={{ fontFamily: 'Playfair Display, serif' }}>
-            <Shield className="text-gold w-4.5 h-4.5" /> Executive Owner Dashboard
-          </h2>
-          <p className="text-[11px] text-text-secondary">Chain-wide branch locations, analytics and menu catalog administration</p>
-        </div>
+    <div style={{ background: 'var(--bg-cream)', minHeight: '90vh', padding: '24px 16px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
         
-        {/* Dynamic CTA button depending on tab */}
-        <div className="flex gap-2 shrink-0">
-          {activeTab === 'MENU' && (
-            <button 
-              onClick={handleAddClick} 
-              className="gold-btn py-1.5 px-3 text-[11px] font-bold flex items-center gap-1"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add Menu Item
-            </button>
-          )}
-          {activeTab === 'BRANCHES' && (
-            <button 
-              onClick={() => setIsBranchFormOpen(true)} 
-              className="gold-btn py-1.5 px-3 text-[11px] font-bold flex items-center gap-1"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add New Branch
-            </button>
-          )}
-        </div>
-      </div>
+        {/* Top Header Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #1A120B 0%, #2A1F17 100%)',
+          border: '1.5px solid var(--border-warm)', borderRadius: '20px', padding: '20px 24px',
+          color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexWrap: 'wrap', gap: '16px', marginBottom: '24px', boxShadow: 'var(--shadow-md)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '14px', background: '#FDFBF7',
+              padding: '3px', border: '2px solid var(--haandi-saffron)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center'
+            }}>
+              <img src="/logo.png" alt="Haandi" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: '900', color: '#ffffff' }}>
+                  Haandi Executive HQ
+                </h1>
+                <span style={{ background: 'rgba(244,196,48,0.2)', color: '#F4C430', border: '1px solid #F4C430', padding: '2px 8px', borderRadius: '99px', fontSize: '10px', fontWeight: '800' }}>
+                  OWNER
+                </span>
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginTop: '2px' }}>
+                Chain Control, Global Tax Rules & Menu Management · Islamabad
+              </p>
+            </div>
+          </div>
 
-      {/* Dashboard Sub-navigation Tabs */}
-      <div style={{ display: 'flex', gap: '4px', borderBottom: '2px solid #e5e7eb', paddingBottom: '2px' }}>
-        {[
-          { id: 'OVERVIEW', label: '📈 Chain Overview' },
-          { id: 'MENU', label: '🍽️ Menu Administration' },
-          { id: 'BRANCHES', label: '🏢 Branch Locations' }
-        ].map(tab => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+          {/* Master Tax Quick Pill */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              onClick={toggleGlobalTax}
               style={{
-                padding: '8px 16px',
-                borderRadius: '8px 8px 0 0',
-                background: isActive ? '#F4C430' : 'transparent',
-                color: isActive ? '#0d0d0d' : '#4b5563',
-                border: 'none',
-                fontWeight: isActive ? '700' : '500',
-                fontSize: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                borderBottom: isActive ? 'none' : '2px solid transparent'
+                display: 'flex', alignItems: 'center', gap: '8px',
+                background: settings.isTaxActive ? 'rgba(22,163,74,0.18)' : 'rgba(220,38,38,0.18)',
+                border: `1.5px solid ${settings.isTaxActive ? '#16A34A' : '#DC2626'}`,
+                borderRadius: '12px', padding: '8px 14px', cursor: 'pointer',
+                transition: 'all 0.2s'
               }}
+              title="Click to toggle Sales Tax system-wide"
             >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ==========================================
-          TAB 1: CHAIN OVERVIEW
-          ========================================== */}
-      {activeTab === 'OVERVIEW' && (
-        <div className="space-y-4 animate-fade">
-          {/* Analytics Card Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            
-            <div className="gold-card p-3 flex items-center gap-3">
-              <div className="p-2 rounded bg-gold-alpha text-gold"><DollarSign className="w-5 h-5" /></div>
+              <Percent style={{ width: '16px', height: '16px', color: settings.isTaxActive ? '#4ADE80' : '#F87171' }} />
               <div>
-                <div className="text-[9px] text-text-secondary uppercase tracking-wider font-bold">Total Revenue</div>
-                <div className="text-sm font-bold text-text-primary">Rs. {totalRevenue.toLocaleString()}</div>
-              </div>
-            </div>
-
-            <div className="gold-card p-3 flex items-center gap-3">
-              <div className="p-2 rounded bg-emerald-alpha text-emerald"><ShoppingBag className="w-5 h-5" /></div>
-              <div>
-                <div className="text-[9px] text-text-secondary uppercase tracking-wider font-bold">Sales Volume</div>
-                <div className="text-sm font-bold text-text-primary">{orders.length} Orders</div>
-              </div>
-            </div>
-
-            <div className="gold-card p-3 flex items-center gap-3">
-              <div className="p-2 rounded bg-amber-alpha text-amber"><Calendar className="w-5 h-5" /></div>
-              <div>
-                <div className="text-[9px] text-text-secondary uppercase tracking-wider font-bold">Table Reservations</div>
-                <div className="text-sm font-bold text-text-primary">{reservations.length} Booked</div>
-              </div>
-            </div>
-
-            <div className="gold-card p-3 flex items-center gap-3">
-              <div className="p-2 rounded bg-zinc-800 text-white"><Layers className="w-5 h-5" /></div>
-              <div>
-                <div className="text-[9px] text-text-secondary uppercase tracking-wider font-bold">Outlet Branches</div>
-                <div className="text-sm font-bold text-text-primary">{branches.length} Outlets</div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Visual Analytics graphs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            {/* Branch Revenue Chart */}
-            <div className="gold-card space-y-3 p-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-text-secondary border-b border-color pb-1.5">Branch Sales Breakdown</h3>
-              <div className="space-y-3 pt-1">
-                {branches.map(br => {
-                  const rev = completedOrders.filter(o => o.branchId === br.id).reduce((acc, o) => acc + o.total, 0);
-                  const pct = totalRevenue > 0 ? (rev / totalRevenue) * 100 : 0;
-                  return (
-                    <div key={br.id} className="space-y-1">
-                      <div className="flex justify-between text-[11px] text-text-primary font-semibold">
-                        <span>{br.name.split(' - ')[1] || br.name}</span>
-                        <span className="text-gold">Rs. {rev.toLocaleString()} ({pct.toFixed(0)}%)</span>
-                      </div>
-                      <div className="w-full h-2 bg-bg-tertiary rounded-full overflow-hidden border border-border-color">
-                        <div 
-                          className="h-full bg-gold transition-all duration-500" 
-                          style={{ width: `${pct || 1}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Order Channel Breakdown */}
-            <div className="gold-card space-y-3 p-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-text-secondary border-b border-color pb-1.5">Order Channels</h3>
-              <div className="grid grid-cols-3 gap-3 pt-2 text-center">
-                <div className="space-y-1">
-                  <div className="text-sm font-bold text-text-primary">{deliveryCount}</div>
-                  <div className="text-[10px] text-text-secondary uppercase">Delivery</div>
-                  <div className="w-full bg-emerald h-1 rounded-full mt-1.5" />
+                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: '800' }}>
+                  Global Tax
                 </div>
-                <div className="space-y-1">
-                  <div className="text-sm font-bold text-text-primary">{dineinCount}</div>
-                  <div className="text-[10px] text-text-secondary uppercase">Dine-In</div>
-                  <div className="w-full bg-gold h-1 rounded-full mt-1.5" />
-                </div>
-                <div className="space-y-1">
-                  <div className="text-sm font-bold text-text-primary">{pickupCount}</div>
-                  <div className="text-[10px] text-text-secondary uppercase">Pick-Up</div>
-                  <div className="w-full bg-amber h-1 rounded-full mt-1.5" />
+                <div style={{ fontSize: '12px', fontWeight: '900', color: settings.isTaxActive ? '#4ADE80' : '#F87171' }}>
+                  {settings.isTaxActive ? 'TAX ACTIVE (5%/16%)' : 'TAX DEACTIVATED (0%)'}
                 </div>
               </div>
             </div>
 
+            {/* Tab Navigation */}
+            <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.08)', padding: '4px', borderRadius: '12px' }}>
+              <button
+                onClick={() => setActiveTab('OVERVIEW')}
+                style={{
+                  padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '800', border: 'none', cursor: 'pointer',
+                  background: activeTab === 'OVERVIEW' ? 'var(--haandi-red)' : 'transparent',
+                  color: activeTab === 'OVERVIEW' ? '#ffffff' : 'rgba(255,255,255,0.7)'
+                }}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('TAX_CONTROL')}
+                style={{
+                  padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '800', border: 'none', cursor: 'pointer',
+                  background: activeTab === 'TAX_CONTROL' ? 'var(--haandi-red)' : 'transparent',
+                  color: activeTab === 'TAX_CONTROL' ? '#ffffff' : 'rgba(255,255,255,0.7)'
+                }}
+              >
+                Tax Policy
+              </button>
+              <button
+                onClick={() => setActiveTab('MENU')}
+                style={{
+                  padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '800', border: 'none', cursor: 'pointer',
+                  background: activeTab === 'MENU' ? 'var(--haandi-red)' : 'transparent',
+                  color: activeTab === 'MENU' ? '#ffffff' : 'rgba(255,255,255,0.7)'
+                }}
+              >
+                Menu ({menu.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('BRANCHES')}
+                style={{
+                  padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '800', border: 'none', cursor: 'pointer',
+                  background: activeTab === 'BRANCHES' ? 'var(--haandi-red)' : 'transparent',
+                  color: activeTab === 'BRANCHES' ? '#ffffff' : 'rgba(255,255,255,0.7)'
+                }}
+              >
+                Outlets
+              </button>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* ==========================================
-          TAB 2: MENU ADMINISTRATION
-          ========================================== */}
-      {activeTab === 'MENU' && (
-        <div className="space-y-6 animate-fade">
-          <h3 className="text-sm font-bold border-b border-color pb-1.5 uppercase tracking-wider text-text-secondary">Global Menu Administration</h3>
-          
-          {Array.from(new Set(menu.map(item => item.category))).map(cat => {
-            const catItems = menu.filter(item => item.category === cat);
-            return (
-              <div key={cat} className="space-y-3">
-                <h4 className="text-[11px] font-bold text-text-primary border-l-4 border-yellow pl-2 uppercase tracking-wider flex items-center justify-between">
-                  <span>{cat}</span>
-                  <span className="text-xs text-text-secondary font-normal lowercase">({catItems.length} {catItems.length === 1 ? 'item' : 'items'})</span>
-                </h4>
-                
-                <div className="owner-menu-grid">
-                  {catItems.map(item => (
-                    <div key={item.id} className="border border-border-color rounded-xl p-3 bg-white flex flex-col justify-between hover:shadow-md transition">
-                      <div className="flex gap-3">
-                        <img 
-                          src={item.imageUrl} 
-                          alt={item.name} 
-                          className="owner-menu-img border border-border-color bg-bg-tertiary"
-                          onError={e => { e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80'; }}
-                        />
-                        <div className="space-y-0.5 text-xs flex-1 min-w-0 font-medium">
-                          <div className="font-bold text-text-primary truncate" title={item.name}>{item.name}</div>
-                          <div className="text-gold font-bold">Rs. {item.price.toLocaleString()}</div>
-                          <p className="text-[10px] text-text-secondary line-clamp-1 leading-normal" title={item.description}>
-                            {item.description || 'No description provided.'}
-                          </p>
-                        </div>
-                      </div>
+        {/* Tax Notification Banner */}
+        {taxMessage && (
+          <div style={{
+            background: settings.isTaxActive ? '#F0FDF4' : '#FEF2F2',
+            border: `1.5px solid ${settings.isTaxActive ? '#86EFAC' : '#FCA5A5'}`,
+            color: settings.isTaxActive ? '#15803D' : '#DC2626',
+            padding: '12px 18px', borderRadius: '12px', fontWeight: '800', fontSize: '13px',
+            marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px',
+            animation: 'fadeIn 0.25s ease-out'
+          }}>
+            <Sparkles style={{ width: '16px', height: '16px' }} />
+            <span>{taxMessage}</span>
+          </div>
+        )}
 
-                      <div className="border-t border-color/40 pt-2 mt-2 flex items-center justify-between">
-                        <button 
-                          onClick={() => toggleItemAvailability(item)}
-                          className="text-xs"
-                        >
-                          {item.isAvailable ? (
-                            <span className="badge badge-emerald py-0.5 px-2 text-[9px]"><Check className="w-2.5 h-2.5 mr-0.5 inline" /> Active</span>
-                          ) : (
-                            <span className="badge badge-ruby py-0.5 px-2 text-[9px]"><X className="w-2.5 h-2.5 mr-0.5 inline" /> Paused</span>
-                          )}
-                        </button>
-
-                        <div className="flex gap-1.5">
-                          <button
-                            onClick={() => handleEditClick(item)}
-                            className="p-1 bg-bg-tertiary hover:bg-gold-alpha text-text-secondary hover:text-gold border border-border-color rounded transition-all"
-                            title="Edit Item"
-                          >
-                            <Edit2 className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(item.id)}
-                            className="p-1 bg-bg-tertiary hover:bg-ruby-alpha text-text-secondary hover:text-ruby border border-border-color rounded transition-all"
-                            title="Delete Item"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+        {/* TAB 1: OVERVIEW */}
+        {activeTab === 'OVERVIEW' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* KPI Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+              <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)', borderRadius: '16px', padding: '18px', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--haandi-saffron-light)', color: 'var(--haandi-saffron)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <DollarSign style={{ width: '20px', height: '20px' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Revenue</div>
+                    <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-dark)' }}>Rs. {totalRevenue.toLocaleString()}</div>
+                  </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
-      {/* ==========================================
-          TAB 3: BRANCH LOCATIONS
-          ========================================== */}
-      {activeTab === 'BRANCHES' && (
-        <div className="space-y-4 animate-fade">
-          <h3 className="text-sm font-bold border-b border-color pb-1.5 uppercase tracking-wider text-text-secondary">Outlet Network Locations</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {branches.map(br => (
-              <div key={br.id} className="gold-card flex flex-col justify-between p-3.5 space-y-3 border border-border-color bg-white hover:shadow-md transition">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start border-b border-color/40 pb-2">
+
+              <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)', borderRadius: '16px', padding: '18px', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--emerald-light)', color: 'var(--emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ShoppingBag style={{ width: '20px', height: '20px' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Orders Dispatched</div>
+                    <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-dark)' }}>{orders.length} Total</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)', borderRadius: '16px', padding: '18px', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244,196,48,0.2)', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Calendar style={{ width: '20px', height: '20px' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Table Bookings</div>
+                    <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-dark)' }}>{reservations.length} Active</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)', borderRadius: '16px', padding: '18px', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(139,30,30,0.1)', color: 'var(--haandi-red)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Layers style={{ width: '20px', height: '20px' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Active Branch</div>
+                    <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--text-dark)' }}>Gulberg Greens</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Breakdown Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+              {/* Order Channels */}
+              <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)', borderRadius: '18px', padding: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '14px' }}>
+                  Dining Channel Distribution
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                    <span>🛵 Delivery (Gulberg 2.5 km)</span>
+                    <strong style={{ color: 'var(--haandi-red)' }}>{deliveryCount} orders</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                    <span>🛍️ Takeaway / Pickup</span>
+                    <strong style={{ color: 'var(--haandi-saffron)' }}>{pickupCount} orders</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                    <span>🪑 Dine-In & Majlis</span>
+                    <strong style={{ color: 'var(--emerald)' }}>{dineinCount} orders</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tax & Compliance Summary */}
+              <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)', borderRadius: '18px', padding: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '14px' }}>
+                  FBR Sales Tax Status
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>System Status:</span>
+                    <strong style={{ color: settings.isTaxActive ? 'var(--emerald)' : '#DC2626' }}>
+                      {settings.isTaxActive ? '✓ Tax Active' : '⚠ Tax Deactivated (0%)'}
+                    </strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Digital / Card Rate:</span>
+                    <strong>{settings.isTaxActive ? `${settings.salesTaxCardPercent}%` : '0%'}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Cash POS Rate:</span>
+                    <strong>{settings.isTaxActive ? `${settings.salesTaxCashPercent}%` : '0%'}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: TAX CONTROL PANEL */}
+        {activeTab === 'TAX_CONTROL' && (
+          <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)', borderRadius: '20px', padding: '28px', maxWidth: '720px', margin: '0 auto', boxShadow: 'var(--shadow-md)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'var(--haandi-saffron-light)', color: 'var(--haandi-saffron)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Percent style={{ width: '24px', height: '24px' }} />
+              </div>
+              <div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '900', color: 'var(--text-dark)' }}>
+                  Haandi System-Wide Sales Tax Control
+                </h2>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  Activate or deactivate sales tax computation across all Web, Mobile, and POS Cashier Terminals.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-cream-light)', border: '1.5px solid var(--border-warm)', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-dark)' }}>
+                    Master Sales Tax Switch
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {settings.isTaxActive
+                      ? 'Tax is currently ENABLED. Card/Online orders charge 5% tax; Cash orders charge 16% tax.'
+                      : 'Tax is currently DISABLED. All orders across customer website and POS terminals will charge 0% tax.'}
+                  </div>
+                </div>
+
+                <button
+                  onClick={toggleGlobalTax}
+                  style={{
+                    background: settings.isTaxActive ? 'var(--emerald)' : '#9CA3AF',
+                    color: '#ffffff', border: 'none', borderRadius: '99px',
+                    padding: '10px 20px', fontWeight: '900', fontSize: '13px',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.2)', transition: 'all 0.2s'
+                  }}
+                >
+                  {settings.isTaxActive ? <ToggleRight style={{ width: '22px', height: '22px' }} /> : <ToggleLeft style={{ width: '22px', height: '22px' }} />}
+                  <span>{settings.isTaxActive ? 'ACTIVE (ON)' : 'DISABLED (OFF)'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Live Calculation Preview */}
+            <div style={{ background: '#ffffff', border: '1.5px solid var(--border-warm)', borderRadius: '14px', padding: '16px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '8px' }}>
+                Live Ticket Simulation (Rs. 1,000 Order):
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>
+                <div style={{ background: 'var(--bg-cream-light)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-warm)' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--text-muted)' }}>💳 Card / Online Payment:</div>
+                  <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--haandi-red)', marginTop: '4px' }}>
+                    Tax: Rs. {settings.isTaxActive ? '50 (5%)' : '0 (0%)'}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Total Payable: Rs. {settings.isTaxActive ? '1,050' : '1,000'}
+                  </div>
+                </div>
+                <div style={{ background: 'var(--bg-cream-light)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-warm)' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--text-muted)' }}>💵 Cash POS Payment:</div>
+                  <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--haandi-red)', marginTop: '4px' }}>
+                    Tax: Rs. {settings.isTaxActive ? '160 (16%)' : '0 (0%)'}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Total Payable: Rs. {settings.isTaxActive ? '1,160' : '1,000'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: MENU MANAGEMENT */}
+        {activeTab === 'MENU' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '800', color: 'var(--text-dark)' }}>
+                  Haandi Menu Catalog
+                </h2>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Manage authentic Handi, Karahi, and BBQ items</p>
+              </div>
+              <button
+                onClick={handleAddClick}
+                style={{
+                  background: 'var(--haandi-red)', color: '#ffffff', border: 'none', borderRadius: '10px',
+                  padding: '10px 18px', fontWeight: '800', fontSize: '13px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '6px'
+                }}
+              >
+                <Plus style={{ width: '16px', height: '16px' }} />
+                <span>Add Menu Item</span>
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+              {menu.map(item => (
+                <div key={item.id} style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)', borderRadius: '16px', padding: '14px', display: 'flex', gap: '12px' }}>
+                  <img src={item.imageUrl} alt={item.name} style={{ width: '80px', height: '80px', borderRadius: '10px', objectFit: 'cover', border: '1px solid var(--border-warm)' }} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
-                      <div className="font-bold text-sm text-text-primary" style={{ fontFamily: 'Playfair Display, serif' }}>{br.name}</div>
-                      <span className="text-[9px] font-bold tracking-wider uppercase bg-gold-alpha text-gold py-0.5 px-2 rounded-full border border-gold/10 mt-1 inline-block">
-                        {br.city}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteBranch(br.id)}
-                      className="p-1.5 bg-bg-tertiary hover:bg-ruby-alpha text-text-secondary hover:text-ruby border border-border-color rounded transition-all shrink-0"
-                      title="Delete Branch"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="text-[11px] text-text-secondary space-y-1">
-                    <div>📍 <strong>Address:</strong> {br.address}</div>
-                    <div>📞 <strong>Phone:</strong> {br.phone}</div>
-                  </div>
-
-                  <div className="border-t border-color/40 pt-2.5 mt-2 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] text-text-secondary">Surcharge Fee</span>
-                      <input 
-                        type="number"
-                        value={br.premiumBookingFee}
-                        onChange={(e) => dbState.updateBranchPremiumFee(br.id, Number(e.target.value))}
-                        className="bg-bg-tertiary border border-border-color rounded px-2 py-0.5 text-xs text-text-primary w-20 font-bold focus:border-gold focus:outline-none"
-                      />
+                      <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-dark)' }}>{item.name}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--haandi-saffron)', fontWeight: '700' }}>{item.category}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '900', color: 'var(--haandi-red)', marginTop: '2px' }}>
+                        Rs. {item.price.toLocaleString()}
+                      </div>
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] text-text-secondary">Surcharge Enabled</span>
-                      <label className="relative inline-flex items-center cursor-pointer select-none">
-                        <input 
-                          type="checkbox"
-                          checked={br.activeSurchargeToggle}
-                          onChange={(e) => dbState.updateBranchSurchargeToggle(br.id, e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-7 h-4 bg-bg-tertiary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-secondary after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-gold peer-checked:after:bg-black"></div>
-                      </label>
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                      <button
+                        onClick={() => handleEditClick(item)}
+                        style={{ padding: '4px 8px', borderRadius: '6px', background: 'var(--bg-cream-light)', border: '1px solid var(--border-warm)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                      >
+                        <Edit2 style={{ width: '12px', height: '12px', display: 'inline', marginRight: '3px' }} />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(item.id)}
+                        style={{ padding: '4px 8px', borderRadius: '6px', background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                      >
+                        <Trash2 style={{ width: '12px', height: '12px', display: 'inline', marginRight: '3px' }} />
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Editor Modal Inline Form */}
-      {isFormOpen && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade">
-          <div className="gold-card max-w-lg w-full space-y-4 animate-slideup max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center border-b border-color pb-3">
-              <h3 className="text-lg font-bold text-gold">
-                {editingItem ? 'Edit Menu Item Details' : 'Add New Dish to Menu'}
-              </h3>
-              <button 
-                onClick={() => setIsFormOpen(false)}
-                className="text-text-muted hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              ))}
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="block text-text-secondary">Dish Name *</label>
-                  <input 
-                    type="text" 
-                    required 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-bg-tertiary border border-border-color rounded-lg p-2.5 text-text-primary focus:border-gold focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="block text-text-secondary">Pricing (Rs.) *</label>
-                  <input 
-                    type="number" 
-                    required 
-                    min={1}
-                    value={price} 
-                    onChange={(e) => setPrice(Number(e.target.value))}
-                    className="w-full bg-bg-tertiary border border-border-color rounded-lg p-2.5 text-text-primary focus:border-gold focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="block text-text-secondary">Category *</label>
-                  <select 
-                    value={category} 
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-bg-tertiary border border-border-color rounded-lg p-2.5 text-text-primary focus:border-gold focus:outline-none"
-                  >
-                    <option value="Mandi Platters">Mandi Platters</option>
-                    <option value="Grills & Shawarma">Grills & Shawarma</option>
-                    <option value="Appetizers & Sides">Appetizers & Sides</option>
-                    <option value="Desserts">Desserts</option>
-                    <option value="Beverages">Beverages</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="block text-text-secondary">Image URL</label>
-                  <input 
-                    type="text" 
-                    value={imageUrl} 
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    className="w-full bg-bg-tertiary border border-border-color rounded-lg p-2.5 text-text-primary focus:border-gold focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-text-secondary">Description</label>
-                <textarea 
-                  rows={3}
-                  value={description} 
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-bg-tertiary border border-border-color rounded-lg p-2.5 text-text-primary focus:border-gold focus:outline-none resize-none"
-                />
-              </div>
-
-              <div className="space-y-2 border-t border-color/40 pt-3">
-                <span className="block text-text-secondary font-semibold">Available Outlet Locations</span>
-                <div className="flex gap-4">
-                  {branches.map(br => (
-                    <label key={br.id} className="flex items-center gap-2 cursor-pointer select-none">
-                      <input 
-                        type="checkbox"
-                        checked={branchesAvailable.includes(br.id)}
-                        onChange={() => handleBranchToggle(br.id)}
-                        className="rounded border-border-color text-gold focus:ring-0 focus:ring-offset-0 bg-bg-tertiary"
-                      />
-                      <span className="text-text-primary">{br.name.split(' - ')[1] || br.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-color/40 pt-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input 
-                    type="checkbox"
-                    checked={isAvailable}
-                    onChange={(e) => setIsAvailable(e.target.checked)}
-                    className="rounded border-border-color text-gold bg-bg-tertiary"
-                  />
-                  <span className="text-text-primary font-semibold">Mark Available for Ordering</span>
-                </label>
-                <div className="flex gap-2">
-                  <button 
-                    type="button" 
-                    onClick={() => setIsFormOpen(false)}
-                    className="px-4 py-2 border border-border-color rounded-lg text-text-secondary hover:text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="gold-btn px-4 py-2"
-                  >
-                    {editingItem ? 'Save Changes' : 'Publish Dish'}
-                  </button>
-                </div>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ==========================================
-          MODAL 2: ADD BRANCH
-          ========================================== */}
-      {isBranchFormOpen && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade">
-          <div className="gold-card max-w-md w-full space-y-4 animate-slideup">
-            <div className="flex justify-between items-center border-b border-color pb-3">
-              <h3 className="text-lg font-bold text-gold">Add New Branch Outlet</h3>
-              <button 
-                onClick={() => setIsBranchFormOpen(false)}
-                className="text-text-muted hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        {/* TAB 4: OUTLET BRANCH */}
+        {activeTab === 'BRANCHES' && (
+          <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)', borderRadius: '20px', padding: '24px', maxWidth: '640px', margin: '0 auto' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '14px' }}>
+              Active Branch & Delivery Zone
+            </h2>
+            <div style={{ background: '#ffffff', border: '1.5px solid var(--border-warm)', borderRadius: '14px', padding: '18px' }}>
+              <div style={{ fontSize: '16px', fontWeight: '900', color: 'var(--text-dark)' }}>
+                Haandi by Yumto - Islamabad (Single Active Location)
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Gulberg Greens, Civic Center, Executive Block, Islamabad
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--haandi-red)', fontWeight: '800', marginTop: '6px' }}>
+                📞 0330 0500600 · NTN/GST: 4585147-3
+              </div>
+              <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                <span style={{ background: 'var(--emerald-light)', color: 'var(--emerald)', border: '1px solid var(--emerald-border)', borderRadius: '6px', padding: '3px 8px', fontSize: '11px', fontWeight: '800' }}>
+                  ✓ 2.5 km Delivery Radius
+                </span>
+                <span style={{ background: 'var(--haandi-saffron-light)', color: 'var(--haandi-saffron)', border: '1px solid var(--haandi-saffron)', borderRadius: '6px', padding: '3px 8px', fontSize: '11px', fontWeight: '800' }}>
+                  ✓ Advance Prepayment Only
+                </span>
+              </div>
             </div>
-
-            <form onSubmit={handleBranchSubmit} className="space-y-4 text-xs">
-              <div className="space-y-1">
-                <label className="block text-text-secondary">Branch Name *</label>
-                <input 
-                  type="text" 
-                  required 
-                  placeholder="e.g. Yumto Mandi - Gulberg"
-                  value={branchName} 
-                  onChange={(e) => setBranchName(e.target.value)}
-                  className="w-full bg-bg-tertiary border border-border-color rounded-lg p-2.5 text-text-primary focus:border-gold focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="block text-text-secondary">City *</label>
-                  <select 
-                    value={branchCity} 
-                    onChange={(e) => setBranchCity(e.target.value)}
-                    className="w-full bg-bg-tertiary border border-border-color rounded-lg p-2.5 text-text-primary focus:border-gold focus:outline-none"
-                  >
-                    <option value="Lahore">Lahore</option>
-                    <option value="Islamabad">Islamabad</option>
-                    <option value="Faisalabad">Faisalabad</option>
-                    <option value="Rawalpindi">Rawalpindi</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-text-secondary">Contact Phone *</label>
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder="e.g. 0300-0000000"
-                    value={branchPhone} 
-                    onChange={(e) => setBranchPhone(e.target.value)}
-                    className="w-full bg-bg-tertiary border border-border-color rounded-lg p-2.5 text-text-primary focus:border-gold focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-text-secondary">Full Location Address *</label>
-                <textarea 
-                  rows={2}
-                  required
-                  placeholder="e.g. Plot #12-A, Main Boulevard, Lahore"
-                  value={branchAddress} 
-                  onChange={(e) => setBranchAddress(e.target.value)}
-                  className="w-full bg-bg-tertiary border border-border-color rounded-lg p-2.5 text-text-primary focus:border-gold focus:outline-none resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 border-t border-color/40 pt-3">
-                <div className="space-y-1">
-                  <label className="block text-text-secondary">Peak Booking Fee (Rs.)</label>
-                  <input 
-                    type="number"
-                    value={branchFee} 
-                    onChange={(e) => setBranchFee(Number(e.target.value))}
-                    className="w-full bg-bg-tertiary border border-border-color rounded-lg p-2.5 text-text-primary focus:border-gold focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-2 flex flex-col justify-end pb-1.5">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox"
-                      checked={branchSurcharge}
-                      onChange={(e) => setBranchSurcharge(e.target.checked)}
-                      className="rounded border-border-color text-gold bg-bg-tertiary"
-                    />
-                    <span className="text-text-primary font-semibold">Enable Surcharge</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 border-t border-color/40 pt-3">
-                <button 
-                  type="button" 
-                  onClick={() => setIsBranchFormOpen(false)}
-                  className="px-4 py-2 border border-border-color rounded-lg text-text-secondary hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="gold-btn px-4 py-2"
-                >
-                  Create Branch
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Item Edit Modal */}
+        {isFormOpen && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(26,18,11,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+            <div style={{ background: 'var(--bg-cream-light)', borderRadius: '20px', maxWidth: '440px', width: '100%', overflow: 'hidden', border: '1.5px solid var(--border-warm)', boxShadow: 'var(--shadow-xl)' }}>
+              <div style={{ background: 'var(--bg-dark)', padding: '16px 20px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontWeight: '800', fontSize: '15px' }}>{editingItem ? 'Edit Menu Item' : 'Add New Item'}</div>
+                <button onClick={() => setIsFormOpen(false)} style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer' }}><X /></button>
+              </div>
+
+              <form onSubmit={handleSubmit} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Item Name</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} required style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', fontSize: '13px' }} />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Price (PKR)</label>
+                    <input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} required min={1} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', fontSize: '13px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Category</label>
+                    <select value={category} onChange={e => setCategory(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', fontSize: '13px' }}>
+                      {['Handi Special', 'Karahi Special', 'Charcoal BBQ', 'Rice & Biryani', 'Roti & Naan', 'Soup', 'Salad', 'Beverages', 'Desserts'].map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Description</label>
+                  <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', fontSize: '12px' }} />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Image URL</label>
+                  <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', fontSize: '12px' }} />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
+                  <button type="button" onClick={() => setIsFormOpen(false)} style={{ padding: '8px 16px', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-warm)', fontSize: '12px', cursor: 'pointer', fontWeight: '700' }}>Cancel</button>
+                  <button type="submit" style={{ padding: '8px 18px', borderRadius: '8px', background: 'var(--haandi-red)', color: '#ffffff', border: 'none', fontSize: '12px', cursor: 'pointer', fontWeight: '800' }}>Save Dish</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
       </div>
-      {/* Laptop metal base bar */}
-      <div className="device-laptop-base" />
     </div>
   );
 };
-export default OwnerPortal;

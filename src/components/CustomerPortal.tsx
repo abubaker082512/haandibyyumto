@@ -1136,6 +1136,85 @@ export const CustomerPortal: React.FC = () => {
       )}
 
       {/* ============================================================
+          FLOATING HAANDI LOGO CART BUTTON (BOTTOM RIGHT)
+          ============================================================ */}
+      <div
+        onClick={() => setCartOpen(true)}
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 800,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)',
+          border: '2.5px solid #F4C430',
+          borderRadius: '99px',
+          padding: '8px 18px 8px 8px',
+          boxShadow: '0 10px 30px rgba(139, 30, 30, 0.5), 0 0 20px rgba(244, 196, 48, 0.3)',
+          transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.transform = 'scale(1.08) translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 15px 35px rgba(139, 30, 30, 0.7), 0 0 25px rgba(244, 196, 48, 0.5)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.transform = 'scale(1) translateY(0)';
+          e.currentTarget.style.boxShadow = '0 10px 30px rgba(139, 30, 30, 0.5), 0 0 20px rgba(244, 196, 48, 0.3)';
+        }}
+      >
+        <div style={{ position: 'relative' }}>
+          <img
+            src="/logo.png"
+            alt="Haandi Cart"
+            style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '50%',
+              objectFit: 'contain',
+              background: '#FDFBF7',
+              padding: '2px',
+              border: '2px solid #E85D04',
+              display: 'block'
+            }}
+          />
+          {cartCount > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-6px',
+              right: '-6px',
+              background: '#F4C430',
+              color: '#1A120B',
+              fontSize: '11px',
+              fontWeight: '900',
+              borderRadius: '99px',
+              minWidth: '20px',
+              height: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 4px',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+              border: '1.5px solid #8B1E1E'
+            }}>
+              {cartCount}
+            </span>
+          )}
+        </div>
+
+        <div>
+          <div style={{ color: '#ffffff', fontSize: '13px', fontWeight: '900', letterSpacing: '0.02em', lineHeight: 1.1 }}>
+            View Handi
+          </div>
+          <div style={{ color: '#F4C430', fontSize: '11px', fontWeight: '800', marginTop: '2px' }}>
+            {cartCount > 0 ? `Rs. ${subtotal.toLocaleString()}` : '0 Items'}
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================
           TOAST NOTIFICATION
           ============================================================ */}
       {toast && (

@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../store/mockDb';
-import { Play, Check, Flame, Clock, Award, Coffee } from 'lucide-react';
+import { Play, Check, Clock, ChefHat, CheckCircle } from 'lucide-react';
 
 export const KitchenPortal: React.FC = () => {
   const [dbState, setDbState] = useState(db);
-  
-  // Tick for elapsed times
-  const [timeTick, setTimeTick] = useState(0);
-  
-  // Use timeTick to trigger re-renders and log debug ticks
-  if (timeTick === -1) console.log(timeTick);
-
-
+  const [, setTimeTick] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -28,15 +21,14 @@ export const KitchenPortal: React.FC = () => {
     };
   }, []);
 
-  const [selectedBranchId, setSelectedBranchId] = useState('br-lhr');
-  const branches = dbState.getBranches();
+  const selectedBranchId = 'br-isb';
+  const tables = dbState.getTables(selectedBranchId);
 
-  // Get active kitchen orders (PENDING, CONFIRMED, PREPARING, READY)
+  // Active kitchen orders (PENDING, CONFIRMED, PREPARING, READY)
   const activeOrders = dbState.getOrders(selectedBranchId)
     .filter(o => ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'].includes(o.status))
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()); // oldest first
 
-  // Progress logic
   const handleStartPrep = (orderId: string) => {
     dbState.updateOrderStatus(orderId, 'PREPARING');
   };
@@ -49,7 +41,6 @@ export const KitchenPortal: React.FC = () => {
     dbState.updateOrderStatus(orderId, 'COMPLETED');
   };
 
-  // Helper for timers
   const getElapsedTime = (isoString: string) => {
     const created = new Date(isoString).getTime();
     const diff = Date.now() - created;
@@ -58,163 +49,196 @@ export const KitchenPortal: React.FC = () => {
     return `${minutes}m ${seconds}s`;
   };
 
-  const getTimerSeverityColor = (isoString: string) => {
+  const getTimerStyle = (isoString: string) => {
     const created = new Date(isoString).getTime();
     const minutes = Math.floor((Date.now() - created) / 60000);
-    if (minutes >= 15) return 'text-ruby border-ruby bg-ruby-alpha';
-    if (minutes >= 8) return 'text-amber border-amber bg-amber-alpha';
-    return 'text-emerald border-emerald bg-emerald-alpha';
+    if (minutes >= 15) return { color: '#DC2626', bg: '#FEE2E2', border: '#FCA5A5' };
+    if (minutes >= 8) return { color: '#D97706', bg: '#FEF3C7', border: '#FCD34D' };
+    return { color: '#15803D', bg: '#DCFCE7', border: '#86EFAC' };
   };
 
   return (
-    <div className="animate-fade container py-6 flex justify-center text-left">
-      
-      {/* Tablet Device Mockup Container for KDS */}
-      <div className="device-tablet-frame bg-bg-secondary p-4 relative w-full">
-        <div className="device-tablet-camera"></div>
-        <div className="device-tablet-header mb-3 rounded-lg">
-          <span className="font-semibold text-text-primary">👨‍🍳 Yumto OS — KDS Terminal</span>
-          <span className="font-bold text-gold">Kitchen WiFi</span>
-          <span className="opacity-80">100% 🔌</span>
-        </div>
-
-        <div className="space-y-4">
-      
-          {/* Header and Branch select */}
-      <div className="gold-card flex flex-col md:flex-row md:items-center justify-between gap-3 p-3">
-        <div className="space-y-0.5">
-          <h2 className="text-base font-bold flex items-center gap-1.5">
-            <Flame className="text-gold w-4.5 h-4.5 animate-pulse" /> Kitchen Display System (KDS)
-          </h2>
-          <p className="text-[11px] text-text-secondary">Live cooking ticket grid. Items sorted by elapsed queue time.</p>
-        </div>
-        <div>
-          <select 
-            value={selectedBranchId} 
-            onChange={(e) => setSelectedBranchId(e.target.value)}
-            className="bg-bg-tertiary border border-border-color rounded-lg px-2.5 py-1.5 text-xs text-text-primary focus:border-gold focus:outline-none"
-          >
-            {branches.map(b => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Grid of Cooking Tickets */}
-      {activeOrders.length === 0 ? (
-        <div className="gold-card py-12 text-center text-text-secondary space-y-2 p-3">
-          <Coffee className="w-10 h-10 text-gold mx-auto opacity-50" />
-          <div className="font-bold text-base text-text-primary">All Tickets Cleared!</div>
-          <p className="text-xs max-w-sm mx-auto">No pending orders in the kitchen queue. Enjoy the peaceful moments.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {activeOrders.map(order => {
-            const isPreparing = order.status === 'PREPARING';
-            const isReady = order.status === 'READY';
-            const table = order.tableId ? dbState.getTables().find(t => t.id === order.tableId) : null;
-            const timerClass = getTimerSeverityColor(order.createdAt);
-            
-            return (
-              <div 
-                key={order.id} 
-                className={`gold-card flex flex-col justify-between p-3 space-y-3 border transition-all ${
-                  isReady 
-                    ? 'border-emerald/40 bg-emerald-alpha/5 shadow-emerald-alpha' 
-                    : isPreparing 
-                      ? 'border-amber/40 bg-amber-alpha/5' 
-                      : 'border-border-color'
-                }`}
-              >
-                {/* Card Top: Order ID & Timer */}
-                <div className="flex justify-between items-center border-b border-color/40 pb-1.5">
-                  <div>
-                    <span className="font-bold text-xs text-text-primary uppercase">{order.id}</span>
-                    <div className="text-[9px] text-text-secondary uppercase tracking-wider font-semibold">
-                      {order.orderType.replace('_', ' ')} 
-                      {table && <span className="text-gold ml-1">| Table {table.tableNumber}</span>}
-                    </div>
-                  </div>
-                  <div className={`flex items-center gap-1 px-1.5 py-0.5 border rounded text-[9px] font-bold ${timerClass}`}>
-                    <Clock className="w-3 h-3" />
-                    <span>{getElapsedTime(order.createdAt)}</span>
-                  </div>
-                </div>
-
-                {/* Card Items List */}
-                <div className="flex-1 space-y-1.5 text-[11px]">
-                  {order.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-start gap-1 font-medium">
-                      <span className="text-text-primary">
-                        <span className="text-gold font-bold text-xs mr-1">x{item.quantity}</span> 
-                        {item.name}
-                      </span>
-                    </div>
-                  ))}
-                  
-                  {order.deliveryAddress && (
-                    <div className="text-[9px] bg-bg-tertiary/60 p-1 rounded border border-border-color/40 text-text-secondary mt-1.5 truncate" title={order.deliveryAddress}>
-                      <strong>Address:</strong> {order.deliveryAddress}
-                    </div>
-                  )}
-                </div>
-
-                {/* Card Actions Bottom */}
-                <div className="border-t border-color/40 pt-2.5">
-                  {!isPreparing && !isReady ? (
-                    <button
-                      onClick={() => handleStartPrep(order.id)}
-                      className="gold-btn w-full py-1.5 text-[11px] font-bold flex items-center justify-center gap-1"
-                    >
-                      <Play className="w-3 h-3" /> Start Cooking
-                    </button>
-                  ) : isPreparing ? (
-                    <button
-                      onClick={() => handleMarkReady(order.id)}
-                      className="bg-amber text-black hover:bg-amber-600 font-bold w-full py-1.5 text-[11px] rounded transition-all flex items-center justify-center gap-1"
-                    >
-                      <Check className="w-3 h-3" /> Mark Ready
-                    </button>
-                  ) : (
-                    <div className="space-y-1 text-center">
-                      <div className="text-[9px] text-emerald font-semibold flex items-center justify-center gap-0.5">
-                        <Award className="w-3 h-3" /> Food is Ready!
-                      </div>
-                      
-                      {order.orderType === 'DINE_IN' ? (
-                        <button
-                          onClick={() => handleCompleteOrder(order.id)}
-                          className="bg-emerald text-black hover:bg-emerald-600 font-bold w-full py-1.5 text-[11px] rounded transition-all"
-                        >
-                          Complete (Serve to Table)
-                        </button>
-                      ) : order.orderType === 'PICK_UP' ? (
-                        <button
-                          onClick={() => handleCompleteOrder(order.id)}
-                          className="bg-emerald text-black hover:bg-emerald-600 font-bold w-full py-1.5 text-[11px] rounded transition-all"
-                        >
-                          Complete (Handout)
-                        </button>
-                      ) : (
-                        <div className="text-[9px] text-text-secondary p-1 bg-bg-tertiary rounded border border-border-color">
-                          {order.riderId 
-                            ? `Rider: ${dbState.getUsers().find(u => u.id === order.riderId)?.name.split(' ')[0]}` 
-                            : 'Awaiting Dispatch'}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
+    <div style={{ background: 'var(--bg-cream)', minHeight: '90vh', padding: '20px 16px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+        
+        {/* KDS Top Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #1A120B 0%, #2A1F17 100%)',
+          border: '1.5px solid var(--border-warm)', borderRadius: '20px', padding: '18px 24px',
+          color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexWrap: 'wrap', gap: '14px', marginBottom: '20px', boxShadow: 'var(--shadow-md)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#FDFBF7', padding: '2px', border: '2px solid var(--haandi-saffron)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src="/logo.png" alt="Haandi" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '900', color: '#ffffff' }}>
+                  Kitchen Display System (KDS)
+                </h1>
+                <span style={{ background: 'rgba(220,38,38,0.25)', color: '#F87171', border: '1px solid #DC2626', padding: '2px 8px', borderRadius: '99px', fontSize: '10px', fontWeight: '800' }}>
+                  LIVE COOKING QUEUE
+                </span>
               </div>
-            );
-          })}
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', marginTop: '2px' }}>
+                Clay Pot Handi, Karahi & BBQ Grill Dispatch · Gulberg Greens, Islamabad
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ background: 'rgba(232,93,4,0.2)', border: '1px solid var(--haandi-saffron)', borderRadius: '10px', padding: '6px 14px', color: '#F4C430', fontWeight: '800', fontSize: '12px' }}>
+              🔥 {activeOrders.length} Active Tickets
+            </div>
+          </div>
         </div>
-      )}
-        </div>
+
+        {/* KDS Order Tickets Grid */}
+        {activeOrders.length === 0 ? (
+          <div style={{
+            background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)', borderRadius: '20px',
+            padding: '60px 20px', textAlign: 'center', boxShadow: 'var(--shadow-sm)'
+          }}>
+            <ChefHat style={{ width: '54px', height: '54px', color: 'var(--haandi-saffron)', margin: '0 auto 12px', opacity: 0.7 }} />
+            <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)' }}>All Cooking Queues are Clear</h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+              New orders punched from Customer App, Manager Tablet, or POS will appear here instantly.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+            {activeOrders.map(order => {
+              const timer = getTimerStyle(order.createdAt);
+              const tblObj = order.tableId ? tables.find(t => t.id === order.tableId) : null;
+              const tableText = tblObj ? `Table ${tblObj.tableNumber}` : (order.tableId || 'Takeaway');
+              const isPreparing = order.status === 'PREPARING';
+              const isReady = order.status === 'READY';
+
+              return (
+                <div
+                  key={order.id}
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: `2px solid ${isReady ? '#16A34A' : isPreparing ? '#E85D04' : 'var(--border-warm)'}`,
+                    borderRadius: '18px',
+                    overflow: 'hidden',
+                    boxShadow: 'var(--shadow-md)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'transform 0.2s'
+                  }}
+                >
+                  {/* Ticket Header */}
+                  <div style={{
+                    background: isReady ? 'linear-gradient(135deg, #15803D 0%, #166534 100%)' : 'linear-gradient(135deg, #1A120B 0%, #2A1F17 100%)',
+                    padding: '12px 16px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: '900', fontSize: '14px', letterSpacing: '0.04em' }}>
+                        #{order.id.slice(-6).toUpperCase()} · {order.orderType}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--haandi-gold)', fontWeight: '700' }}>
+                        {order.orderType === 'DINE_IN' ? `🪑 ${tableText}` : `🛵 ${order.userName}`}
+                      </div>
+                    </div>
+
+                    {/* Timer Badge */}
+                    <div style={{
+                      background: timer.bg, color: timer.color, border: `1px solid ${timer.border}`,
+                      padding: '4px 8px', borderRadius: '8px', fontSize: '11px', fontWeight: '900',
+                      display: 'flex', alignItems: 'center', gap: '4px'
+                    }}>
+                      <Clock style={{ width: '12px', height: '12px' }} />
+                      <span>{getElapsedTime(order.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {/* Items List */}
+                  <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {order.items.map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '8px 10px', background: 'var(--bg-cream-light)', borderRadius: '8px',
+                          border: '1px solid var(--border-warm)'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{
+                            width: '24px', height: '24px', borderRadius: '6px',
+                            background: 'var(--haandi-red)', color: '#ffffff', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '900'
+                          }}>
+                            {item.quantity}×
+                          </span>
+                          <div>
+                            <div style={{ fontWeight: '800', fontSize: '12.5px', color: 'var(--text-dark)' }}>
+                              {item.name}
+                            </div>
+                            {item.variation && (
+                              <div style={{ fontSize: '10px', color: 'var(--haandi-saffron)', fontWeight: '700' }}>
+                                Portion: {item.variation}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)' }}>
+                          {item.name.toLowerCase().includes('handi') ? '🍲 Clay Pot' : item.name.toLowerCase().includes('karahi') ? '🍳 Wok' : '🍢 BBQ'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Ticket Bottom Actions */}
+                  <div style={{ padding: '12px 16px', background: '#ffffff', borderTop: '1.5px solid var(--border-warm)', display: 'flex', gap: '8px' }}>
+                    {order.status === 'PENDING' || order.status === 'CONFIRMED' ? (
+                      <button
+                        onClick={() => handleStartPrep(order.id)}
+                        style={{
+                          flex: 1, background: 'var(--haandi-saffron)', color: '#ffffff', border: 'none',
+                          borderRadius: '10px', padding: '10px', fontWeight: '800', fontSize: '12px', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                        }}
+                      >
+                        <Play style={{ width: '14px', height: '14px' }} />
+                        <span>Start Cooking</span>
+                      </button>
+                    ) : isPreparing ? (
+                      <button
+                        onClick={() => handleMarkReady(order.id)}
+                        style={{
+                          flex: 1, background: 'var(--emerald)', color: '#ffffff', border: 'none',
+                          borderRadius: '10px', padding: '10px', fontWeight: '800', fontSize: '12px', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                        }}
+                      >
+                        <Check style={{ width: '14px', height: '14px' }} />
+                        <span>Mark Order Ready</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleCompleteOrder(order.id)}
+                        style={{
+                          flex: 1, background: 'var(--haandi-red)', color: '#ffffff', border: 'none',
+                          borderRadius: '10px', padding: '10px', fontWeight: '800', fontSize: '12px', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                        }}
+                      >
+                        <CheckCircle style={{ width: '14px', height: '14px' }} />
+                        <span>Dispatched / Served</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
       </div>
     </div>
   );
 };
-export default KitchenPortal;
