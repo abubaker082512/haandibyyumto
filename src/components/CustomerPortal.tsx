@@ -648,13 +648,13 @@ export const CustomerPortal: React.FC = () => {
                   if (cat === 'All') {
                     const el = document.getElementById('menu-section');
                     if (el) {
-                      const y = el.getBoundingClientRect().top + window.pageYOffset - 10;
+                      const y = el.getBoundingClientRect().top + window.pageYOffset - 70;
                       window.scrollTo({ top: y, behavior: 'smooth' });
                     }
                   } else {
                     const el = document.getElementById(`cat-section-${cat.replace(/\s+/g, '-').toLowerCase()}`);
                     if (el) {
-                      const y = el.getBoundingClientRect().top + window.pageYOffset - 60;
+                      const y = el.getBoundingClientRect().top + window.pageYOffset - 125;
                       window.scrollTo({ top: y, behavior: 'smooth' });
                     }
                   }

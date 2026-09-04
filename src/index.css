@@ -431,24 +431,29 @@ body {
 }
 
 /* ============================================================
-   TOP MAIN HEADER (Natural Flow, Scrolls Away on Scroll)
+   TOP MAIN HEADER (Permanently Sticky at Top: 0)
    ============================================================ */
 .haandi-top-header,
 .haandi-floating-nav {
-  position: relative;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
   width: 100%;
-  z-index: 100;
+  z-index: 500;
   margin: 0;
   padding: 0;
   background: linear-gradient(135deg, #1A120B 0%, #2A170E 100%);
   border-bottom: 1.5px solid rgba(232, 93, 4, 0.38);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .haandi-floating-nav-inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 12px 16px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -457,34 +462,35 @@ body {
 
 @media (max-width: 640px) {
   .haandi-floating-nav-inner {
-    padding: 10px 12px;
+    padding: 8px 12px;
     gap: 8px;
   }
 }
 
 /* ============================================================
-   FLOATING STICKY CATEGORY HEADER (Locks at top: 0 on Scroll)
+   CATEGORY NAVIGATION TABS (Sticky Below Top Header)
    ============================================================ */
 .haandi-cat-nav-wrap {
   position: sticky;
-  top: 0;
+  top: 62px;
   left: 0;
   right: 0;
   width: 100%;
-  z-index: 500;
+  z-index: 490;
   margin: 0 0 24px 0;
-  padding: 10px 0;
-  background: rgba(26, 18, 11, 0.97);
-  border-bottom: 2px solid rgba(232, 93, 4, 0.4);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(232, 93, 4, 0.2);
+  padding: 8px 0;
+  background: rgba(26, 18, 11, 0.96);
+  border-bottom: 1.5px solid rgba(232, 93, 4, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(232, 93, 4, 0.12);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 
 @media (max-width: 640px) {
   .haandi-cat-nav-wrap {
-    padding: 8px 0;
+    top: 54px;
+    padding: 6px 0;
   }
 }
 
