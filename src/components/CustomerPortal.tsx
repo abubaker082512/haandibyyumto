@@ -4,7 +4,7 @@ import type { MenuItem, OrderType, OrderItem } from '../types';
 import {
   MapPin, ShoppingBag,
   Trash2, Plus, Minus, X, Navigation,
-  Utensils, Sparkles, ArrowRight
+  Sparkles, ArrowRight, CheckCircle2
 } from 'lucide-react';
 import { LiveTrackingMap } from './LiveTrackingMap';
 
@@ -217,7 +217,6 @@ export const CustomerPortal: React.FC = () => {
       });
       reservationId = r.id;
     }
-
     const fullDeliveryAddress = orderType === 'DELIVERY'
       ? `${deliveryAddr.trim()}, ${selectedSector}, Islamabad (${currentSector.distanceKm} km from Civic Center)`
       : undefined;
@@ -239,7 +238,23 @@ export const CustomerPortal: React.FC = () => {
     setSelectedTableId(null);
     setIsReservingTable(false);
     setCartOpen(false);
-    showToast('Advance Payment Verified · Order Confirmed & In Kitchen!', 'success');
+
+    // Prepare WhatsApp Message with Live Tracking Link
+    const trackingUrl = `${window.location.origin}/#/track/${created.id}`;
+    const waText = `🍲 *HAANDI BY YUMTO — Order Confirmed!*\n\n*Order ID:* #${created.id.slice(-6).toUpperCase()}\n*Mode:* ${created.orderType}\n*Items:* ${created.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}\n*Total:* Rs. ${created.total.toLocaleString()}\n\n📍 *Track Live Order & Rider:* ${trackingUrl}\n\n*Haandi by Yumto*\nCivic Center, Gulberg Greens, Islamabad\n📞 0330 0500600`;
+
+    const cleanPhone = (custPhone || '').replace(/[^0-9]/g, '');
+    const formattedPhone = cleanPhone.startsWith('0') ? '92' + cleanPhone.slice(1) : cleanPhone.startsWith('92') ? cleanPhone : '92' + (cleanPhone || '3300500600');
+    const waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(waText)}`;
+
+    // Open WhatsApp Tracking
+    try {
+      window.open(waUrl, '_blank');
+    } catch {
+      // Handled in modal
+    }
+
+    showToast('🎉 Order Placed! WhatsApp tracking link sent.', 'success');
   };
 
   return (
@@ -297,148 +312,120 @@ export const CustomerPortal: React.FC = () => {
       )}
 
       {/* ============================================================
-          PROMOTIONAL MARQUEE STRIP
+          SMOOTH & EASY LUXURY NAVBAR (Creamy Porcelain Canvas)
           ============================================================ */}
-      <div className="haandi-marquee-strip">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sparkles style={{ width: '14px', height: '14px', color: '#F4C430' }} />
-          <span>Authentic Handi Slow-Cooked in Earthen Pots</span>
-          <span style={{ opacity: 0.5 }}>•</span>
-          <span>100% Desi Ghee & Fresh Farm Meat</span>
-          <span style={{ opacity: 0.5 }}>•</span>
-          <span>Strict 2.5 km Delivery Zone (Gulberg Greens, Islamabad)</span>
-          <span style={{ opacity: 0.5 }}>•</span>
-          <span>{settings.isTaxActive ? `${settings.salesTaxCardPercent}% Digital FBR Sales Tax` : '0% System Sales Tax Exemption'}</span>
-        </div>
-      </div>
-
-      {/* ============================================================
-          TOP NAVIGATION BAR (Luxury Heritage Espresso & Gold)
-          ============================================================ */}
-      <nav className="haandi-navbar">
-        <div className="haandi-navbar-inner">
-          {/* Center/Right: Location & Dining Mode Popup Pill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              className="haandi-location-pill"
-              onClick={() => setShowDiningModeModal(true)}
-              title="Select Delivery, Takeaway, or Dine-In Mode"
-              style={{ cursor: 'pointer' }}
-            >
-              <span>{isReservingTable ? '🪑 Dine-In' : orderType === 'DELIVERY' ? '🛵 Delivery' : '🛍️ Takeaway'}</span>
-              <span style={{ color: 'var(--haandi-gold)', fontSize: '10px', fontWeight: '800' }}>Change</span>
-            </button>
-
-            <button
-              className="haandi-location-pill"
-              onClick={() => setShowSectorModal(true)}
-              title="View Delivery Boundary & Sector Details"
-            >
-              <MapPin style={{ width: '14px', height: '14px', color: 'var(--haandi-saffron)' }} />
-              <span className="hidden sm:inline">Gulberg Greens</span>
-              <span style={{ color: 'var(--haandi-gold)', fontSize: '10px', fontWeight: '800' }}>2.5 km</span>
-            </button>
-          </div>
-
-          {/* Center: Haandi Brand Logo */}
-          <a href="#menu-section" className="haandi-logo-badge">
-            <img src="/logo.png" alt="Haandi by Yumto" className="haandi-logo-img" />
-            <div className="hidden sm:block">
-              <div className="haandi-brand-title">
-                HAANDI <span style={{ color: 'var(--haandi-saffron)' }}>BY YUMTO</span>
+      <nav style={{
+        background: '#FFFFFF',
+        borderBottom: '1px solid #EADBCC',
+        position: 'sticky', top: 0, zIndex: 500,
+        boxShadow: '0 2px 10px rgba(26,18,11,0.04)',
+        padding: '10px 16px'
+      }}>
+        <div style={{
+          maxWidth: '1200px', margin: '0 auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+        }}>
+          {/* Brand Logo & Title */}
+          <a href="#menu-section" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <img
+              src="/logo.png"
+              alt="Haandi by Yumto"
+              style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'contain', background: '#F8F3EA', padding: '2px', border: '1.5px solid #E85D04' }}
+            />
+            <div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: '900', color: '#1A120B', letterSpacing: '0.02em', lineHeight: 1.1 }}>
+                HAANDI <span style={{ color: '#E85D04' }}>BY YUMTO</span>
               </div>
-              <div className="haandi-brand-subtitle">Civic Center Islamabad</div>
+              <div style={{ fontSize: '10px', color: '#5C4B3C', fontWeight: '700', marginTop: '2px' }}>
+                Civic Center, Gulberg Greens
+              </div>
             </div>
           </a>
 
-          {/* Right: Live Map, Catering Inquiry, Order History, Table Reservation & Cart */}
+          {/* Center: Smooth Dining Mode Pill */}
+          <button
+            onClick={() => setShowDiningModeModal(true)}
+            style={{
+              background: '#F8F3EA',
+              border: '1.5px solid #EADBCC',
+              borderRadius: '99px', padding: '6px 14px',
+              display: 'flex', alignItems: 'center', gap: '8px',
+              cursor: 'pointer', transition: 'all 0.2s',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+            }}
+          >
+            <span style={{ fontSize: '14px' }}>
+              {isReservingTable ? '🪑' : orderType === 'DELIVERY' ? '🛵' : '🛍️'}
+            </span>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#1A120B' }}>
+              {isReservingTable ? 'Dine-In Table' : orderType === 'DELIVERY' ? `Delivery (${selectedSector.split(' ')[0]})` : 'Takeaway'}
+            </span>
+            <span style={{ fontSize: '10px', color: '#8B1E1E', fontWeight: '900', background: 'rgba(139,30,30,0.08)', padding: '2px 6px', borderRadius: '6px' }}>
+              Change
+            </span>
+          </button>
+
+          {/* Right Action Pills */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
-              className="haandi-nav-btn"
               onClick={() => setShowInquiryModal(true)}
-              title="Catering & Banquet Inquiries"
+              style={{
+                background: '#FFFFFF', border: '1px solid #EADBCC', borderRadius: '10px',
+                padding: '6px 12px', fontSize: '12px', fontWeight: '700', color: '#1A120B',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+              className="hidden sm:inline-flex"
             >
               <span>🎉</span>
-              <span className="hidden sm:inline">Catering</span>
+              <span>Catering</span>
             </button>
 
             <button
-              className="haandi-nav-btn"
               onClick={() => setShowOrderHistoryModal(true)}
-              title="View Past Orders & Live Status"
+              style={{
+                background: '#FFFFFF', border: '1px solid #EADBCC', borderRadius: '10px',
+                padding: '6px 12px', fontSize: '12px', fontWeight: '700', color: '#1A120B',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+              className="hidden sm:inline-flex"
             >
               <span>🧾</span>
-              <span className="hidden sm:inline">My Orders</span>
+              <span>My Orders</span>
             </button>
 
             <button
-              className="haandi-nav-btn haandi-nav-btn-map"
               onClick={() => setShowLiveTrackingModal(true)}
-              title="Open Live GPS Delivery Map"
-            >
-              <Navigation style={{ width: '13px', height: '13px' }} />
-              <span className="hidden sm:inline">Live Map</span>
-            </button>
-
-            <button
-              className="haandi-nav-btn"
-              style={{ background: 'rgba(255,255,255,0.08)', color: '#FBF8F3', border: '1px solid rgba(255,255,255,0.15)' }}
-              onClick={() => {
-                setOrderType('DINE_IN');
-                setIsReservingTable(true);
-                document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
+              style={{
+                background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '10px',
+                padding: '6px 12px', fontSize: '12px', fontWeight: '800', color: '#15803D',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
               }}
             >
-              <Utensils style={{ width: '13px', height: '13px', color: 'var(--haandi-saffron)' }} />
-              <span className="hidden sm:inline">Reserve</span>
+              <Navigation style={{ width: '13px', height: '13px' }} />
+              <span className="hidden sm:inline">Track</span>
             </button>
 
             <button
-              className="haandi-nav-btn haandi-nav-btn-cart"
               onClick={() => setCartOpen(true)}
+              style={{
+                background: 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)',
+                color: '#ffffff', border: 'none', borderRadius: '10px',
+                padding: '7px 14px', fontSize: '12px', fontWeight: '800',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                boxShadow: '0 2px 8px rgba(139,30,30,0.25)'
+              }}
             >
-              <ShoppingBag style={{ width: '15px', height: '15px' }} />
+              <ShoppingBag style={{ width: '14px', height: '14px' }} />
               <span>Cart</span>
-              {cartCount > 0 && <span className="haandi-cart-badge">{cartCount}</span>}
+              {cartCount > 0 && (
+                <span style={{ background: '#FFFFFF', color: '#8B1E1E', fontSize: '10px', fontWeight: '900', padding: '1px 6px', borderRadius: '10px' }}>
+                  {cartCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
       </nav>
-
-      {/* ============================================================
-          MINIMAL HERO BANNER & LOCATION STRIP
-          ============================================================ */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1A120B 0%, #2A1F17 100%)',
-        color: '#ffffff', padding: '24px 16px', borderBottom: '2px solid var(--haandi-saffron)'
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(232,93,4,0.2)', border: '1px solid var(--haandi-saffron)', padding: '3px 10px', borderRadius: '99px', fontSize: '11px', color: 'var(--haandi-gold)', fontWeight: '800', marginBottom: '8px' }}>
-              <span>🏺 Authentic Desi Earthenware Cuisine</span>
-            </div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: '900', color: '#ffffff', margin: '0 0 4px 0' }}>
-              Slow-Cooked Clay Pot Handi & Charcoal BBQ
-            </h1>
-            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0 }}>
-              Civic Center, Executive Block, Gulberg Greens, Islamabad · 0330 0500600
-            </p>
-          </div>
-
-          <button
-            onClick={() => setShowDiningModeModal(true)}
-            style={{
-              background: 'linear-gradient(135deg, var(--haandi-red) 0%, #E85D04 100%)',
-              color: '#ffffff', border: 'none', borderRadius: '12px', padding: '10px 18px',
-              fontSize: '13px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-              boxShadow: '0 4px 14px rgba(232,93,4,0.4)'
-            }}
-          >
-            <span>{isReservingTable ? '🪑 Dine-In' : orderType === 'DELIVERY' ? `🛵 Delivery (${selectedSector.split(',')[0]})` : '🛍️ Takeaway'}</span>
-            <span style={{ fontSize: '10px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>Change</span>
-          </button>
-        </div>
-      </div>
 
           {/* Delivery Sector Selector */}
           {orderType === 'DELIVERY' && (
@@ -1085,9 +1072,231 @@ export const CustomerPortal: React.FC = () => {
       )}
 
       {/* ============================================================
+          ORDER CONFIRMED & WHATSAPP TRACKING MODAL
+          ============================================================ */}
+      {isOrderPlaced && placedOrderId && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(26,18,11,0.75)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+        }}>
+          <div style={{
+            background: '#FDFBF7', borderRadius: '24px', maxWidth: '440px', width: '100%',
+            overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.4)', border: '2px solid #EADBCC',
+            animation: 'fadeIn 0.25s ease-out'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)',
+              padding: '24px 20px', color: '#ffffff', textAlign: 'center'
+            }}>
+              <div style={{
+                width: '56px', height: '56px', margin: '0 auto 10px',
+                borderRadius: '50%', background: '#15803D', color: '#ffffff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 6px 20px rgba(21,128,61,0.5)', border: '3px solid #ffffff'
+              }}>
+                <CheckCircle2 style={{ width: '30px', height: '30px' }} />
+              </div>
+              <h2 style={{ fontSize: '20px', fontWeight: '900', margin: '0 0 4px 0', color: '#ffffff' }}>
+                Order Confirmed!
+              </h2>
+              <p style={{ fontSize: '12px', color: 'var(--haandi-gold)', margin: 0 }}>
+                Order #{placedOrderId.slice(-6).toUpperCase()} · In Earthen Kitchen
+              </p>
+            </div>
+
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ background: '#F0FDF4', border: '1.5px solid #BBF7D0', borderRadius: '14px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ fontSize: '22px' }}>📲</div>
+                <div style={{ fontSize: '12px', color: '#15803D', lineHeight: 1.4 }}>
+                  <strong>WhatsApp Tracking Sent!</strong><br />
+                  A WhatsApp message with your live rider tracking link has been prepared.
+                </div>
+              </div>
+
+              <a
+                href={`/#/track/${placedOrderId}`}
+                style={{
+                  background: 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)',
+                  color: '#ffffff', textDecoration: 'none', borderRadius: '14px',
+                  padding: '13px', fontSize: '14px', fontWeight: '900', textAlign: 'center',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  boxShadow: '0 4px 16px rgba(139,30,30,0.35)'
+                }}
+              >
+                <span>📍 Track Live Order & Rider on Map</span>
+                <ArrowRight style={{ width: '16px', height: '16px' }} />
+              </a>
+
+              <a
+                href={`https://wa.me/${((custPhone || '').replace(/[^0-9]/g, '').startsWith('0') ? '92' + (custPhone || '').replace(/[^0-9]/g, '').slice(1) : '92' + (custPhone || '').replace(/[^0-9]/g, '')) || '923300500600'}?text=${encodeURIComponent(`🍲 *HAANDI BY YUMTO — Live Order Tracking*\n\n*Order ID:* #${placedOrderId.slice(-6).toUpperCase()}\n\n📍 *Track Live Order & Rider:* ${window.location.origin}/#/track/${placedOrderId}`)}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  background: '#25D366', color: '#ffffff', textDecoration: 'none',
+                  borderRadius: '14px', padding: '11px', fontSize: '13px', fontWeight: '800', textAlign: 'center',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                }}
+              >
+                <span>💬 Open WhatsApp Tracking Link</span>
+              </a>
+
+              <button
+                onClick={() => setIsOrderPlaced(false)}
+                style={{
+                  background: 'transparent', border: '1.5px solid #EADBCC', borderRadius: '12px',
+                  padding: '9px', fontSize: '12px', fontWeight: '700', color: '#5C4B3C', cursor: 'pointer'
+                }}
+              >
+                Continue Browsing Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          SHORT & COMPACT DINING MODE POPUP (Screenshot 1)
+          ============================================================ */}
+      {showDiningModeModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9998,
+          background: 'rgba(26,18,11,0.7)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+        }}>
+          <div style={{
+            background: '#FDFBF7', borderRadius: '24px', maxWidth: '400px', width: '100%',
+            overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.35)', border: '2px solid #EADBCC',
+            animation: 'fadeIn 0.25s ease-out'
+          }}>
+            {/* Header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)',
+              padding: '16px 20px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img src="/logo.png" alt="Haandi" style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#FDFBF7', padding: '2px' }} />
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: '900', color: '#ffffff', margin: 0 }}>
+                    Select Dining Mode
+                  </h3>
+                  <div style={{ fontSize: '10px', color: 'var(--haandi-gold)' }}>Gulberg Greens, Islamabad</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDiningModeModal(false)}
+                style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', color: '#ffffff', cursor: 'pointer', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <X style={{ width: '16px', height: '16px' }} />
+              </button>
+            </div>
+
+            {/* 3 Compact Option Cards */}
+            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              
+              {/* Delivery */}
+              <button
+                onClick={() => {
+                  setOrderType('DELIVERY');
+                  setIsReservingTable(false);
+                  setShowDiningModeModal(false);
+                  showToast('🛵 Delivery selected (Gulberg Greens)');
+                }}
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: '14px',
+                  background: orderType === 'DELIVERY' && !isReservingTable ? '#FFF9F5' : '#FFFFFF',
+                  border: `2px solid ${orderType === 'DELIVERY' && !isReservingTable ? '#8B1E1E' : '#EADBCC'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left',
+                  boxShadow: orderType === 'DELIVERY' && !isReservingTable ? '0 4px 12px rgba(139,30,30,0.12)' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ fontSize: '24px', width: '38px', height: '38px', borderRadius: '10px', background: '#FBF0EF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    🛵
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: '900', fontSize: '15px', color: '#1A120B' }}>Delivery</div>
+                    <div style={{ fontSize: '11px', color: '#5C4B3C' }}>Gulberg Greens · Within 2.5 km</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '11px', fontWeight: '800', background: '#F0FDF4', color: '#15803D', padding: '3px 8px', borderRadius: '6px', border: '1px solid #BBF7D0' }}>
+                  30-40 Mins
+                </div>
+              </button>
+
+              {/* Takeaway */}
+              <button
+                onClick={() => {
+                  setOrderType('PICK_UP');
+                  setIsReservingTable(false);
+                  setShowDiningModeModal(false);
+                  showToast('🛍️ Takeaway / Pickup selected');
+                }}
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: '14px',
+                  background: orderType === 'PICK_UP' && !isReservingTable ? '#FFF9F5' : '#FFFFFF',
+                  border: `2px solid ${orderType === 'PICK_UP' && !isReservingTable ? '#8B1E1E' : '#EADBCC'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left',
+                  boxShadow: orderType === 'PICK_UP' && !isReservingTable ? '0 4px 12px rgba(139,30,30,0.12)' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ fontSize: '24px', width: '38px', height: '38px', borderRadius: '10px', background: '#FDF4EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    🛍️
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: '900', fontSize: '15px', color: '#1A120B' }}>Takeaway</div>
+                    <div style={{ fontSize: '11px', color: '#5C4B3C' }}>Civic Center Pickup</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '11px', fontWeight: '800', background: '#FDF4EB', color: '#E85D04', padding: '3px 8px', borderRadius: '6px', border: '1px solid rgba(232,93,4,0.3)' }}>
+                  20 Mins
+                </div>
+              </button>
+
+              {/* Dine-In */}
+              <button
+                onClick={() => {
+                  setOrderType('DINE_IN');
+                  setIsReservingTable(true);
+                  setShowDiningModeModal(false);
+                  document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
+                  showToast('🪑 Dine-In selected · Pick your table');
+                }}
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: '14px',
+                  background: isReservingTable ? '#FFF9F5' : '#FFFFFF',
+                  border: `2px solid ${isReservingTable ? '#8B1E1E' : '#EADBCC'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left',
+                  boxShadow: isReservingTable ? '0 4px 12px rgba(139,30,30,0.12)' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ fontSize: '24px', width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(244,196,48,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    🪑
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: '900', fontSize: '15px', color: '#1A120B' }}>Dine-In</div>
+                    <div style={{ fontSize: '11px', color: '#5C4B3C' }}>Table & VIP Majlis Seating</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '11px', fontWeight: '800', background: 'rgba(244,196,48,0.2)', color: '#D97706', padding: '3px 8px', borderRadius: '6px', border: '1px solid rgba(217,119,6,0.3)' }}>
+                  Floor Plan
+                </div>
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
           LIVE GPS TRACKING MODAL (OPENSTREETMAP)
           ============================================================ */}
-      {(isOrderPlaced || showLiveTrackingModal) && (
+      {(showLiveTrackingModal) && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 9998,
           background: 'rgba(26,18,11,0.75)', backdropFilter: 'blur(5px)',
@@ -1111,7 +1320,7 @@ export const CustomerPortal: React.FC = () => {
                 </div>
               </div>
               <button
-                onClick={() => { setIsOrderPlaced(false); setShowLiveTrackingModal(false); }}
+                onClick={() => setShowLiveTrackingModal(false)}
                 style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer' }}
               >
                 <X style={{ width: '20px', height: '20px' }} />
@@ -1133,231 +1342,13 @@ export const CustomerPortal: React.FC = () => {
                 📍 Gulberg Greens Civic Center ➔ {selectedSector}
               </span>
               <button
-                onClick={() => { setIsOrderPlaced(false); setShowLiveTrackingModal(false); }}
+                onClick={() => setShowLiveTrackingModal(false)}
                 style={{
                   background: 'var(--haandi-red)', color: '#ffffff', border: 'none', borderRadius: '10px',
                   padding: '8px 18px', fontSize: '12px', fontWeight: '800', cursor: 'pointer'
                 }}
               >
                 Close Tracker
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================
-          DINING MODE SELECTION POPUP MODAL (DELIVERY, TAKEAWAY, DINE-IN)
-          ============================================================ */}
-      {showDiningModeModal && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9998,
-          background: 'rgba(26,18,11,0.75)', backdropFilter: 'blur(5px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
-        }}>
-          <div style={{
-            background: 'var(--bg-cream-light)', borderRadius: '24px', maxWidth: '500px', width: '100%',
-            overflow: 'hidden', boxShadow: 'var(--shadow-xl)', border: '2px solid var(--border-warm)',
-            animation: 'fadeIn 0.25s ease-out'
-          }}>
-
-            {/* Modal Header */}
-            <div style={{
-              background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)',
-              padding: '20px 24px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              borderBottom: '2px solid var(--haandi-saffron)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#FDFBF7', padding: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
-                  <img src="/logo.png" alt="Haandi" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                </div>
-                <div>
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: '900', color: '#ffffff', margin: 0 }}>
-                    How would you like to order?
-                  </h3>
-                  <p style={{ fontSize: '11px', color: 'var(--haandi-gold)', margin: '2px 0 0 0' }}>
-                    Haandi by Yumto · Civic Center, Gulberg Greens, Islamabad
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowDiningModeModal(false)}
-                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', color: '#ffffff', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <X style={{ width: '18px', height: '18px' }} />
-              </button>
-            </div>
-
-            {/* 3 High-Contrast Interactive Cards */}
-            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '72vh', overflowY: 'auto' }}>
-              
-              {/* Option 1: Doorstep Delivery */}
-              <div
-                onClick={() => {
-                  setOrderType('DELIVERY');
-                  setIsReservingTable(false);
-                }}
-                style={{
-                  background: orderType === 'DELIVERY' && !isReservingTable ? '#FFF9F5' : '#ffffff',
-                  border: `2.5px solid ${orderType === 'DELIVERY' && !isReservingTable ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
-                  borderRadius: '16px', padding: '16px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '10px',
-                  boxShadow: orderType === 'DELIVERY' && !isReservingTable ? '0 6px 20px rgba(139,30,30,0.18)' : 'none',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{
-                    width: '50px', height: '50px', borderRadius: '14px',
-                    background: orderType === 'DELIVERY' && !isReservingTable ? 'linear-gradient(135deg, var(--haandi-red) 0%, #E85D04 100%)' : 'var(--haandi-red-light)',
-                    color: orderType === 'DELIVERY' && !isReservingTable ? '#ffffff' : 'var(--haandi-red)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', flexShrink: 0
-                  }}>
-                    🛵
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '16px', fontWeight: '900', color: 'var(--text-dark)' }}>
-                        Doorstep Delivery
-                      </span>
-                      <span style={{ fontSize: '11px', fontWeight: '800', background: 'var(--emerald-light)', color: 'var(--emerald)', border: '1px solid var(--emerald-border)', padding: '3px 8px', borderRadius: '6px' }}>
-                        30-40 Mins
-                      </span>
-                    </div>
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
-                      Delivered piping hot in sealed clay pots within 2.5 km of Civic Center.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Sector Selector when Delivery is selected */}
-                {orderType === 'DELIVERY' && !isReservingTable && (
-                  <div style={{ borderTop: '1px dashed var(--border-warm)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)' }}>Confirm Your Sector in Gulberg Greens:</label>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <select
-                        value={selectedSector}
-                        onChange={e => setSelectedSector(e.target.value)}
-                        style={{
-                          flex: 1, background: '#ffffff', border: `1.5px solid ${isWithinDeliveryRadius ? 'var(--border-warm)' : '#EF4444'}`,
-                          borderRadius: '10px', padding: '9px 12px', fontSize: '12px', fontWeight: '700'
-                        }}
-                      >
-                        {GULBERG_SECTORS.map(s => (
-                          <option key={s.name} value={s.name}>{s.name} ({s.distanceKm} km)</option>
-                        ))}
-                      </select>
-                      <div style={{
-                        padding: '8px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: '900',
-                        background: isWithinDeliveryRadius ? 'var(--emerald-light)' : '#FEE2E2',
-                        color: isWithinDeliveryRadius ? 'var(--emerald)' : '#DC2626',
-                        display: 'flex', alignItems: 'center', whiteSpace: 'nowrap'
-                      }}>
-                        {isWithinDeliveryRadius ? `✓ ${currentSector.distanceKm} km` : '✗ >2.5 km'}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Option 2: Takeaway / Pickup */}
-              <div
-                onClick={() => {
-                  setOrderType('PICK_UP');
-                  setIsReservingTable(false);
-                }}
-                style={{
-                  background: orderType === 'PICK_UP' && !isReservingTable ? '#FFF9F5' : '#ffffff',
-                  border: `2.5px solid ${orderType === 'PICK_UP' && !isReservingTable ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
-                  borderRadius: '16px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px',
-                  boxShadow: orderType === 'PICK_UP' && !isReservingTable ? '0 6px 20px rgba(139,30,30,0.18)' : 'none',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <div style={{
-                  width: '50px', height: '50px', borderRadius: '14px',
-                  background: orderType === 'PICK_UP' && !isReservingTable ? 'linear-gradient(135deg, #E85D04 0%, #F4C430 100%)' : 'var(--haandi-saffron-light)',
-                  color: orderType === 'PICK_UP' && !isReservingTable ? '#1A120B' : 'var(--haandi-saffron)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', flexShrink: 0
-                }}>
-                  🛍️
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '16px', fontWeight: '900', color: 'var(--text-dark)' }}>
-                      Takeaway / Self-Pickup
-                    </span>
-                    <span style={{ fontSize: '11px', fontWeight: '800', background: 'var(--haandi-saffron-light)', color: 'var(--haandi-saffron)', border: '1px solid rgba(232,93,4,0.3)', padding: '3px 8px', borderRadius: '6px' }}>
-                      20-25 Mins
-                    </span>
-                  </div>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
-                    Pick up directly from Civic Center, Executive Block, Gulberg Greens.
-                  </p>
-                </div>
-              </div>
-
-              {/* Option 3: Dine-In & VIP Majlis */}
-              <div
-                onClick={() => {
-                  setOrderType('DINE_IN');
-                  setIsReservingTable(true);
-                }}
-                style={{
-                  background: isReservingTable ? '#FFF9F5' : '#ffffff',
-                  border: `2.5px solid ${isReservingTable ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
-                  borderRadius: '16px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px',
-                  boxShadow: isReservingTable ? '0 6px 20px rgba(139,30,30,0.18)' : 'none',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <div style={{
-                  width: '50px', height: '50px', borderRadius: '14px',
-                  background: isReservingTable ? 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)' : 'rgba(244,196,48,0.2)',
-                  color: isReservingTable ? '#ffffff' : '#D97706',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', flexShrink: 0
-                }}>
-                  🪑
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '16px', fontWeight: '900', color: 'var(--text-dark)' }}>
-                      Dine-In & VIP Majlis
-                    </span>
-                    <span style={{ fontSize: '11px', fontWeight: '800', background: 'rgba(244,196,48,0.2)', color: '#D97706', border: '1px solid rgba(217,119,6,0.3)', padding: '3px 8px', borderRadius: '6px' }}>
-                      Floor Seating
-                    </span>
-                  </div>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
-                    Reserve your table or authentic earthen carpet Majlis on our live floor plan.
-                  </p>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Modal Footer with Big Vibrant Button */}
-            <div style={{ padding: '16px 20px', background: 'var(--bg-card)', borderTop: '1px solid var(--border-warm)', display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => {
-                  setShowDiningModeModal(false);
-                  if (isReservingTable) {
-                    document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
-                  } else {
-                    document.getElementById('menu-section')?.scrollIntoView({ behavior: 'smooth' });
-                  }
-                  showToast(`✓ Mode set to ${isReservingTable ? 'Dine-In' : orderType === 'DELIVERY' ? `Delivery (${selectedSector.split(',')[0]})` : 'Takeaway'}`);
-                }}
-                style={{
-                  flex: 1,
-                  background: 'linear-gradient(135deg, var(--haandi-red) 0%, #E85D04 100%)',
-                  color: '#ffffff', border: 'none', borderRadius: '12px',
-                  padding: '14px', fontSize: '14px', fontWeight: '900', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  boxShadow: '0 4px 16px rgba(139,30,30,0.35)'
-                }}
-              >
-                <span>Start Ordering ({isReservingTable ? 'Dine-In' : orderType === 'DELIVERY' ? 'Delivery' : 'Takeaway'})</span>
-                <ArrowRight style={{ width: '16px', height: '16px' }} />
               </button>
             </div>
           </div>
