@@ -312,13 +312,13 @@ export const CustomerPortal: React.FC = () => {
       )}
 
       {/* ============================================================
-          SMOOTH & EASY LUXURY NAVBAR (Creamy Porcelain Canvas)
+          LUXURY DARK NAVBAR (Deep Roasted Charcoal & Saffron Gold)
           ============================================================ */}
       <nav style={{
-        background: '#FFFFFF',
-        borderBottom: '1px solid #EADBCC',
+        background: '#1A120B',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
         position: 'sticky', top: 0, zIndex: 500,
-        boxShadow: '0 2px 10px rgba(26,18,11,0.04)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
         padding: '10px 16px'
       }}>
         <div style={{
@@ -330,37 +330,41 @@ export const CustomerPortal: React.FC = () => {
             <img
               src="/logo.png"
               alt="Haandi by Yumto"
-              style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'contain', background: '#F8F3EA', padding: '2px', border: '1.5px solid #E85D04' }}
+              style={{
+                width: '42px', height: '42px', borderRadius: '10px',
+                objectFit: 'contain', background: '#F8F3EA', padding: '2px',
+                border: '2px solid rgba(232,93,4,0.6)', flexShrink: 0
+              }}
             />
             <div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: '900', color: '#1A120B', letterSpacing: '0.02em', lineHeight: 1.1 }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: '900', color: '#ffffff', letterSpacing: '0.04em', lineHeight: 1.1 }}>
                 HAANDI <span style={{ color: '#E85D04' }}>BY YUMTO</span>
               </div>
-              <div style={{ fontSize: '10px', color: '#5C4B3C', fontWeight: '700', marginTop: '2px' }}>
+              <div style={{ fontSize: '10px', color: '#F4C430', fontWeight: '700', marginTop: '2px', letterSpacing: '0.06em' }}>
                 Civic Center, Gulberg Greens
               </div>
             </div>
           </a>
 
-          {/* Center: Smooth Dining Mode Pill */}
+          {/* Center: Dark Glass Dining Mode Pill */}
           <button
             onClick={() => setShowDiningModeModal(true)}
             style={{
-              background: '#F8F3EA',
-              border: '1.5px solid #EADBCC',
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.18)',
               borderRadius: '99px', padding: '6px 14px',
               display: 'flex', alignItems: 'center', gap: '8px',
               cursor: 'pointer', transition: 'all 0.2s',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+              color: '#ffffff'
             }}
           >
             <span style={{ fontSize: '14px' }}>
               {isReservingTable ? '🪑' : orderType === 'DELIVERY' ? '🛵' : '🛍️'}
             </span>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#1A120B' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#ffffff' }}>
               {isReservingTable ? 'Dine-In Table' : orderType === 'DELIVERY' ? `Delivery (${selectedSector.split(' ')[0]})` : 'Takeaway'}
             </span>
-            <span style={{ fontSize: '10px', color: '#8B1E1E', fontWeight: '900', background: 'rgba(139,30,30,0.08)', padding: '2px 6px', borderRadius: '6px' }}>
+            <span style={{ fontSize: '10px', color: '#F4C430', fontWeight: '900', background: 'rgba(244,196,48,0.15)', padding: '2px 6px', borderRadius: '6px' }}>
               Change
             </span>
           </button>
@@ -370,8 +374,8 @@ export const CustomerPortal: React.FC = () => {
             <button
               onClick={() => setShowInquiryModal(true)}
               style={{
-                background: '#FFFFFF', border: '1px solid #EADBCC', borderRadius: '10px',
-                padding: '6px 12px', fontSize: '12px', fontWeight: '700', color: '#1A120B',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px',
+                padding: '6px 12px', fontSize: '12px', fontWeight: '700', color: '#ffffff',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
               }}
               className="hidden sm:inline-flex"
@@ -383,8 +387,8 @@ export const CustomerPortal: React.FC = () => {
             <button
               onClick={() => setShowOrderHistoryModal(true)}
               style={{
-                background: '#FFFFFF', border: '1px solid #EADBCC', borderRadius: '10px',
-                padding: '6px 12px', fontSize: '12px', fontWeight: '700', color: '#1A120B',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px',
+                padding: '6px 12px', fontSize: '12px', fontWeight: '700', color: '#ffffff',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
               }}
               className="hidden sm:inline-flex"
@@ -396,8 +400,8 @@ export const CustomerPortal: React.FC = () => {
             <button
               onClick={() => setShowLiveTrackingModal(true)}
               style={{
-                background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '10px',
-                padding: '6px 12px', fontSize: '12px', fontWeight: '800', color: '#15803D',
+                background: 'rgba(21,128,61,0.2)', border: '1px solid #15803D', borderRadius: '10px',
+                padding: '6px 12px', fontSize: '12px', fontWeight: '800', color: '#4ADE80',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
               }}
             >
@@ -412,7 +416,7 @@ export const CustomerPortal: React.FC = () => {
                 color: '#ffffff', border: 'none', borderRadius: '10px',
                 padding: '7px 14px', fontSize: '12px', fontWeight: '800',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-                boxShadow: '0 2px 8px rgba(139,30,30,0.25)'
+                boxShadow: '0 2px 10px rgba(232,93,4,0.4)'
               }}
             >
               <ShoppingBag style={{ width: '14px', height: '14px' }} />
@@ -426,6 +430,41 @@ export const CustomerPortal: React.FC = () => {
           </div>
         </div>
       </nav>
+
+      {/* ============================================================
+          DARK LUXURY HERO BANNER
+          ============================================================ */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1A120B 0%, #2A1F17 100%)',
+        color: '#ffffff', padding: '22px 16px', borderBottom: '2px solid var(--haandi-saffron)'
+      }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(232,93,4,0.2)', border: '1px solid var(--haandi-saffron)', padding: '3px 10px', borderRadius: '99px', fontSize: '11px', color: 'var(--haandi-gold)', fontWeight: '800', marginBottom: '8px' }}>
+              <span>🏺 Authentic Desi Earthenware Cuisine</span>
+            </div>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: '900', color: '#ffffff', margin: '0 0 4px 0' }}>
+              Slow-Cooked Clay Pot Handi & Charcoal BBQ
+            </h1>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0 }}>
+              Civic Center, Executive Block, Gulberg Greens, Islamabad · 0330 0500600
+            </p>
+          </div>
+
+          <button
+            onClick={() => setShowDiningModeModal(true)}
+            style={{
+              background: 'linear-gradient(135deg, var(--haandi-red) 0%, #E85D04 100%)',
+              color: '#ffffff', border: 'none', borderRadius: '12px', padding: '10px 18px',
+              fontSize: '13px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+              boxShadow: '0 4px 14px rgba(232,93,4,0.4)'
+            }}
+          >
+            <span>{isReservingTable ? '🪑 Dine-In' : orderType === 'DELIVERY' ? `🛵 Delivery (${selectedSector.split(',')[0]})` : '🛍️ Takeaway'}</span>
+            <span style={{ fontSize: '10px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>Change</span>
+          </button>
+        </div>
+      </div>
 
           {/* Delivery Sector Selector */}
           {orderType === 'DELIVERY' && (
