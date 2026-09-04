@@ -16,8 +16,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const isCustomerView = location.pathname === '/' || location.pathname.startsWith('/track');
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F8F3EA', overflowX: 'hidden' }}>
-      <main style={{ flex: 1, width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F8F3EA' }}>
+      <main style={{ flex: 1, width: '100%' }}>
         {children}
       </main>
 
