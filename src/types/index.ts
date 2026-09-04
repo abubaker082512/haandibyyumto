@@ -1,4 +1,4 @@
-export type Role = 'CUSTOMER' | 'KITCHEN' | 'RIDER' | 'WAITER' | 'MANAGER' | 'OWNER' | 'CASHIER';
+export type Role = 'CUSTOMER' | 'KITCHEN' | 'RIDER' | 'WAITER' | 'MANAGER' | 'OWNER' | 'ADMIN' | 'CASHIER';
 
 export interface Branch {
   id: string;
@@ -27,8 +27,8 @@ export interface Table {
   tableNumber: string;
   capacity: number;
   type: TableType;
-  x: number; // percentage width relative to floor layout container
-  y: number; // percentage height relative to floor layout container
+  x: number;
+  y: number;
   width: number;
   height: number;
   status: TableStatus;
@@ -49,6 +49,43 @@ export interface MenuItem {
   isAvailable: boolean;
   branchesAvailable: string[]; // branch IDs
   variations?: MenuItemVariation[];
+  costPrice?: number; // Estimated food cost
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Branch-Specific Menu Overrides
+// ──────────────────────────────────────────────────────────────────────────────
+export interface BranchMenuOverride {
+  branchId: string;
+  menuItemId: string;
+  customPrice?: number;
+  isAvailable?: boolean;
+  customName?: string;
+  promoTag?: string;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Recipe & Bill of Materials (BOM) Management
+// ──────────────────────────────────────────────────────────────────────────────
+export interface RecipeIngredient {
+  id: string;
+  ingredientName: string;
+  quantity: number;
+  unit: 'kg' | 'g' | 'liter' | 'ml' | 'piece' | 'packet';
+  costPerUnit: number;
+  totalCost: number;
+}
+
+export interface MenuItemRecipe {
+  menuItemId: string;
+  menuItemName: string;
+  portionYield: number; // default 1 portion
+  ingredients: RecipeIngredient[];
+  totalFoodCost: number;
+  targetSellingPrice: number;
+  foodCostMarginPercent: number; // (totalFoodCost / targetSellingPrice) * 100
+  preparationNotes?: string;
+  lastUpdated: string;
 }
 
 export type ReservationType = 'STANDARD' | 'PRIOR_2H_PREMIUM';
@@ -61,7 +98,7 @@ export interface Reservation {
   userId: string;
   userName: string;
   userPhone: string;
-  startTime: string; // ISO string or time string
+  startTime: string;
   endTime: string;
   guestCount: number;
   type: ReservationType;
@@ -85,10 +122,14 @@ export type OrderStatus =
 export interface OrderItem {
   menuItemId: string;
   name: string;
+  category?: string;
   price: number;
   quantity: number;
   variation?: string;
+  itemNotes?: string;
 }
+
+export type PaymentMethodType = 'CASH' | 'CARD' | 'ONLINE';
 
 export interface Order {
   id: string;
@@ -97,36 +138,40 @@ export interface Order {
   userName: string;
   userPhone: string;
   orderType: OrderType;
-  tableId?: string; // assigned by manager or selected by customer
+  tableId?: string;
   reservationId?: string;
   status: OrderStatus;
   paymentStatus: 'PENDING' | 'PAID';
-  paymentMethod: 'CASH' | 'CARD' | 'ONLINE' | 'SPLIT';
+  paymentMethod: PaymentMethodType;
   items: OrderItem[];
   subtotal: number;
-  discountAmount: number;     // flat discount applied at POS
-  discountPercent: number;    // percent discount applied at POS
-  tax: number;
+  discountAmount: number;
+  discountPercent: number;
+  serviceCharge: number;        // 5% mandatory service charges on subtotal
+  serviceChargePercent: number; // default 5%
+  taxableAmount: number;        // subtotal - discount + serviceCharge
+  tax: number;                  // FBR GST (5% Card / 16% Cash)
+  taxRatePercent: number;       // 5 or 16
   deliveryFee: number;
   premiumReservationFee: number;
   total: number;
   deliveryAddress?: string;
-  riderId?: string; // assigned delivery driver ID
-  cashierId?: string; // cashier who processed the order at POS
-  waiterName?: string; // server / manager who took the table order
-  isBillRequested?: boolean; // flag for cashier POS terminal
-  splitPayment?: SplitPayment; // multi-tender split details
-  isOnline?: boolean; // created online by customer
-  isPunched?: boolean; // true once cashier verifies and punches to kitchen
-  isCallConfirmed?: boolean; // cashier called customer to verify
+  riderId?: string;
+  cashierId?: string;
+  waiterName?: string;
+  isBillRequested?: boolean;
+  isOnline?: boolean;
+  isPunched?: boolean;
+  isCallConfirmed?: boolean;
   confirmedByCashier?: string;
+  cancellationReason?: string;
   createdAt: string;
 }
 
 export interface CustomerAddress {
   id: string;
-  label: string; // 'Home', 'Office', 'Farmhouse', etc.
-  sector: string; // 'Civic Center', 'Executive Block', 'Block A', etc.
+  label: string;
+  sector: string;
   address: string;
   isDefault?: boolean;
 }
@@ -136,35 +181,32 @@ export interface UserProfile {
   name: string;
   phone: string;
   role: Role;
-  branchId?: string; // linked branch for manager/kitchen
+  branchId?: string;
   addresses?: CustomerAddress[];
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// POS-Specific Types
+// System Settings
 // ──────────────────────────────────────────────────────────────────────────────
-
 export interface SystemSettings {
-  isTaxActive: boolean; // Master toggle for entire Haandi system
-  salesTaxCardPercent: number; // default 5%
-  salesTaxCashPercent: number; // default 16%
-  deliveryRadiusKm: number; // default 2.5 km
-  singleBranchId: string; // 'br-isb'
+  isTaxActive: boolean;
+  salesTaxCardPercent: number;   // default 5%
+  salesTaxCashPercent: number;   // default 16%
+  serviceChargePercent: number;  // default 5%
+  deliveryRadiusKm: number;      // default 2.5 km
+  singleBranchId: string;        // 'br-isb'
   advancePrepaymentOnly: boolean;
 }
 
-export interface SplitPayment {
-  cashAmount: number;
-  cardAmount: number;
-}
-
-/** A parked / held POS order ticket that can be recalled later */
+// ──────────────────────────────────────────────────────────────────────────────
+// Cash Tenders & Held POS Orders
+// ──────────────────────────────────────────────────────────────────────────────
 export interface HeldOrder {
   id: string;
   label: string; // e.g. "Table 4 - Ahmed" or "Takeaway #3"
   branchId: string;
   cashierId: string;
-  parkedBy?: string; // e.g. "Manager Bilal", "Frontdesk Staff", "Cashier Nadia", "Waiter Ali"
+  parkedBy?: string;
   tableNumber?: string;
   customerName?: string;
   customerPhone?: string;
@@ -173,10 +215,26 @@ export interface HeldOrder {
   items: OrderItem[];
   discountAmount: number;
   discountPercent: number;
-  heldAt: string; // ISO timestamp
+  serviceCharge: number;
+  tax: number;
+  total: number;
+  heldAt: string;
 }
 
-/** Cash drawer shift opened by a cashier at the start of a service period */
+// ──────────────────────────────────────────────────────────────────────────────
+// Shift Opening & Closing Audit (Denominations & Reconciliation)
+// ──────────────────────────────────────────────────────────────────────────────
+export interface CashDenominations {
+  rs5000: number;
+  rs1000: number;
+  rs500: number;
+  rs100: number;
+  rs50: number;
+  rs20: number;
+  rs10: number;
+  coins: number;
+}
+
 export type ShiftStatus = 'OPEN' | 'CLOSED';
 
 export interface CashierShift {
@@ -184,14 +242,24 @@ export interface CashierShift {
   cashierId: string;
   cashierName: string;
   branchId: string;
-  openedAt: string;      // ISO timestamp
-  closedAt?: string;     // ISO timestamp, set on shift close
-  openingFloat: number;  // cash placed in drawer at shift open
-  cashSales: number;     // accumulated cash payments during shift
-  cardSales: number;     // accumulated card payments during shift
-  cashIn: number;        // manual cash additions (e.g. change top-up)
-  cashOut: number;       // manual cash removals (e.g. petty cash & expenses)
-  actualCashCounted?: number; // cashier-entered cash count at close
+  openedAt: string;
+  closedAt?: string;
+  openingFloat: number;
+  openingNotes?: string;
+  cashSales: number;
+  cardSales: number;
+  onlineSales: number;
+  totalServiceChargesCollected: number;
+  totalTaxCollected: number;
+  cashIn: number;
+  cashOut: number;
+  inventoryBoughtFromTill: number;
+  expectedCashInDrawer: number;
+  actualCashCounted?: number;
+  denominations?: CashDenominations;
+  cashDiscrepancy?: number; // positive = over, negative = short, 0 = balanced
+  closingNotes?: string;
+  handoverToCashierName?: string;
   status: ShiftStatus;
 }
 
@@ -203,10 +271,124 @@ export interface TillTransaction {
   cashierName: string;
   type: 'CASH_IN' | 'CASH_OUT' | 'EXPENSE' | 'INVENTORY_PURCHASE';
   amount: number;
-  category: string; // 'Petty Expense', 'Vendor Inventory', 'Daily Supplies', 'Cash Top-up'
+  category: string;
   description: string;
   supplierName?: string;
   inventoryItemName?: string;
   quantityAdded?: number;
   timestamp: string;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Financial Accounting: Expenses, Vendors & General Ledger
+// ──────────────────────────────────────────────────────────────────────────────
+export interface ExpenseCategory {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface Expense {
+  id: string;
+  branchId: string;
+  category: string;
+  amount: number;
+  paidTo: string;
+  paymentMethod: 'CASH_DRAWER' | 'BANK_TRANSFER' | 'PETTY_CASH';
+  recordedBy: string;
+  receiptNumber?: string;
+  notes: string;
+  date: string;
+}
+
+export interface Vendor {
+  id: string;
+  name: string;
+  contactPerson: string;
+  phone: string;
+  supplyCategory: string; // 'Fresh Meat', 'Desi Ghee & Dairy', 'Spices & Herbs', 'Rice & Flour', 'Packaging'
+  currentBalancePayable: number;
+  branchId: string;
+}
+
+export interface VendorInvoice {
+  id: string;
+  vendorId: string;
+  vendorName: string;
+  branchId: string;
+  invoiceNumber: string;
+  itemsPurchased: string;
+  totalAmount: number;
+  amountPaid: number;
+  balanceDue: number;
+  status: 'PENDING' | 'PARTIAL' | 'PAID';
+  dueDate: string;
+  createdAt: string;
+}
+
+export interface GeneralLedgerEntry {
+  id: string;
+  branchId: string;
+  date: string;
+  account: 'REVENUE' | 'FOOD_COST' | 'EXPENSE' | 'TAX_PAYABLE' | 'SERVICE_CHARGE' | 'PAYROLL';
+  type: 'DEBIT' | 'CREDIT';
+  amount: number;
+  referenceId?: string;
+  description: string;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// HR, Staff & Payroll Management
+// ──────────────────────────────────────────────────────────────────────────────
+export interface StaffMember {
+  id: string;
+  name: string;
+  phone: string;
+  role: Role;
+  branchId: string;
+  monthlySalary: number;
+  designation: string;
+  cnic?: string;
+  joiningDate: string;
+  isActive: boolean;
+}
+
+export interface StaffAttendance {
+  id: string;
+  staffId: string;
+  staffName: string;
+  date: string;
+  status: 'PRESENT' | 'ABSENT' | 'LEAVE' | 'HALF_DAY';
+  checkIn?: string;
+  checkOut?: string;
+}
+
+export interface PayrollRecord {
+  id: string;
+  staffId: string;
+  staffName: string;
+  month: string; // e.g. "September 2026"
+  baseSalary: number;
+  allowances: number;
+  deductions: number;
+  netPayable: number;
+  status: 'PENDING' | 'PROCESSED' | 'PAID';
+  paidDate?: string;
+  paymentMethod?: 'BANK' | 'CASH';
+}
+
+export interface RolePermission {
+  role: Role;
+  canAccessPOS: boolean;
+  canAccessKDS: boolean;
+  canAccessFloorManager: boolean;
+  canAccessRiderPanel: boolean;
+  canAccessAdminReports: boolean;
+  canManageMenu: boolean;
+  canManageBranchPricing: boolean;
+  canManageRecipes: boolean;
+  canManageAccounting: boolean;
+  canManagePayroll: boolean;
+  canOverrideDiscounts: boolean;
+  canCloseShift: boolean;
 }

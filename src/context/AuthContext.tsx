@@ -82,6 +82,13 @@ const DEMO_PROFILES: Record<Role, AppUserProfile> = {
     email: 'owner@haandi.yumto.com',
     phone: '+92 300 0000000',
     role: 'OWNER'
+  },
+  ADMIN: {
+    uid: 'demo-admin',
+    name: 'Executive Admin',
+    email: 'admin@haandi.yumto.com',
+    phone: '+92 300 0000000',
+    role: 'ADMIN'
   }
 };
 
@@ -95,6 +102,7 @@ export const PRESET_CREDENTIALS: {
   portal: string;
 }[] = [
   { username: 'owner', email: 'owner@haandi.yumto.com', password: 'Haandi@2026', role: 'OWNER', name: 'Sajid Owner', phone: '0300-0000000', portal: '/admin' },
+  { username: 'admin', email: 'admin@haandi.yumto.com', password: 'Haandi@2026', role: 'ADMIN', name: 'Executive Admin', phone: '0300-0000000', portal: '/admin' },
   { username: 'manager', email: 'manager@haandi.yumto.com', password: 'Haandi@2026', role: 'MANAGER', name: 'Bilal Manager (Islamabad)', phone: '0333-4567890', portal: '/manager' },
   { username: 'waiter', email: 'waiter@haandi.yumto.com', password: 'Haandi@2026', role: 'WAITER', name: 'Ali Order Taker (Waiter)', phone: '0322-7770001', portal: '/manager' },
   { username: 'cashier', email: 'cashier@haandi.yumto.com', password: 'Haandi@2026', role: 'CASHIER', name: 'Nadia Cashier (Islamabad)', phone: '0321-5550001', portal: '/pos' },

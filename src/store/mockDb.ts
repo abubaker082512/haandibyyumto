@@ -1,6 +1,13 @@
 import { HAANDI_MENU } from './menuData';
 import { useState, useEffect } from 'react';
-import type { Branch, Floor, Table, MenuItem, Reservation, Order, OrderItem, UserProfile, OrderStatus, TableStatus, CashierShift, HeldOrder, SystemSettings, TillTransaction, CustomerAddress } from '../types';
+import type {
+  Branch, Floor, Table, MenuItem, Reservation, Order, OrderItem,
+  UserProfile, OrderStatus, TableStatus, CashierShift, HeldOrder,
+  SystemSettings, TillTransaction, CustomerAddress, BranchMenuOverride,
+  MenuItemRecipe, CashDenominations, Expense, Vendor,
+  VendorInvoice, StaffMember,
+  PayrollRecord, PaymentMethodType
+} from '../types';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -20,15 +27,17 @@ const INITIAL_USERS: UserProfile[] = [
   },
   { id: 'u-man1', name: 'Bilal Manager (Islamabad)', phone: '0333 4567890', role: 'MANAGER', branchId: 'br-isb' },
   { id: 'u-waiter1', name: 'Ali Order Taker (Waiter)', phone: '0322 7770001', role: 'WAITER', branchId: 'br-isb' },
+  { id: 'u-waiter2', name: 'Hamza Floor Captain', phone: '0322 7770002', role: 'WAITER', branchId: 'br-isb' },
   { id: 'u-kit1', name: 'Chef Tariq', phone: '0312 3456789', role: 'KITCHEN', branchId: 'br-isb' },
   { id: 'u-ride1', name: 'Zahid Rider 1', phone: '0345 6789012', role: 'RIDER' },
   { id: 'u-ride2', name: 'Kamran Rider 2', phone: '0315 1122334', role: 'RIDER' },
   { id: 'u-own', name: 'Sajid Owner (HQ)', phone: '0300 0000000', role: 'OWNER' },
+  { id: 'u-admin', name: 'Admin General Head', phone: '0311 9998877', role: 'ADMIN' },
   { id: 'u-cash1', name: 'Nadia Cashier (Islamabad)', phone: '0321 5550001', role: 'CASHIER', branchId: 'br-isb' },
   { id: 'u-cash2', name: 'Hamza Cashier (Islamabad)', phone: '0333 5550002', role: 'CASHIER', branchId: 'br-isb' },
 ];
 
-// Single Location — Gulberg Greens, Islamabad
+// Single Location & Expansion Branches
 const INITIAL_BRANCHES: Branch[] = [
   {
     id: 'br-isb',
@@ -38,6 +47,15 @@ const INITIAL_BRANCHES: Branch[] = [
     phone: '0330 0500600',
     premiumBookingFee: 1500,
     activeSurchargeToggle: true
+  },
+  {
+    id: 'br-rwp',
+    name: 'Haandi by Yumto - Saddar / Bahria Town, Rawalpindi',
+    city: 'Rawalpindi',
+    address: 'Phase 7, Bahria Town / Saddar Cantt, Rawalpindi',
+    phone: '0330 0500700',
+    premiumBookingFee: 1200,
+    activeSurchargeToggle: false
   }
 ];
 
@@ -79,6 +97,60 @@ const INITIAL_TABLES: Table[] = [
 
 const INITIAL_MENU: MenuItem[] = HAANDI_MENU;
 
+// Seed Initial Recipes & Bill of Materials (BOM)
+const INITIAL_RECIPES: MenuItemRecipe[] = [
+  {
+    menuItemId: 'handi-c1',
+    menuItemName: 'Chicken Handi (Special Desi Ghee)',
+    portionYield: 1,
+    ingredients: [
+      { id: 'ing-1', ingredientName: 'Fresh Chicken Boneless', quantity: 0.5, unit: 'kg', costPerUnit: 850, totalCost: 425 },
+      { id: 'ing-2', ingredientName: 'Pure Desi Ghee', quantity: 0.08, unit: 'kg', costPerUnit: 2200, totalCost: 176 },
+      { id: 'ing-3', ingredientName: 'Dairy Cream & Yogurt', quantity: 0.1, unit: 'kg', costPerUnit: 600, totalCost: 60 },
+      { id: 'ing-4', ingredientName: 'Haandi Secret Spice Blend', quantity: 0.03, unit: 'kg', costPerUnit: 1500, totalCost: 45 },
+      { id: 'ing-5', ingredientName: 'Tomatoes & Ginger Garlic', quantity: 0.15, unit: 'kg', costPerUnit: 200, totalCost: 30 }
+    ],
+    totalFoodCost: 736,
+    targetSellingPrice: 1690,
+    foodCostMarginPercent: 43.5,
+    preparationNotes: 'Slow-cooked in clay terracotta handi for 25 minutes over low flame.',
+    lastUpdated: new Date().toISOString()
+  },
+  {
+    menuItemId: 'mandi-1',
+    menuItemName: 'Special Mutton Mandi Platter',
+    portionYield: 1,
+    ingredients: [
+      { id: 'ing-6', ingredientName: 'Fresh Prime Mutton Shin', quantity: 0.6, unit: 'kg', costPerUnit: 2400, totalCost: 1440 },
+      { id: 'ing-7', ingredientName: 'Premium Sella Basmati Rice', quantity: 0.35, unit: 'kg', costPerUnit: 420, totalCost: 147 },
+      { id: 'ing-8', ingredientName: 'Fried Nuts (Almonds, Raisins)', quantity: 0.05, unit: 'kg', costPerUnit: 3000, totalCost: 150 },
+      { id: 'ing-9', ingredientName: 'Mandi Special Arabian Spices', quantity: 0.04, unit: 'kg', costPerUnit: 2000, totalCost: 80 }
+    ],
+    totalFoodCost: 1817,
+    targetSellingPrice: 3200,
+    foodCostMarginPercent: 56.7,
+    preparationNotes: 'Smoked with charcoal and aged basmati rice broth.',
+    lastUpdated: new Date().toISOString()
+  }
+];
+
+// Seed Initial Vendors
+const INITIAL_VENDORS: Vendor[] = [
+  { id: 'v-1', name: 'Al-Madina Meat Suppliers', contactPerson: 'Haji Aslam', phone: '0300 5551122', supplyCategory: 'Fresh Meat & Mutton', currentBalancePayable: 45000, branchId: 'br-isb' },
+  { id: 'v-2', name: 'Punjab Pure Desi Dairy', contactPerson: 'Malik Qasim', phone: '0321 4443322', supplyCategory: 'Desi Ghee & Dairy Cream', currentBalancePayable: 28000, branchId: 'br-isb' },
+  { id: 'v-3', name: 'Shahi Spices & Rice Mills', contactPerson: 'Rana Tariq', phone: '0333 8887766', supplyCategory: 'Basmati Rice & Spices', currentBalancePayable: 15000, branchId: 'br-isb' },
+  { id: 'v-4', name: 'Eco Pack Islamabad', contactPerson: 'Zubair Packaging', phone: '0311 2223344', supplyCategory: 'Handi Terracotta & Boxes', currentBalancePayable: 12000, branchId: 'br-isb' }
+];
+
+// Seed Initial Staff Members
+const INITIAL_STAFF: StaffMember[] = [
+  { id: 'st-1', name: 'Bilal Manager', phone: '0333 4567890', role: 'MANAGER', branchId: 'br-isb', monthlySalary: 85000, designation: 'Branch General Manager', joiningDate: '2025-01-15', isActive: true },
+  { id: 'st-2', name: 'Nadia Cashier', phone: '0321 5550001', role: 'CASHIER', branchId: 'br-isb', monthlySalary: 45000, designation: 'Head Shift Cashier', joiningDate: '2025-03-01', isActive: true },
+  { id: 'st-3', name: 'Ali Order Taker', phone: '0322 7770001', role: 'WAITER', branchId: 'br-isb', monthlySalary: 35000, designation: 'Senior Order Taker / Captain', joiningDate: '2025-04-10', isActive: true },
+  { id: 'st-4', name: 'Chef Tariq', phone: '0312 3456789', role: 'KITCHEN', branchId: 'br-isb', monthlySalary: 75000, designation: 'Executive Handi Master Chef', joiningDate: '2024-11-20', isActive: true },
+  { id: 'st-5', name: 'Zahid Rider', phone: '0345 6789012', role: 'RIDER', branchId: 'br-isb', monthlySalary: 32000, designation: 'Senior Delivery Driver', joiningDate: '2025-06-01', isActive: true }
+];
+
 // Mock Reservations Seed
 const INITIAL_RESERVATIONS: Reservation[] = [
   {
@@ -117,10 +189,14 @@ const INITIAL_ORDERS: Order[] = [
     subtotal: 2070,
     discountAmount: 0,
     discountPercent: 0,
-    tax: 104, // 5% for Online
+    serviceCharge: 104,
+    serviceChargePercent: 5,
+    taxableAmount: 2174,
+    tax: 109,
+    taxRatePercent: 5,
     deliveryFee: 150,
     premiumReservationFee: 0,
-    total: 2324,
+    total: 2433,
     deliveryAddress: 'House 12, Executive Block, Gulberg Greens, Islamabad (0.4 km)',
     createdAt: new Date(Date.now() - 10 * 60000).toISOString()
   }
@@ -130,6 +206,7 @@ const DEFAULT_SETTINGS: SystemSettings = {
   isTaxActive: true,
   salesTaxCardPercent: 5,
   salesTaxCashPercent: 16,
+  serviceChargePercent: 5,
   deliveryRadiusKm: 2.5,
   singleBranchId: 'br-isb',
   advancePrepaymentOnly: true,
@@ -143,27 +220,50 @@ class MockDatabase {
   }
 
   private init() {
-    // Always force-refresh menu data to pick up any new items
     localStorage.setItem('yumto_users', JSON.stringify(INITIAL_USERS));
     localStorage.setItem('yumto_branches', JSON.stringify(INITIAL_BRANCHES));
     localStorage.setItem('yumto_floors', JSON.stringify(INITIAL_FLOORS));
     localStorage.setItem('yumto_tables', JSON.stringify(INITIAL_TABLES));
     localStorage.setItem('yumto_menu', JSON.stringify(INITIAL_MENU));
+    
     if (!localStorage.getItem('yumto_settings')) {
       localStorage.setItem('yumto_settings', JSON.stringify(DEFAULT_SETTINGS));
     }
-    if (!localStorage.getItem('yumto_reservations')) {
-      localStorage.setItem('yumto_reservations', JSON.stringify(INITIAL_RESERVATIONS));
+    if (!localStorage.getItem('yumto_recipes')) {
+      localStorage.setItem('yumto_recipes', JSON.stringify(INITIAL_RECIPES));
     }
-    if (!localStorage.getItem('yumto_orders')) {
-      localStorage.setItem('yumto_orders', JSON.stringify(INITIAL_ORDERS));
+    if (!localStorage.getItem('yumto_vendors')) {
+      localStorage.setItem('yumto_vendors', JSON.stringify(INITIAL_VENDORS));
     }
-    // POS-specific keys – only seed once per session
+    if (!localStorage.getItem('yumto_staff')) {
+      localStorage.setItem('yumto_staff', JSON.stringify(INITIAL_STAFF));
+    }
+    if (!localStorage.getItem('yumto_expenses')) {
+      localStorage.setItem('yumto_expenses', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('yumto_vendor_invoices')) {
+      localStorage.setItem('yumto_vendor_invoices', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('yumto_ledger')) {
+      localStorage.setItem('yumto_ledger', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('yumto_payroll')) {
+      localStorage.setItem('yumto_payroll', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('yumto_branch_menu_overrides')) {
+      localStorage.setItem('yumto_branch_menu_overrides', JSON.stringify([]));
+    }
     if (!localStorage.getItem('yumto_shifts')) {
       localStorage.setItem('yumto_shifts', JSON.stringify([]));
     }
     if (!localStorage.getItem('yumto_held_orders')) {
       localStorage.setItem('yumto_held_orders', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('yumto_orders')) {
+      localStorage.setItem('yumto_orders', JSON.stringify(INITIAL_ORDERS));
+    }
+    if (!localStorage.getItem('yumto_reservations')) {
+      localStorage.setItem('yumto_reservations', JSON.stringify(INITIAL_RESERVATIONS));
     }
   }
 
@@ -198,18 +298,118 @@ class MockDatabase {
     return updated;
   }
 
-  // FBR Sales Tax Rule: Controlled by isTaxActive toggle
-  calculateSalesTax(subtotal: number, paymentMethod: string): { taxRate: number; taxAmount: number } {
+  /**
+   * Complete Billing Calculation Formula:
+   * 1. Discounted Subtotal = Subtotal - Discount
+   * 2. Service Charges (5%) = Discounted Subtotal * 0.05
+   * 3. Taxable Amount = Discounted Subtotal + Service Charges
+   * 4. GST = Taxable Amount * (5% Card/Online or 16% Cash)
+   * 5. Total = Taxable Amount + GST
+   */
+  calculateBilling(discountedSubtotal: number, paymentMethod: PaymentMethodType) {
     const settings = this.getSettings();
-    if (!settings.isTaxActive) {
-      return { taxRate: 0, taxAmount: 0 };
+    const scPercent = settings.serviceChargePercent || 5;
+    const serviceCharge = Math.round(discountedSubtotal * (scPercent / 100));
+    const taxableAmount = discountedSubtotal + serviceCharge;
+
+    let taxRate = 0;
+    let taxAmount = 0;
+
+    if (settings.isTaxActive) {
+      const isDigital = paymentMethod === 'CARD' || paymentMethod === 'ONLINE';
+      taxRate = isDigital ? settings.salesTaxCardPercent : settings.salesTaxCashPercent;
+      taxAmount = Math.round(taxableAmount * (taxRate / 100));
     }
-    const isDigital = paymentMethod === 'CARD' || paymentMethod === 'ONLINE';
-    const rate = isDigital ? (settings.salesTaxCardPercent / 100) : (settings.salesTaxCashPercent / 100);
+
+    const grandTotal = taxableAmount + taxAmount;
+
     return {
-      taxRate: isDigital ? settings.salesTaxCardPercent : settings.salesTaxCashPercent,
-      taxAmount: Math.round(subtotal * rate)
+      serviceChargePercent: scPercent,
+      serviceCharge,
+      taxableAmount,
+      taxRatePercent: taxRate,
+      taxAmount,
+      grandTotal
     };
+  }
+
+  // Legacy helper mapping
+  calculateSalesTax(subtotal: number, paymentMethod: string) {
+    const pm: PaymentMethodType = (paymentMethod === 'CARD' || paymentMethod === 'ONLINE') ? paymentMethod : 'CASH';
+    const res = this.calculateBilling(subtotal, pm);
+    return {
+      taxRate: res.taxRatePercent,
+      taxAmount: res.taxAmount,
+      serviceCharge: res.serviceCharge
+    };
+  }
+
+  // Branch Menu Overrides
+  getBranchMenuOverrides(branchId?: string): BranchMenuOverride[] {
+    const list: BranchMenuOverride[] = JSON.parse(localStorage.getItem('yumto_branch_menu_overrides') || '[]');
+    return branchId ? list.filter(o => o.branchId === branchId) : list;
+  }
+
+  setBranchMenuOverride(override: BranchMenuOverride) {
+    const list = this.getBranchMenuOverrides();
+    const idx = list.findIndex(o => o.branchId === override.branchId && o.menuItemId === override.menuItemId);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...override };
+    } else {
+      list.push(override);
+    }
+    localStorage.setItem('yumto_branch_menu_overrides', JSON.stringify(list));
+    this.notify();
+  }
+
+  getBranchEffectiveMenu(branchId: string): MenuItem[] {
+    const menu = this.getMenu();
+    const overrides = this.getBranchMenuOverrides(branchId);
+    
+    return menu.map(item => {
+      const ov = overrides.find(o => o.menuItemId === item.id);
+      if (ov) {
+        return {
+          ...item,
+          name: ov.customName || item.name,
+          price: ov.customPrice !== undefined ? ov.customPrice : item.price,
+          isAvailable: ov.isAvailable !== undefined ? ov.isAvailable : item.isAvailable
+        };
+      }
+      return item;
+    });
+  }
+
+  // Recipes & BOM
+  getRecipes(): MenuItemRecipe[] {
+    return JSON.parse(localStorage.getItem('yumto_recipes') || '[]');
+  }
+
+  getRecipeByItemId(menuItemId: string): MenuItemRecipe | undefined {
+    return this.getRecipes().find(r => r.menuItemId === menuItemId);
+  }
+
+  saveRecipe(recipe: MenuItemRecipe) {
+    const list = this.getRecipes();
+    const totalCost = recipe.ingredients.reduce((acc, i) => acc + (i.costPerUnit * i.quantity), 0);
+    const margin = recipe.targetSellingPrice > 0 ? Math.round((totalCost / recipe.targetSellingPrice) * 1000) / 10 : 0;
+    
+    const enriched: MenuItemRecipe = {
+      ...recipe,
+      totalFoodCost: Math.round(totalCost),
+      foodCostMarginPercent: margin,
+      lastUpdated: new Date().toISOString()
+    };
+
+    const idx = list.findIndex(r => r.menuItemId === recipe.menuItemId);
+    if (idx !== -1) {
+      list[idx] = enriched;
+    } else {
+      list.push(enriched);
+    }
+    localStorage.setItem('yumto_recipes', JSON.stringify(list));
+    this.notify();
+    return enriched;
   }
 
   // Getters
@@ -566,51 +766,109 @@ class MockDatabase {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // POS: Cashier Shift Management
+  // Shift Opening, Closing, Denominations & Reconciliation
   // ─────────────────────────────────────────────────────────────────────────
-
   getShifts(branchId?: string): CashierShift[] {
-    const shifts: CashierShift[] = JSON.parse(localStorage.getItem('yumto_shifts') || '[]');
-    return branchId ? shifts.filter(s => s.branchId === branchId) : shifts;
+    const list: CashierShift[] = JSON.parse(localStorage.getItem('yumto_shifts') || '[]');
+    return branchId ? list.filter(s => s.branchId === branchId) : list;
   }
 
-  getActiveShift(branchId: string, cashierId: string): CashierShift | null {
-    return this.getShifts(branchId).find(
-      s => s.cashierId === cashierId && s.status === 'OPEN'
-    ) ?? null;
+  getActiveShift(branchIdOrCashier?: string, cashierId?: string): CashierShift | null {
+    const shifts = this.getShifts();
+    if (!branchIdOrCashier) {
+      return shifts.find(s => s.status === 'OPEN') || null;
+    }
+    return shifts.find(s => s.status === 'OPEN' && (
+      s.branchId === branchIdOrCashier || s.cashierId === branchIdOrCashier || (cashierId && s.cashierId === cashierId)
+    )) || null;
   }
 
-  openShift(cashierId: string, cashierName: string, branchId: string, openingFloat: number): CashierShift {
+  openShift(cashierId: string, cashierName: string, branchId: string, openingFloat: number, openingNotes?: string): CashierShift {
+    return this.openShiftWithFloat(cashierId, cashierName, branchId, openingFloat, openingNotes);
+  }
+
+  openShiftWithFloat(
+    cashierId: string,
+    cashierName: string,
+    branchId: string,
+    openingFloat: number,
+    openingNotes?: string
+  ): CashierShift {
     const shifts = this.getShifts();
     const newShift: CashierShift = {
-      id: 'shift-' + generateId(),
+      id: 'sh-' + generateId(),
       cashierId,
       cashierName,
       branchId,
       openedAt: new Date().toISOString(),
-      openingFloat,
+      openingFloat: Math.round(openingFloat),
+      openingNotes: openingNotes || '',
       cashSales: 0,
       cardSales: 0,
+      onlineSales: 0,
+      totalServiceChargesCollected: 0,
+      totalTaxCollected: 0,
       cashIn: 0,
       cashOut: 0,
-      status: 'OPEN',
+      inventoryBoughtFromTill: 0,
+      expectedCashInDrawer: Math.round(openingFloat),
+      status: 'OPEN'
     };
-    shifts.push(newShift);
+    shifts.unshift(newShift);
     localStorage.setItem('yumto_shifts', JSON.stringify(shifts));
     this.notify();
     return newShift;
   }
 
-  closeShift(shiftId: string, actualCashCounted: number) {
+  closeShiftWithDenominations(
+    shiftId: string,
+    denominations: CashDenominations,
+    closingNotes?: string,
+    handoverToCashierName?: string
+  ): CashierShift | null {
     const shifts = this.getShifts();
-    const index = shifts.findIndex(s => s.id === shiftId);
-    if (index !== -1) {
-      shifts[index].status = 'CLOSED';
-      shifts[index].closedAt = new Date().toISOString();
-      shifts[index].actualCashCounted = actualCashCounted;
-      localStorage.setItem('yumto_shifts', JSON.stringify(shifts));
-      this.notify();
-    }
+    const idx = shifts.findIndex(s => s.id === shiftId);
+    if (idx === -1) return null;
+
+    const countedCash = 
+      (denominations.rs5000 * 5000) +
+      (denominations.rs1000 * 1000) +
+      (denominations.rs500 * 500) +
+      (denominations.rs100 * 100) +
+      (denominations.rs50 * 50) +
+      (denominations.rs20 * 20) +
+      (denominations.rs10 * 10) +
+      (denominations.coins);
+
+    const s = shifts[idx];
+    const expected = s.openingFloat + s.cashSales + s.cashIn - s.cashOut - s.inventoryBoughtFromTill;
+    const discrepancy = countedCash - expected;
+
+    shifts[idx] = {
+      ...s,
+      status: 'CLOSED',
+      closedAt: new Date().toISOString(),
+      denominations,
+      actualCashCounted: countedCash,
+      expectedCashInDrawer: expected,
+      cashDiscrepancy: discrepancy,
+      closingNotes: closingNotes || '',
+      handoverToCashierName: handoverToCashierName || 'Next Shift Cashier'
+    };
+
+    localStorage.setItem('yumto_shifts', JSON.stringify(shifts));
+    this.notify();
+    return shifts[idx];
+  }
+
+  // Legacy close shift support
+  closeShift(shiftId: string, actualCashCounted: number) {
+    const defaultDenoms: CashDenominations = {
+      rs5000: Math.floor(actualCashCounted / 5000),
+      rs1000: 0, rs500: 0, rs100: 0, rs50: 0, rs20: 0, rs10: 0,
+      coins: actualCashCounted % 5000
+    };
+    return this.closeShiftWithDenominations(shiftId, defaultDenoms);
   }
 
   recordCashMovement(shiftId: string, type: 'IN' | 'OUT', amount: number) {
@@ -624,24 +882,178 @@ class MockDatabase {
     }
   }
 
-  private _updateShiftSales(shiftId: string, paymentMethod: string, amount: number) {
-    const shifts = this.getShifts();
-    const index = shifts.findIndex(s => s.id === shiftId);
-    if (index !== -1) {
-      if (paymentMethod === 'CASH') shifts[index].cashSales += amount;
-      else if (paymentMethod === 'CARD') shifts[index].cardSales += amount;
-      else if (paymentMethod === 'SPLIT' && shifts[index]) {
-        // split amounts are tracked separately via the order's splitPayment field
-        // we add both portions
+  // ─────────────────────────────────────────────────────────────────────────
+  // Financial Accounting: Expenses, Vendors & P&L
+  // ─────────────────────────────────────────────────────────────────────────
+  getExpenses(branchId?: string): Expense[] {
+    const list: Expense[] = JSON.parse(localStorage.getItem('yumto_expenses') || '[]');
+    return branchId ? list.filter(e => e.branchId === branchId) : list;
+  }
+
+  addExpense(expense: Omit<Expense, 'id'>): Expense {
+    const list = this.getExpenses();
+    const newExp: Expense = { ...expense, id: 'exp-' + generateId() };
+    list.unshift(newExp);
+    localStorage.setItem('yumto_expenses', JSON.stringify(list));
+    this.notify();
+    return newExp;
+  }
+
+  deleteExpense(id: string) {
+    const list = this.getExpenses();
+    const filtered = list.filter(e => e.id !== id);
+    localStorage.setItem('yumto_expenses', JSON.stringify(filtered));
+    this.notify();
+  }
+
+  getVendors(branchId?: string): Vendor[] {
+    const list: Vendor[] = JSON.parse(localStorage.getItem('yumto_vendors') || '[]');
+    return branchId ? list.filter(v => v.branchId === branchId) : list;
+  }
+
+  addVendor(vendor: Omit<Vendor, 'id'>): Vendor {
+    const list = this.getVendors();
+    const newVen: Vendor = { ...vendor, id: 'v-' + generateId() };
+    list.push(newVen);
+    localStorage.setItem('yumto_vendors', JSON.stringify(list));
+    this.notify();
+    return newVen;
+  }
+
+  updateVendor(vendor: Vendor) {
+    const list = this.getVendors();
+    const idx = list.findIndex(v => v.id === vendor.id);
+    if (idx !== -1) {
+      list[idx] = vendor;
+      localStorage.setItem('yumto_vendors', JSON.stringify(list));
+      this.notify();
+    }
+  }
+
+  getVendorInvoices(branchId?: string): VendorInvoice[] {
+    const list: VendorInvoice[] = JSON.parse(localStorage.getItem('yumto_vendor_invoices') || '[]');
+    return branchId ? list.filter(i => i.branchId === branchId) : list;
+  }
+
+  addVendorInvoice(inv: Omit<VendorInvoice, 'id' | 'createdAt'>): VendorInvoice {
+    const list = this.getVendorInvoices();
+    const newInv: VendorInvoice = {
+      ...inv,
+      id: 'vinv-' + generateId(),
+      createdAt: new Date().toISOString()
+    };
+    list.unshift(newInv);
+    localStorage.setItem('yumto_vendor_invoices', JSON.stringify(list));
+
+    const vendors = this.getVendors();
+    const vIdx = vendors.findIndex(v => v.id === inv.vendorId);
+    if (vIdx !== -1) {
+      vendors[vIdx].currentBalancePayable += inv.balanceDue;
+      localStorage.setItem('yumto_vendors', JSON.stringify(vendors));
+    }
+
+    this.notify();
+    return newInv;
+  }
+
+  payVendorInvoice(invoiceId: string, amountPaid: number) {
+    const list = this.getVendorInvoices();
+    const idx = list.findIndex(i => i.id === invoiceId);
+    if (idx !== -1) {
+      const inv = list[idx];
+      const newPaid = inv.amountPaid + amountPaid;
+      const newBalance = Math.max(0, inv.totalAmount - newPaid);
+      list[idx] = {
+        ...inv,
+        amountPaid: newPaid,
+        balanceDue: newBalance,
+        status: newBalance === 0 ? 'PAID' : 'PARTIAL'
+      };
+      localStorage.setItem('yumto_vendor_invoices', JSON.stringify(list));
+
+      const vendors = this.getVendors();
+      const vIdx = vendors.findIndex(v => v.id === inv.vendorId);
+      if (vIdx !== -1) {
+        vendors[vIdx].currentBalancePayable = Math.max(0, vendors[vIdx].currentBalancePayable - amountPaid);
+        localStorage.setItem('yumto_vendors', JSON.stringify(vendors));
       }
-      localStorage.setItem('yumto_shifts', JSON.stringify(shifts));
+
+      this.notify();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // HR, Staff & Payroll
+  // ─────────────────────────────────────────────────────────────────────────
+  getStaff(branchId?: string): StaffMember[] {
+    const list: StaffMember[] = JSON.parse(localStorage.getItem('yumto_staff') || '[]');
+    return branchId ? list.filter(s => s.branchId === branchId) : list;
+  }
+
+  addStaff(staff: Omit<StaffMember, 'id'>): StaffMember {
+    const list = this.getStaff();
+    const newSt: StaffMember = { ...staff, id: 'st-' + generateId() };
+    list.push(newSt);
+    localStorage.setItem('yumto_staff', JSON.stringify(list));
+    this.notify();
+    return newSt;
+  }
+
+  updateStaff(staff: StaffMember) {
+    const list = this.getStaff();
+    const idx = list.findIndex(s => s.id === staff.id);
+    if (idx !== -1) {
+      list[idx] = staff;
+      localStorage.setItem('yumto_staff', JSON.stringify(list));
+      this.notify();
+    }
+  }
+
+  getPayroll(month?: string): PayrollRecord[] {
+    const list: PayrollRecord[] = JSON.parse(localStorage.getItem('yumto_payroll') || '[]');
+    return month ? list.filter(p => p.month === month) : list;
+  }
+
+  generateMonthlyPayroll(monthStr: string) {
+    const staff = this.getStaff();
+    const currentPayroll = this.getPayroll();
+    const newRecords: PayrollRecord[] = staff.map(st => {
+      const existing = currentPayroll.find(p => p.staffId === st.id && p.month === monthStr);
+      if (existing) return existing;
+
+      return {
+        id: 'pay-' + generateId(),
+        staffId: st.id,
+        staffName: st.name,
+        month: monthStr,
+        baseSalary: st.monthlySalary,
+        allowances: 2000,
+        deductions: 0,
+        netPayable: st.monthlySalary + 2000,
+        status: 'PENDING'
+      };
+    });
+
+    localStorage.setItem('yumto_payroll', JSON.stringify(newRecords));
+    this.notify();
+    return newRecords;
+  }
+
+  paySalary(payrollId: string, method: 'BANK' | 'CASH' = 'BANK') {
+    const list = this.getPayroll();
+    const idx = list.findIndex(p => p.id === payrollId);
+    if (idx !== -1) {
+      list[idx].status = 'PAID';
+      list[idx].paidDate = new Date().toISOString();
+      list[idx].paymentMethod = method;
+      localStorage.setItem('yumto_payroll', JSON.stringify(list));
+      this.notify();
     }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
   // Dine-In Table Tabs & Live Manager/Frontdesk Order Taking
   // ─────────────────────────────────────────────────────────────────────────
-
   getOrderByTableId(tableId: string): Order | undefined {
     const orders = this.getOrders();
     return orders.find(o => o.tableId === tableId && o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
@@ -662,8 +1074,8 @@ class MockDatabase {
     const discPct = params.discountPercent || 0;
     const discAmt = params.discountAmount || Math.round((subtotal * discPct) / 100);
     const discounted = Math.max(0, subtotal - discAmt);
-    const taxCalc = this.calculateSalesTax(discounted, 'CASH');
-    const total = discounted + taxCalc.taxAmount;
+    const billCalc = this.calculateBilling(discounted, 'CASH');
+    const total = billCalc.grandTotal;
 
     const existing = this.getOrderByTableId(params.tableId);
     let order: Order;
@@ -673,7 +1085,10 @@ class MockDatabase {
       existing.subtotal = subtotal;
       existing.discountPercent = discPct;
       existing.discountAmount = discAmt;
-      existing.tax = taxCalc.taxAmount;
+      existing.serviceCharge = billCalc.serviceCharge;
+      existing.taxableAmount = billCalc.taxableAmount;
+      existing.tax = billCalc.taxAmount;
+      existing.taxRatePercent = billCalc.taxRatePercent;
       existing.total = total;
       if (params.customerName) existing.userName = params.customerName;
       if (params.customerPhone) existing.userPhone = params.customerPhone;
@@ -701,7 +1116,11 @@ class MockDatabase {
         subtotal,
         discountPercent: discPct,
         discountAmount: discAmt,
-        tax: taxCalc.taxAmount,
+        serviceCharge: billCalc.serviceCharge,
+        serviceChargePercent: 5,
+        taxableAmount: billCalc.taxableAmount,
+        tax: billCalc.taxAmount,
+        taxRatePercent: billCalc.taxRatePercent,
         deliveryFee: 0,
         premiumReservationFee: 0,
         total,
@@ -713,7 +1132,6 @@ class MockDatabase {
       localStorage.setItem('yumto_orders', JSON.stringify(orders));
     }
 
-    // Mark table as OCCUPIED
     this.updateTableStatus(params.tableId, 'OCCUPIED');
     this.notify();
     return order;
@@ -723,14 +1141,12 @@ class MockDatabase {
     const order = this.getOrderByTableId(fromTableId);
     if (!order) return false;
 
-    // Update order tableId
     order.tableId = toTableId;
     const orders = this.getOrders();
     const idx = orders.findIndex(o => o.id === order.id);
     if (idx !== -1) orders[idx] = order;
     localStorage.setItem('yumto_orders', JSON.stringify(orders));
 
-    // Release old table, occupy new table
     this.updateTableStatus(fromTableId, 'AVAILABLE');
     this.updateTableStatus(toTableId, 'OCCUPIED');
     this.notify();
@@ -752,7 +1168,6 @@ class MockDatabase {
   // ─────────────────────────────────────────────────────────────────────────
   // POS: Held (Parked) Orders
   // ─────────────────────────────────────────────────────────────────────────
-
   getHeldOrders(branchId?: string): HeldOrder[] {
     const held: HeldOrder[] = JSON.parse(localStorage.getItem('yumto_held_orders') || '[]');
     return branchId ? held.filter(h => h.branchId === branchId) : held;
@@ -791,25 +1206,23 @@ class MockDatabase {
   // ─────────────────────────────────────────────────────────────────────────
   // POS: Checkout — creates a fully confirmed & paid POS order
   // ─────────────────────────────────────────────────────────────────────────
-
-  createPosOrder(
-    payload: {
-      branchId: string;
-      cashierId: string;
-      cashierName: string;
-      orderType: 'DINE_IN' | 'PICK_UP';
-      tableId?: string;
-      items: Order['items'];
-      subtotal: number;
-      discountAmount: number;
-      discountPercent: number;
-      tax: number;
-      total: number;
-      paymentMethod: 'CASH' | 'CARD' | 'SPLIT';
-      splitPayment?: { cashAmount: number; cardAmount: number };
-      shiftId?: string;
-    }
-  ): Order {
+  createPosOrder(payload: {
+    branchId: string;
+    cashierId: string;
+    cashierName: string;
+    orderType: 'DINE_IN' | 'PICK_UP';
+    tableId?: string;
+    items: Order['items'];
+    subtotal: number;
+    discountAmount: number;
+    discountPercent: number;
+    serviceCharge: number;
+    tax: number;
+    taxRatePercent: number;
+    total: number;
+    paymentMethod: PaymentMethodType;
+    shiftId?: string;
+  }): Order {
     const newOrder: Order = {
       id: 'pos-' + generateId(),
       branchId: payload.branchId,
@@ -818,16 +1231,19 @@ class MockDatabase {
       userPhone: '',
       orderType: payload.orderType,
       tableId: payload.tableId,
-      status: 'CONFIRMED',          // POS orders skip PENDING — go straight to kitchen
-      paymentStatus: 'PAID',        // POS always paid at counter
+      status: 'CONFIRMED',
+      paymentStatus: 'PAID',
       paymentMethod: payload.paymentMethod,
-      splitPayment: payload.splitPayment,
       cashierId: payload.cashierId,
       items: payload.items,
       subtotal: payload.subtotal,
       discountAmount: payload.discountAmount,
       discountPercent: payload.discountPercent,
+      serviceCharge: payload.serviceCharge,
+      serviceChargePercent: 5,
+      taxableAmount: payload.subtotal - payload.discountAmount + payload.serviceCharge,
       tax: payload.tax,
+      taxRatePercent: payload.taxRatePercent,
       deliveryFee: 0,
       premiumReservationFee: 0,
       total: payload.total,
@@ -838,23 +1254,24 @@ class MockDatabase {
     orders.unshift(newOrder);
     localStorage.setItem('yumto_orders', JSON.stringify(orders));
 
-    // Mark table as OCCUPIED immediately if Dine-In
     if (payload.tableId) {
       this.updateTableStatus(payload.tableId, 'OCCUPIED');
     }
 
-    // Record sales in the active shift
     if (payload.shiftId) {
-      if (payload.paymentMethod === 'SPLIT' && payload.splitPayment) {
-        const shifts = this.getShifts();
-        const idx = shifts.findIndex(s => s.id === payload.shiftId);
-        if (idx !== -1) {
-          shifts[idx].cashSales += payload.splitPayment.cashAmount;
-          shifts[idx].cardSales += payload.splitPayment.cardAmount;
-          localStorage.setItem('yumto_shifts', JSON.stringify(shifts));
+      const shifts = this.getShifts();
+      const idx = shifts.findIndex(s => s.id === payload.shiftId);
+      if (idx !== -1) {
+        if (payload.paymentMethod === 'CASH') {
+          shifts[idx].cashSales += payload.total;
+        } else if (payload.paymentMethod === 'CARD') {
+          shifts[idx].cardSales += payload.total;
+        } else {
+          shifts[idx].onlineSales += payload.total;
         }
-      } else {
-        this._updateShiftSales(payload.shiftId, payload.paymentMethod, payload.total);
+        shifts[idx].totalTaxCollected += payload.tax;
+        shifts[idx].totalServiceChargesCollected += payload.serviceCharge;
+        localStorage.setItem('yumto_shifts', JSON.stringify(shifts));
       }
     }
 
@@ -862,7 +1279,6 @@ class MockDatabase {
     return newOrder;
   }
 
-  // Dynamic state getter hook replacement
   static useDbState() {
     const [, setTick] = useState(0);
     useEffect(() => {

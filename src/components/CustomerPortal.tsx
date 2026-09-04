@@ -218,11 +218,14 @@ export const CustomerPortal: React.FC = () => {
 
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
 
-  // Dynamic Sales Tax: Only applied and shown if Admin Master Toggle is ACTIVE
-  const taxCalc = dbState.calculateSalesTax(discountedSubtotal, paymentMethod);
-  const tax = settings.isTaxActive ? taxCalc.taxAmount : 0;
+  // Dynamic Billing: Mandatory 5% Service Charge + FBR Tax (5% Card / 16% Cash)
+  const billing = dbState.calculateBilling(discountedSubtotal, paymentMethod);
+  const serviceCharge = billing.serviceCharge;
+  const tax = settings.isTaxActive ? billing.taxAmount : 0;
+  const taxableAmount = billing.taxableAmount;
+  const taxRatePercent = settings.isTaxActive ? billing.taxRatePercent : 0;
   const premiumReservationFee = 0;
-  const grandTotal = discountedSubtotal + tax + deliveryFee + premiumReservationFee;
+  const grandTotal = discountedSubtotal + serviceCharge + tax + deliveryFee + premiumReservationFee;
 
   const handleCheckout = () => {
     if (!profile) {
@@ -266,7 +269,9 @@ export const CustomerPortal: React.FC = () => {
       paymentStatus: 'PAID', // Advance prepayment verified
       paymentMethod,
       items: cart.map(i => ({ menuItemId: i.menuItemId, name: i.name, price: i.price, quantity: i.quantity, variation: i.variation })),
-      subtotal, discountAmount, discountPercent: appliedPromo ? 10 : 0, tax, deliveryFee, premiumReservationFee, total: grandTotal,
+      subtotal, discountAmount, discountPercent: appliedPromo ? 10 : 0,
+      serviceCharge, serviceChargePercent: 5, taxableAmount, tax, taxRatePercent,
+      deliveryFee, premiumReservationFee, total: grandTotal,
       deliveryAddress: fullDeliveryAddress,
     });
 
@@ -1207,9 +1212,15 @@ export const CustomerPortal: React.FC = () => {
                       <span>-Rs. {discountAmount.toLocaleString()}</span>
                     </div>
                   )}
+                  {serviceCharge > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#D97706', fontWeight: '700' }}>
+                      <span>5% Service Charges:</span>
+                      <span>Rs. {serviceCharge.toLocaleString()}</span>
+                    </div>
+                  )}
                   {settings.isTaxActive && tax > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Digital Sales Tax ({taxCalc.taxRate}%):</span>
+                      <span>Digital Sales Tax ({taxRatePercent}%):</span>
                       <span>Rs. {tax.toLocaleString()}</span>
                     </div>
                   )}

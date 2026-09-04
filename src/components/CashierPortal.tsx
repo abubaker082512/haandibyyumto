@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../store/mockDb';
-import type { Order, OrderItem, MenuItem, CashierShift, HeldOrder, Table } from '../types';
+import type { Order, OrderItem, MenuItem, CashierShift, HeldOrder, Table, CashDenominations } from '../types';
 import {
   ShoppingCart, Search, Minus, Plus, Trash2,
   Clock, ReceiptText, ChevronDown,
@@ -228,11 +228,15 @@ const ReceiptModal: React.FC<ReceiptProps> = ({ order, onClose }) => {
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                  <span>{order.taxRatePercent}.00 % Sale Tax</span>
+                  <span>5.00 % Service Charges</span>
+                  <span style={{ fontWeight: '700' }}>{Math.round(Math.max(0, order.subtotal - order.discountAmount) * 0.05).toLocaleString()}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                  <span>{order.taxRatePercent}.00 % FBR Sale Tax</span>
                   <span style={{ fontWeight: '700' }}>{Math.round(order.tax).toLocaleString()}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', fontWeight: '800', fontSize: '12px' }}>
-                  <span>Payable</span>
+                  <span>Net Payable</span>
                   <span>{Math.round(order.total).toLocaleString()}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
@@ -336,45 +340,67 @@ const ReceiptModal: React.FC<ReceiptProps> = ({ order, onClose }) => {
 // ─── Shift Open Modal ────────────────────────────────────────────────────────
 interface ShiftModalProps {
   cashierName: string;
-  onOpen: (float: number) => void;
+  onOpen: (float: number, notes?: string) => void;
   onClose: () => void;
 }
 const ShiftOpenModal: React.FC<ShiftModalProps> = ({ cashierName, onOpen, onClose }) => {
   const [float, setFloat] = useState(5000);
+  const [notes, setNotes] = useState('Standard Morning Shift Drawer Opening');
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-      <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '360px', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-        <div style={{ background: '#1A120B', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#E85D04', fontWeight: '800', fontSize: '14px' }}>🏦 Open Cashier Shift</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}><X /></button>
+      <div style={{ background: '#fff', borderRadius: '18px', width: '100%', maxWidth: '420px', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+        <div style={{ background: '#1A120B', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #E85D04' }}>
+          <div>
+            <span style={{ color: '#E85D04', fontWeight: '800', fontSize: '15px' }}>🏦 Open Cashier Shift</span>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', marginTop: '2px' }}>Gulberg Greens, Islamabad</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
         <div style={{ padding: '20px' }}>
-          <p style={{ fontSize: '13px', color: '#374151', marginBottom: '16px' }}>
-            Cashier: <strong>{cashierName}</strong> (Gulberg Greens, Islamabad)
+          <p style={{ fontSize: '13px', color: '#374151', marginBottom: '14px', background: '#F9FAFB', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+            Active Cashier: <strong>{cashierName}</strong>
           </p>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#6b7280', marginBottom: '6px' }}>
-            Opening Cash Float in Drawer
+
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#374151', marginBottom: '6px' }}>
+            Opening Cash Float in Drawer (PKR)
           </label>
           <input
             type="number"
             value={float}
             onChange={e => setFloat(Number(e.target.value))}
             style={{
-              width: '100%', border: '2px solid #e5e7eb', borderRadius: '8px',
-              padding: '10px 12px', fontSize: '16px', fontWeight: '700',
-              outline: 'none', boxSizing: 'border-box'
+              width: '100%', border: '2px solid #E85D04', borderRadius: '8px',
+              padding: '10px 12px', fontSize: '17px', fontWeight: '800',
+              color: '#8B1E1E', outline: 'none', boxSizing: 'border-box', marginBottom: '14px'
             }}
           />
-          <button
-            onClick={() => onOpen(float)}
+
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#6b7280', marginBottom: '6px' }}>
+            Opening Shift Notes
+          </label>
+          <input
+            type="text"
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="e.g. Change received from Admin..."
             style={{
-              marginTop: '16px', width: '100%', background: '#8B1E1E', color: '#ffffff',
-              border: 'none', borderRadius: '10px', padding: '12px',
-              fontWeight: '800', fontSize: '14px', cursor: 'pointer'
+              width: '100%', border: '1.5px solid #e5e7eb', borderRadius: '8px',
+              padding: '9px 12px', fontSize: '12px', outline: 'none', boxSizing: 'border-box', marginBottom: '16px'
+            }}
+          />
+
+          <button
+            onClick={() => onOpen(float, notes)}
+            style={{
+              width: '100%', background: 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)',
+              color: '#ffffff', border: 'none', borderRadius: '10px', padding: '13px',
+              fontWeight: '800', fontSize: '14px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
             }}
           >
-            <LogIn style={{ width: '16px', height: '16px', display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-            Open Shift
+            <LogIn style={{ width: '16px', height: '16px' }} />
+            Confirm & Open Shift
           </button>
         </div>
       </div>
@@ -382,80 +408,171 @@ const ShiftOpenModal: React.FC<ShiftModalProps> = ({ cashierName, onOpen, onClos
   );
 };
 
-// ─── Shift Close / Z-Report Modal ───────────────────────────────────────────
+// ─── Shift Close / Z-Report Modal with Denominations ────────────────────────
 interface ZReportProps {
   shift: CashierShift;
-  onClose: (counted: number) => void;
+  onClose: (denominations: CashDenominations, notes: string, handoverName: string) => void;
   onDismiss: () => void;
 }
 const ZReportModal: React.FC<ZReportProps> = ({ shift, onClose, onDismiss }) => {
-  const [counted, setCounted] = useState(0);
-  const expectedCash = shift.openingFloat + shift.cashSales + shift.cashIn - shift.cashOut;
-  const variance = counted - expectedCash;
+  const [denoms, setDenoms] = useState<CashDenominations>({
+    rs5000: 0, rs1000: 0, rs500: 0, rs100: 0, rs50: 0, rs20: 0, rs10: 0, coins: 0
+  });
+  const [handoverName, setHandoverName] = useState('Hamza Cashier (Evening)');
+  const [closingNotes, setClosingNotes] = useState('Shift closed cleanly, verified drawer balance.');
+
+  const updateDenom = (field: keyof CashDenominations, val: number) => {
+    setDenoms(prev => ({ ...prev, [field]: Math.max(0, val) }));
+  };
+
+  const countedCash = 
+    (denoms.rs5000 * 5000) +
+    (denoms.rs1000 * 1000) +
+    (denoms.rs500 * 500) +
+    (denoms.rs100 * 100) +
+    (denoms.rs50 * 50) +
+    (denoms.rs20 * 20) +
+    (denoms.rs10 * 10) +
+    (denoms.coins);
+
+  const expectedCash = shift.openingFloat + shift.cashSales + shift.cashIn - shift.cashOut - shift.inventoryBoughtFromTill;
+  const variance = countedCash - expectedCash;
+
+  const handlePrintZ = () => {
+    window.print();
+  };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-      <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '420px', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-        <div style={{ background: '#1A120B', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#E85D04', fontWeight: '800', fontSize: '14px' }}>📊 Z-Report / Close Shift</span>
-          <button onClick={onDismiss} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}><X /></button>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+      <div style={{ background: '#fff', borderRadius: '18px', width: '100%', maxWidth: '520px', overflow: 'hidden', boxShadow: '0 25px 70px rgba(0,0,0,0.5)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        
+        {/* Header */}
+        <div style={{ background: '#1A120B', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #E85D04' }}>
+          <div>
+            <span style={{ color: '#E85D04', fontWeight: '800', fontSize: '15px' }}>📊 Detailed Shift Closing & Z-Report</span>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px' }}>Cash Denominations Audit & Handover</div>
+          </div>
+          <button onClick={onDismiss} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
-        <div style={{ padding: '20px', fontFamily: "'Courier New', monospace", fontSize: '12px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '12px', borderBottom: '1px dashed #ccc', paddingBottom: '8px' }}>
-            <strong>HAANDI BY YUMTO</strong><br />
-            Gulberg Greens, Islamabad · Shift #{shift.id.slice(-6)}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span>Opening Float</span><strong>{fmtMoney(shift.openingFloat)}</strong>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', color: '#16a34a' }}>
-            <span>Cash Sales (16% Tax)</span><strong>+ {fmtMoney(shift.cashSales)}</strong>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', color: '#2563eb' }}>
-            <span>Card Sales (5% Tax)</span><strong>{fmtMoney(shift.cardSales)}</strong>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span>Cash In</span><strong>+ {fmtMoney(shift.cashIn)}</strong>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', color: '#dc2626' }}>
-            <span>Cash Out / Expenses</span><strong>- {fmtMoney(shift.cashOut)}</strong>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', borderTop: '2px dashed #374151', paddingTop: '8px', marginBottom: '14px' }}>
-            <span>Expected Cash in Drawer</span><strong>{fmtMoney(expectedCash)}</strong>
-          </div>
 
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6b7280', marginBottom: '6px' }}>
-            Actual Counted Cash in Drawer
-          </label>
-          <input
-            type="number"
-            value={counted}
-            onChange={e => setCounted(Number(e.target.value))}
-            style={{ width: '100%', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '10px', fontSize: '14px', fontWeight: '700', outline: 'none', boxSizing: 'border-box', marginBottom: '8px' }}
-          />
-          {counted > 0 && (
-            <div style={{ fontSize: '12px', fontWeight: '700', color: variance >= 0 ? '#16a34a' : '#dc2626', marginBottom: '12px' }}>
-              Variance: {variance >= 0 ? '+' : ''}{fmtMoney(variance)}
-              {Math.abs(variance) < 1 ? ' ✅ Balanced' : variance > 0 ? ' ⚠️ Over' : ' ⚠️ Short'}
+        {/* Body */}
+        <div style={{ padding: '18px', overflowY: 'auto', flex: 1 }}>
+          
+          {/* Shift Summary Card */}
+          <div style={{ background: '#FDFBF7', border: '1.5px solid #EADBCC', borderRadius: '12px', padding: '12px 16px', marginBottom: '14px', fontSize: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span>Opening Float:</span><strong>{fmtMoney(shift.openingFloat)}</strong>
             </div>
-          )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <button
-              onClick={onDismiss}
-              style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => onClose(counted)}
-              style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}
-            >
-              <LogOut style={{ width: '14px', height: '14px', display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-              Close Shift & Print Z
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: '#16a34a' }}>
+              <span>Cash Sales (16% GST):</span><strong>+ {fmtMoney(shift.cashSales)}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: '#2563eb' }}>
+              <span>Card Sales (5% GST):</span><strong>{fmtMoney(shift.cardSales)}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span>Service Charges Collected (5%):</span><strong>{fmtMoney(shift.totalServiceChargesCollected || 0)}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: '#dc2626' }}>
+              <span>Till Expenses / Inventory Paid:</span><strong>- {fmtMoney(shift.cashOut + shift.inventoryBoughtFromTill)}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '900', borderTop: '1.5px dashed #ccc', paddingTop: '6px', marginTop: '4px', fontSize: '13px', color: '#8B1E1E' }}>
+              <span>Expected Cash in Drawer:</span><span>{fmtMoney(expectedCash)}</span>
+            </div>
           </div>
+
+          {/* Cash Denominations Input Grid */}
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#1A120B', marginBottom: '8px' }}>
+              💵 Physical Cash Count by Denomination (PKR):
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+              {[
+                { label: 'Rs. 5,000', field: 'rs5000' as const, multiplier: 5000 },
+                { label: 'Rs. 1,000', field: 'rs1000' as const, multiplier: 1000 },
+                { label: 'Rs. 500', field: 'rs500' as const, multiplier: 500 },
+                { label: 'Rs. 100', field: 'rs100' as const, multiplier: 100 },
+                { label: 'Rs. 50', field: 'rs50' as const, multiplier: 50 },
+                { label: 'Rs. 20', field: 'rs20' as const, multiplier: 20 },
+                { label: 'Rs. 10', field: 'rs10' as const, multiplier: 10 },
+                { label: 'Coins (Total)', field: 'coins' as const, multiplier: 1 }
+              ].map(d => (
+                <div key={d.field} style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '6px 8px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: '700', color: '#6B7280' }}>{d.label}</div>
+                  <input
+                    type="number"
+                    min="0"
+                    value={denoms[d.field] || ''}
+                    placeholder="0"
+                    onChange={e => updateDenom(d.field, Number(e.target.value))}
+                    style={{ width: '100%', border: '1px solid #D1D5DB', borderRadius: '6px', padding: '4px 6px', fontSize: '12px', fontWeight: '800', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                  <div style={{ fontSize: '9px', color: '#9CA3AF', marginTop: '2px', textAlign: 'right' }}>
+                    = Rs. {(denoms[d.field] * d.multiplier).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Reconciliation Audit Result */}
+          <div style={{
+            background: Math.abs(variance) === 0 ? 'rgba(22,163,74,0.1)' : variance > 0 ? 'rgba(234,179,8,0.15)' : 'rgba(220,38,38,0.1)',
+            border: `1.5px solid ${Math.abs(variance) === 0 ? '#16a34a' : variance > 0 ? '#ca8a04' : '#dc2626'}`,
+            borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          }}>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280' }}>Total Counted Cash</div>
+              <div style={{ fontSize: '16px', fontWeight: '900', color: '#1A120B' }}>{fmtMoney(countedCash)}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280' }}>Discrepancy / Variance</div>
+              <div style={{ fontSize: '14px', fontWeight: '900', color: Math.abs(variance) === 0 ? '#16a34a' : variance > 0 ? '#ca8a04' : '#dc2626' }}>
+                {variance >= 0 ? '+' : ''}{fmtMoney(variance)} {Math.abs(variance) === 0 ? '✅ Balanced' : variance > 0 ? '⚠️ Excess' : '⚠️ Shortage'}
+              </div>
+            </div>
+          </div>
+
+          {/* Handover & Notes */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#4B5563', marginBottom: '4px' }}>Handover to Cashier</label>
+              <input
+                type="text"
+                value={handoverName}
+                onChange={e => setHandoverName(e.target.value)}
+                style={{ width: '100%', border: '1px solid #D1D5DB', borderRadius: '6px', padding: '8px', fontSize: '11px', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#4B5563', marginBottom: '4px' }}>Closing Audit Notes</label>
+              <input
+                type="text"
+                value={closingNotes}
+                onChange={e => setClosingNotes(e.target.value)}
+                style={{ width: '100%', border: '1px solid #D1D5DB', borderRadius: '6px', padding: '8px', fontSize: '11px', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
         </div>
+
+        {/* Footer actions */}
+        <div style={{ background: '#F9FAFB', borderTop: '1px solid #E5E7EB', padding: '12px 18px', display: 'flex', gap: '8px' }}>
+          <button onClick={handlePrintZ} style={{ background: '#374151', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Printer style={{ width: '14px', height: '14px' }} /> Print Z
+          </button>
+          <button onClick={onDismiss} style={{ flex: 1, background: '#E5E7EB', color: '#374151', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+            Cancel
+          </button>
+          <button
+            onClick={() => onClose(denoms, closingNotes, handoverName)}
+            style={{ flex: 2, background: 'linear-gradient(135deg, #DC2626 0%, #8B1E1E 100%)', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+          >
+            <LogOut style={{ width: '14px', height: '14px' }} />
+            Confirm Close Shift & Lock Drawer
+          </button>
+        </div>
+
       </div>
     </div>
   );
@@ -1048,10 +1165,8 @@ export const CashierPortal: React.FC = () => {
   const [variationItem, setVariationItem] = useState<MenuItem | null>(null);
 
   // ── Tender / Payment (Cash = 16% Tax, Card = 5% Tax)
-  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'SPLIT'>('CARD');
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD'>('CARD');
   const [cashTendered, setCashTendered] = useState(0);
-  const [splitCash, setSplitCash] = useState(0);
-  const [splitCard, setSplitCard] = useState(0);
 
   // ── Held orders & Receipt
   const [showHeldPanel, setShowHeldPanel] = useState(false);
@@ -1073,23 +1188,17 @@ export const CashierPortal: React.FC = () => {
   const pickerTables = dbState.getTables(selectedBranchId, pickerFloorId);
   const selectedTable = selectedTableId ? dbState.getTables(selectedBranchId).find(t => t.id === selectedTableId) : null;
 
-  // ── Financials: Dynamic FBR Sales Tax (5% Card vs 16% Cash)
+  // ── Financials: 5% Mandatory Service Charges + FBR Sales Tax (5% Card vs 16% Cash)
   const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
   const discountFromPercent = Math.round((subtotal * discountPercent) / 100);
   const totalDiscount = discountFromPercent + discountFlat;
   const discountedSubtotal = Math.max(0, subtotal - totalDiscount);
 
-  const taxRate = paymentMethod === 'CARD'
-    ? 0.05
-    : paymentMethod === 'CASH'
-      ? 0.16
-      : (splitCash + splitCard > 0)
-        ? ((splitCash / (splitCash + splitCard)) * 0.16 + (splitCard / (splitCash + splitCard)) * 0.05)
-        : 0.05;
-
-  const taxRatePercent = paymentMethod === 'CARD' ? 5 : paymentMethod === 'CASH' ? 16 : Math.round(taxRate * 100);
-  const tax = Math.round(discountedSubtotal * taxRate);
-  const total = discountedSubtotal + tax;
+  const billCalc = dbState.calculateBilling(discountedSubtotal, paymentMethod);
+  const serviceCharge = billCalc.serviceCharge;
+  const tax = billCalc.taxAmount;
+  const taxRatePercent = billCalc.taxRatePercent;
+  const total = billCalc.grandTotal;
   const changeDue = paymentMethod === 'CASH' ? Math.max(0, cashTendered - total) : 0;
 
   // ── Cash presets
@@ -1132,7 +1241,10 @@ export const CashierPortal: React.FC = () => {
       tableId: selectedTableId || undefined,
       label,
       discountAmount: totalDiscount,
-      discountPercent
+      discountPercent,
+      serviceCharge,
+      tax,
+      total
     });
     setCart([]);
     setSelectedTableId(null);
@@ -1174,10 +1286,6 @@ export const CashierPortal: React.FC = () => {
       showToast(`Tendered cash is less than total ${fmtMoney(total)}`, 'error');
       return;
     }
-    if (paymentMethod === 'SPLIT' && splitCash + splitCard !== total) {
-      showToast(`Split sum must equal total ${fmtMoney(total)}`, 'error');
-      return;
-    }
 
     const newOrder = db.createPosOrder({
       branchId: selectedBranchId,
@@ -1187,12 +1295,13 @@ export const CashierPortal: React.FC = () => {
       orderType,
       tableId: orderType === 'DINE_IN' ? (selectedTableId || undefined) : undefined,
       paymentMethod,
-      splitPayment: paymentMethod === 'SPLIT' ? { cashAmount: splitCash, cardAmount: splitCard } : undefined,
       items: cart,
       subtotal,
       discountAmount: totalDiscount,
       discountPercent,
+      serviceCharge,
       tax,
+      taxRatePercent,
       total
     });
 
@@ -1210,7 +1319,6 @@ export const CashierPortal: React.FC = () => {
       total,
       paymentMethod,
       tenderedAmount: paymentMethod === 'CASH' ? (cashTendered || total) : total,
-      splitPayment: paymentMethod === 'SPLIT' ? { cashAmount: splitCash, cardAmount: splitCard } : undefined,
       createdAt: newOrder.createdAt
     });
 
@@ -1220,8 +1328,6 @@ export const CashierPortal: React.FC = () => {
     setDiscountPercent(0);
     setDiscountFlat(0);
     setCashTendered(0);
-    setSplitCash(0);
-    setSplitCard(0);
     showToast('Order completed & bill generated!', 'success');
   };
 
@@ -1329,8 +1435,8 @@ export const CashierPortal: React.FC = () => {
       {showZReport && activeShift && (
         <ZReportModal
           shift={activeShift}
-          onClose={(counted) => {
-            db.closeShift(activeShift.id, counted);
+          onClose={(denoms, notes, handover) => {
+            db.closeShiftWithDenominations(activeShift.id, denoms, notes, handover);
             setActiveShift(null);
             setShowZReport(false);
             showToast('Shift closed — Z-Report generated', 'success');
@@ -1825,6 +1931,10 @@ export const CashierPortal: React.FC = () => {
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Service Charges (5%):</span>
+                  <span style={{ color: ui.text, fontWeight: '700' }}>{fmtMoney(serviceCharge)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>FBR Sales Tax ({taxRatePercent}%):</span>
                   <span style={{ color: ui.text, fontWeight: '700' }}>{fmtMoney(tax)}</span>
                 </div>
@@ -1834,15 +1944,15 @@ export const CashierPortal: React.FC = () => {
                 </div>
               </div>
 
-              {/* Payment Methods */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px', marginBottom: '8px' }}>
+              {/* Payment Methods (Cash vs Card - Split Removed) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '8px' }}>
                 <button
                   onClick={() => setPaymentMethod('CARD')}
                   style={{
-                    padding: '7px 4px', borderRadius: '7px', border: 'none', cursor: 'pointer',
+                    padding: '8px 4px', borderRadius: '7px', border: 'none', cursor: 'pointer',
                     background: paymentMethod === 'CARD' ? '#8B1E1E' : isDark ? '#2A1F17' : '#E5E7EB',
                     color: paymentMethod === 'CARD' ? '#ffffff' : ui.textMuted,
-                    fontWeight: '700', fontSize: '10px', textAlign: 'center'
+                    fontWeight: '800', fontSize: '11px', textAlign: 'center'
                   }}
                 >
                   💳 Card (5% Tax)
@@ -1850,24 +1960,13 @@ export const CashierPortal: React.FC = () => {
                 <button
                   onClick={() => setPaymentMethod('CASH')}
                   style={{
-                    padding: '7px 4px', borderRadius: '7px', border: 'none', cursor: 'pointer',
+                    padding: '8px 4px', borderRadius: '7px', border: 'none', cursor: 'pointer',
                     background: paymentMethod === 'CASH' ? '#8B1E1E' : isDark ? '#2A1F17' : '#E5E7EB',
                     color: paymentMethod === 'CASH' ? '#ffffff' : ui.textMuted,
-                    fontWeight: '700', fontSize: '10px', textAlign: 'center'
+                    fontWeight: '800', fontSize: '11px', textAlign: 'center'
                   }}
                 >
                   💵 Cash (16% Tax)
-                </button>
-                <button
-                  onClick={() => setPaymentMethod('SPLIT')}
-                  style={{
-                    padding: '7px 4px', borderRadius: '7px', border: 'none', cursor: 'pointer',
-                    background: paymentMethod === 'SPLIT' ? '#8B1E1E' : isDark ? '#2A1F17' : '#E5E7EB',
-                    color: paymentMethod === 'SPLIT' ? '#ffffff' : ui.textMuted,
-                    fontWeight: '700', fontSize: '10px', textAlign: 'center'
-                  }}
-                >
-                  🔀 Split Tender
                 </button>
               </div>
 

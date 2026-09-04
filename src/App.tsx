@@ -4,7 +4,7 @@ import { CustomerPortal } from './components/CustomerPortal';
 import { ManagerPortal } from './components/ManagerPortal';
 import { KitchenPortal } from './components/KitchenPortal';
 import { RiderPortal } from './components/RiderPortal';
-import { OwnerPortal } from './components/OwnerPortal';
+import { AdminPortal } from './components/AdminPortal';
 import { CashierPortal } from './components/CashierPortal';
 import { TrackOrderPage } from './components/TrackOrderPage';
 import { PortalGate } from './components/PortalGate';
@@ -61,7 +61,7 @@ function App() {
             <Route
               path="/manager"
               element={
-                <PortalGate allowedRoles={['MANAGER', 'WAITER', 'OWNER']} portalName="Branch Floor & Table Manager" portalIcon="📋">
+                <PortalGate allowedRoles={['MANAGER', 'WAITER', 'OWNER', 'ADMIN']} portalName="Branch Floor & Table Manager" portalIcon="📋">
                   <ManagerPortal />
                 </PortalGate>
               }
@@ -69,7 +69,7 @@ function App() {
             <Route
               path="/waiter"
               element={
-                <PortalGate allowedRoles={['WAITER', 'MANAGER', 'OWNER']} portalName="Order Taker (Waiter) Terminal" portalIcon="🧑‍🍳">
+                <PortalGate allowedRoles={['WAITER', 'MANAGER', 'OWNER', 'ADMIN']} portalName="Order Taker (Waiter) Terminal" portalIcon="🧑‍🍳">
                   <ManagerPortal />
                 </PortalGate>
               }
@@ -77,7 +77,7 @@ function App() {
             <Route
               path="/kitchen"
               element={
-                <PortalGate allowedRoles={['KITCHEN', 'MANAGER', 'OWNER']} portalName="Kitchen KDS Terminal" portalIcon="👨‍🍳">
+                <PortalGate allowedRoles={['KITCHEN', 'MANAGER', 'OWNER', 'ADMIN']} portalName="Kitchen KDS Terminal" portalIcon="👨‍🍳">
                   <KitchenPortal />
                 </PortalGate>
               }
@@ -85,7 +85,7 @@ function App() {
             <Route
               path="/rider"
               element={
-                <PortalGate allowedRoles={['RIDER', 'MANAGER', 'OWNER']} portalName="Fleet Rider Portal" portalIcon="🛵">
+                <PortalGate allowedRoles={['RIDER', 'MANAGER', 'OWNER', 'ADMIN']} portalName="Fleet Rider Portal" portalIcon="🛵">
                   <RiderPortal />
                 </PortalGate>
               }
@@ -93,15 +93,15 @@ function App() {
             <Route
               path="/admin"
               element={
-                <PortalGate allowedRoles={['OWNER']} portalName="Executive Owner Portal" portalIcon="👑">
-                  <OwnerPortal />
+                <PortalGate allowedRoles={['OWNER', 'ADMIN']} portalName="Executive Admin & Enterprise Portal" portalIcon="👑">
+                  <AdminPortal />
                 </PortalGate>
               }
             />
             <Route
               path="/pos"
               element={
-                <PortalGate allowedRoles={['CASHIER', 'MANAGER', 'OWNER']} portalName="POS Cashier Terminal" portalIcon="🏦">
+                <PortalGate allowedRoles={['CASHIER', 'MANAGER', 'OWNER', 'ADMIN']} portalName="POS Cashier Terminal" portalIcon="🏦">
                   <CashierPortal />
                 </PortalGate>
               }
