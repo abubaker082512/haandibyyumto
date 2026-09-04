@@ -431,27 +431,63 @@ body {
 }
 
 /* ============================================================
-   CATEGORY NAVIGATION TABS (Sticky Creamy Bar)
+   FLOATING LUXURY MAIN NAVBAR
+   ============================================================ */
+.haandi-floating-nav {
+  position: sticky;
+  top: 10px;
+  z-index: 500;
+  max-width: 1200px;
+  margin: 10px auto 12px;
+  padding: 10px 18px;
+  background: rgba(26, 18, 11, 0.94);
+  border: 1.5px solid rgba(232, 93, 4, 0.38);
+  border-radius: 20px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 20px rgba(232, 93, 4, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 1240px) {
+  .haandi-floating-nav {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+}
+
+/* ============================================================
+   CATEGORY NAVIGATION TABS (Luxury Floating Dark Glass Dock)
    ============================================================ */
 .haandi-cat-nav-wrap {
   position: sticky;
-  top: 66px;
-  z-index: 400;
-  background: var(--bg-cream-light);
-  border-top: 1px solid var(--border-warm);
-  border-bottom: 2px solid var(--border-warm);
-  box-shadow: 0 4px 16px rgba(26, 18, 11, 0.05);
-  backdrop-filter: blur(8px);
+  top: 76px;
+  z-index: 480;
+  max-width: 1200px;
+  margin: 12px auto 20px;
+  padding: 6px 8px;
+  background: rgba(26, 18, 11, 0.92);
+  border-radius: 20px;
+  border: 1.5px solid rgba(232, 93, 4, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 15px rgba(232, 93, 4, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 1240px) {
+  .haandi-cat-nav-wrap {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
 }
 
 .haandi-cat-nav-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 8px 16px;
   display: flex;
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
+  padding: 4px;
 }
 .haandi-cat-nav-inner::-webkit-scrollbar { display: none; }
 
@@ -460,27 +496,27 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 18px;
+  padding: 9px 18px;
   border-radius: 99px;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-warm);
-  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  color: #F8F3EA;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
   white-space: nowrap;
 }
 .haandi-cat-pill:hover {
-  background: #FFFDF9;
-  border-color: var(--haandi-red);
-  color: var(--haandi-red);
+  background: rgba(232, 93, 4, 0.25);
+  border-color: #E85D04;
+  color: #FFFFFF;
 }
 .haandi-cat-pill.active {
-  background: var(--haandi-red);
-  border-color: var(--haandi-red);
+  background: linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%);
+  border-color: #E85D04;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(139, 30, 30, 0.3);
+  box-shadow: 0 4px 16px rgba(232, 93, 4, 0.45);
 }
 
 /* ============================================================

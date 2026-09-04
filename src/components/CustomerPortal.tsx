@@ -353,17 +353,10 @@ export const CustomerPortal: React.FC = () => {
       )}
 
       {/* ============================================================
-          LUXURY DARK NAVBAR (Deep Roasted Charcoal & Saffron Gold)
+          LUXURY FLOATING DARK NAVBAR (Deep Roasted Charcoal & Saffron Gold)
           ============================================================ */}
-      <nav style={{
-        background: '#1A120B',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        position: 'sticky', top: 0, zIndex: 500,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
-        padding: '10px 16px'
-      }}>
+      <nav className="haandi-floating-nav">
         <div style={{
-          maxWidth: '1200px', margin: '0 auto',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
         }}>
           {/* Brand Logo & Title */}
