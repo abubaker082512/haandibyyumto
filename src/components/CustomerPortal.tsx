@@ -634,29 +634,72 @@ export const CustomerPortal: React.FC = () => {
       </div>
 
       {/* ============================================================
-          STICKY CATEGORY PILLS BAR
+          FLOATING STICKY CATEGORY HEADER (Locks at top: 0 on Scroll)
           ============================================================ */}
       <div id="menu-section" className="haandi-cat-nav-wrap">
         <div className="haandi-cat-nav-inner">
-          {allCategories.map(cat => (
-            <button
-              key={cat}
-              className={`haandi-cat-pill ${activeCategory === cat ? 'active' : ''}`}
-              onClick={() => setActiveCategory(cat)}
-            >
-              {cat === 'All' && '🌟 All Items'}
-              {cat.includes('Handi') && '🍲 ' + cat}
-              {cat.includes('Karahi') && '🍳 ' + cat}
-              {cat.includes('BBQ') && '🍢 ' + cat}
-              {cat.includes('Rice') && '🍚 ' + cat}
-              {cat.includes('Roti') && '🫓 ' + cat}
-              {cat.includes('Soup') && '🥣 ' + cat}
-              {cat.includes('Salad') && '🥗 ' + cat}
-              {cat.includes('Beverages') && '🍹 ' + cat}
-              {cat.includes('Desserts') && '🍨 ' + cat}
-              {!['All', 'Handi', 'Karahi', 'BBQ', 'Rice', 'Roti', 'Soup', 'Salad', 'Beverages', 'Desserts'].some(k => cat.includes(k)) && cat}
-            </button>
-          ))}
+          <div className="haandi-cat-scroll-track">
+            {allCategories.map(cat => (
+              <button
+                key={cat}
+                className={`haandi-cat-pill ${activeCategory === cat ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveCategory(cat);
+                  if (cat === 'All') {
+                    const el = document.getElementById('menu-section');
+                    if (el) {
+                      const y = el.getBoundingClientRect().top + window.pageYOffset - 10;
+                      window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                  } else {
+                    const el = document.getElementById(`cat-section-${cat.replace(/\s+/g, '-').toLowerCase()}`);
+                    if (el) {
+                      const y = el.getBoundingClientRect().top + window.pageYOffset - 60;
+                      window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                  }
+                }}
+              >
+                {cat === 'All' && '🌟 All Items'}
+                {cat.includes('Handi') && '🍲 ' + cat}
+                {cat.includes('Karahi') && '🍳 ' + cat}
+                {cat.includes('BBQ') && '🍢 ' + cat}
+                {cat.includes('Rice') && '🍚 ' + cat}
+                {cat.includes('Roti') && '🫓 ' + cat}
+                {cat.includes('Soup') && '🥣 ' + cat}
+                {cat.includes('Salad') && '🥗 ' + cat}
+                {cat.includes('Beverages') && '🍹 ' + cat}
+                {cat.includes('Desserts') && '🍨 ' + cat}
+                {!['All', 'Handi', 'Karahi', 'BBQ', 'Rice', 'Roti', 'Soup', 'Salad', 'Beverages', 'Desserts'].some(k => cat.includes(k)) && cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Quick Floating Cart Button */}
+          <button
+            onClick={() => setCartOpen(true)}
+            style={{
+              background: 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '99px',
+              padding: '8px 14px',
+              fontSize: '12px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              flexShrink: 0,
+              boxShadow: '0 4px 14px rgba(232,93,4,0.4)'
+            }}
+          >
+            <ShoppingBag style={{ width: '14px', height: '14px' }} />
+            <span className="hidden sm:inline">Handi</span>
+            <span style={{ background: '#FFFFFF', color: '#8B1E1E', fontSize: '10px', fontWeight: '900', padding: '1px 6px', borderRadius: '10px' }}>
+              {cartCount}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -665,7 +708,7 @@ export const CustomerPortal: React.FC = () => {
           ============================================================ */}
       <div style={{ maxWidth: '1200px', margin: '30px auto', padding: '0 16px' }}>
         {groupedByCategory.map(({ cat, items }) => (
-          <div key={cat} className="haandi-menu-section animate-fade">
+          <div key={cat} id={`cat-section-${cat.replace(/\s+/g, '-').toLowerCase()}`} className="haandi-menu-section animate-fade">
             {/* Terracotta/Saffron Header Banner */}
             <div className="haandi-cat-banner">
               <div>

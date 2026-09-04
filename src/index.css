@@ -431,30 +431,24 @@ body {
 }
 
 /* ============================================================
-   FLUSH EDGE-TO-EDGE LUXURY TOP NAVBAR
+   TOP MAIN HEADER (Natural Flow, Scrolls Away on Scroll)
    ============================================================ */
+.haandi-top-header,
 .haandi-floating-nav {
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   width: 100%;
-  z-index: 500;
+  z-index: 100;
   margin: 0;
   padding: 0;
   background: linear-gradient(135deg, #1A120B 0%, #2A170E 100%);
   border-bottom: 1.5px solid rgba(232, 93, 4, 0.38);
-  border-radius: 0;
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(232, 93, 4, 0.15);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .haandi-floating-nav-inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 10px 16px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -463,33 +457,34 @@ body {
 
 @media (max-width: 640px) {
   .haandi-floating-nav-inner {
-    padding: 8px 12px;
+    padding: 10px 12px;
     gap: 8px;
   }
 }
 
 /* ============================================================
-   CATEGORY NAVIGATION TABS (Sticky Below Header Dock)
+   FLOATING STICKY CATEGORY HEADER (Locks at top: 0 on Scroll)
    ============================================================ */
 .haandi-cat-nav-wrap {
   position: sticky;
-  top: 62px;
-  z-index: 450;
+  top: 0;
+  left: 0;
+  right: 0;
   width: 100%;
+  z-index: 500;
   margin: 0 0 24px 0;
-  padding: 8px 0;
-  background: rgba(26, 18, 11, 0.96);
-  border-bottom: 1.5px solid rgba(232, 93, 4, 0.35);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(232, 93, 4, 0.12);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: all 0.2s ease;
+  padding: 10px 0;
+  background: rgba(26, 18, 11, 0.97);
+  border-bottom: 2px solid rgba(232, 93, 4, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(232, 93, 4, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.25s ease;
 }
 
 @media (max-width: 640px) {
   .haandi-cat-nav-wrap {
-    top: 56px;
-    padding: 6px 0;
+    padding: 8px 0;
   }
 }
 
@@ -498,11 +493,21 @@ body {
   margin: 0 auto;
   padding: 0 16px;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.haandi-cat-scroll-track {
+  display: flex;
+  align-items: center;
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
+  flex: 1;
+  padding: 2px 0;
 }
-.haandi-cat-nav-inner::-webkit-scrollbar { display: none; }
+.haandi-cat-scroll-track::-webkit-scrollbar { display: none; }
 
 .haandi-cat-pill {
   flex-shrink: 0;
