@@ -1,4 +1,4 @@
-export type Role = 'CUSTOMER' | 'KITCHEN' | 'RIDER' | 'MANAGER' | 'OWNER' | 'CASHIER';
+export type Role = 'CUSTOMER' | 'KITCHEN' | 'RIDER' | 'WAITER' | 'MANAGER' | 'OWNER' | 'CASHIER';
 
 export interface Branch {
   id: string;
@@ -116,7 +116,19 @@ export interface Order {
   waiterName?: string; // server / manager who took the table order
   isBillRequested?: boolean; // flag for cashier POS terminal
   splitPayment?: SplitPayment; // multi-tender split details
+  isOnline?: boolean; // created online by customer
+  isPunched?: boolean; // true once cashier verifies and punches to kitchen
+  isCallConfirmed?: boolean; // cashier called customer to verify
+  confirmedByCashier?: string;
   createdAt: string;
+}
+
+export interface CustomerAddress {
+  id: string;
+  label: string; // 'Home', 'Office', 'Farmhouse', etc.
+  sector: string; // 'Civic Center', 'Executive Block', 'Block A', etc.
+  address: string;
+  isDefault?: boolean;
 }
 
 export interface UserProfile {
@@ -125,6 +137,7 @@ export interface UserProfile {
   phone: string;
   role: Role;
   branchId?: string; // linked branch for manager/kitchen
+  addresses?: CustomerAddress[];
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -151,7 +164,7 @@ export interface HeldOrder {
   label: string; // e.g. "Table 4 - Ahmed" or "Takeaway #3"
   branchId: string;
   cashierId: string;
-  parkedBy?: string; // e.g. "Manager Bilal", "Frontdesk Staff", "Cashier Nadia"
+  parkedBy?: string; // e.g. "Manager Bilal", "Frontdesk Staff", "Cashier Nadia", "Waiter Ali"
   tableNumber?: string;
   customerName?: string;
   customerPhone?: string;
@@ -177,7 +190,23 @@ export interface CashierShift {
   cashSales: number;     // accumulated cash payments during shift
   cardSales: number;     // accumulated card payments during shift
   cashIn: number;        // manual cash additions (e.g. change top-up)
-  cashOut: number;       // manual cash removals (e.g. petty cash)
+  cashOut: number;       // manual cash removals (e.g. petty cash & expenses)
   actualCashCounted?: number; // cashier-entered cash count at close
   status: ShiftStatus;
+}
+
+export interface TillTransaction {
+  id: string;
+  shiftId: string;
+  branchId: string;
+  cashierId: string;
+  cashierName: string;
+  type: 'CASH_IN' | 'CASH_OUT' | 'EXPENSE' | 'INVENTORY_PURCHASE';
+  amount: number;
+  category: string; // 'Petty Expense', 'Vendor Inventory', 'Daily Supplies', 'Cash Top-up'
+  description: string;
+  supplierName?: string;
+  inventoryItemName?: string;
+  quantityAdded?: number;
+  timestamp: string;
 }

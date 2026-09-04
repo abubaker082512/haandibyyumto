@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { CustomerPortal } from './components/CustomerPortal';
 import { ManagerPortal } from './components/ManagerPortal';
@@ -61,7 +61,15 @@ function App() {
             <Route
               path="/manager"
               element={
-                <PortalGate allowedRoles={['MANAGER', 'OWNER']} portalName="Branch Manager Portal" portalIcon="📋">
+                <PortalGate allowedRoles={['MANAGER', 'WAITER', 'OWNER']} portalName="Branch Floor & Table Manager" portalIcon="📋">
+                  <ManagerPortal />
+                </PortalGate>
+              }
+            />
+            <Route
+              path="/waiter"
+              element={
+                <PortalGate allowedRoles={['WAITER', 'MANAGER', 'OWNER']} portalName="Order Taker (Waiter) Terminal" portalIcon="🧑‍🍳">
                   <ManagerPortal />
                 </PortalGate>
               }

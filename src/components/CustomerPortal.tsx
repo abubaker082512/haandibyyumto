@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../store/mockDb';
-import type { MenuItem, OrderType, OrderItem } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { AuthModal } from './AuthModal';
+import type { MenuItem, OrderType, OrderItem, CustomerAddress } from '../types';
 import {
   MapPin, ShoppingBag,
   Trash2, Plus, Minus, X, Navigation,
-  Sparkles, ArrowRight, CheckCircle2
+  Sparkles, ArrowRight, CheckCircle2, User
 } from 'lucide-react';
 import { LiveTrackingMap } from './LiveTrackingMap';
 
@@ -60,9 +62,43 @@ export const CustomerPortal: React.FC = () => {
   const currentSector = GULBERG_SECTORS.find(s => s.name === selectedSector) || GULBERG_SECTORS[0];
   const isWithinDeliveryRadius = currentSector.distanceKm <= 2.5;
 
-  const [custName, setCustName] = useState('');
-  const [custPhone, setCustPhone] = useState('');
+  const { profile } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const [custName, setCustName] = useState(profile?.name || '');
+  const [custPhone, setCustPhone] = useState(profile?.phone || '');
   const [deliveryAddr, setDeliveryAddr] = useState('');
+
+  // Customer Saved Addresses
+  const customerUser = profile ? dbState.getUsers().find(u => u.id === profile.uid || u.role === 'CUSTOMER') : null;
+  const savedAddresses: CustomerAddress[] = customerUser?.addresses || [
+    { id: 'addr-1', label: 'Executive Residence', sector: 'Executive Block', address: 'House 14, Street 7, Executive Block, Gulberg Greens, Islamabad', isDefault: true },
+    { id: 'addr-2', label: 'Civic Office', sector: 'Civic Center', address: 'Suite 402, Business Center, Civic Center, Gulberg Greens, Islamabad' },
+    { id: 'addr-3', label: 'Farmhouse Villa', sector: 'Sector 2 (Farmhouses)', address: 'Farmhouse 88, Main Boulevard, Sector 2, Gulberg Greens' }
+  ];
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(savedAddresses[0]?.id || 'addr-1');
+  const [showAddAddressForm, setShowAddAddressForm] = useState(false);
+  const [newAddrLabel, setNewAddrLabel] = useState('Home');
+  const [newAddrText, setNewAddrText] = useState('');
+
+  // Sync profile data
+  useEffect(() => {
+    if (profile) {
+      if (!custName) setCustName(profile.name);
+      if (!custPhone && profile.phone) setCustPhone(profile.phone);
+    }
+  }, [profile]);
+
+  // Sync delivery address when selected address changes
+  useEffect(() => {
+    if (orderType === 'DELIVERY') {
+      const activeAddr = savedAddresses.find(a => a.id === selectedAddressId);
+      if (activeAddr) {
+        setDeliveryAddr(activeAddr.address);
+      }
+    }
+  }, [selectedAddressId, orderType]);
+
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'ONLINE'>('CARD');
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
@@ -192,6 +228,11 @@ export const CustomerPortal: React.FC = () => {
   const grandTotal = discountedSubtotal + tax + deliveryFee + premiumReservationFee;
 
   const handleCheckout = () => {
+    if (!profile) {
+      setShowAuthModal(true);
+      showToast('Please sign in or create an account to place your order', 'info');
+      return;
+    }
     if (cart.length === 0) {
       showToast('Your Handi cart is empty!', 'error');
       return;
@@ -201,7 +242,7 @@ export const CustomerPortal: React.FC = () => {
       return;
     }
     if (orderType === 'DELIVERY' && !deliveryAddr.trim()) {
-      showToast('Please enter your house/street address in Gulberg Greens', 'error');
+      showToast('Please enter or select your delivery address in Gulberg Greens', 'error');
       return;
     }
 
@@ -210,8 +251,8 @@ export const CustomerPortal: React.FC = () => {
       const startDT = new Date(`${bookingDate}T${bookingTime}:00`);
       const endDT = new Date(startDT.getTime() + 2 * 3600000);
       const r = dbState.addReservation({
-        tableId: selectedTableId, branchId: 'br-isb', userId: 'u-cust',
-        userName: custName || 'Guest Customer', userPhone: custPhone || '0330-0500600',
+        tableId: selectedTableId, branchId: 'br-isb', userId: profile.uid,
+        userName: custName || profile.name, userPhone: custPhone || profile.phone || '0330-0500600',
         startTime: startDT.toISOString(), endTime: endDT.toISOString(), guestCount,
         type: 'STANDARD', premiumFee: 0, status: 'CONFIRMED'
       });
@@ -222,7 +263,7 @@ export const CustomerPortal: React.FC = () => {
       : undefined;
 
     const created = dbState.addOrder({
-      branchId: 'br-isb', userId: 'u-cust', userName: custName || 'Guest Customer', userPhone: custPhone || '0330-0500600',
+      branchId: 'br-isb', userId: profile.uid, userName: custName || profile.name, userPhone: custPhone || profile.phone || '0330-0500600',
       orderType: isReservingTable ? 'DINE_IN' : orderType, tableId: selectedTableId || undefined, reservationId,
       status: 'PENDING',
       paymentStatus: 'PAID', // Advance prepayment verified
@@ -407,6 +448,18 @@ export const CustomerPortal: React.FC = () => {
             >
               <Navigation style={{ width: '13px', height: '13px' }} />
               <span className="hidden sm:inline">Track</span>
+            </button>
+
+            <button
+              onClick={() => setShowAuthModal(true)}
+              style={{
+                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)',
+                borderRadius: '10px', padding: '6px 12px', fontSize: '12px', fontWeight: '700',
+                color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+            >
+              <User style={{ width: '13px', height: '13px', color: '#E85D04' }} />
+              <span className="hidden sm:inline">{profile ? profile.name.split(' ')[0] : 'Sign In'}</span>
             </button>
 
             <button
@@ -989,13 +1042,105 @@ export const CustomerPortal: React.FC = () => {
                 </div>
 
                 {orderType === 'DELIVERY' && (
-                  <input
-                    type="text"
-                    placeholder="House & Street in Gulberg Greens"
-                    value={deliveryAddr}
-                    onChange={e => setDeliveryAddr(e.target.value)}
-                    style={{ padding: '8px 10px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', fontSize: '12px', background: 'var(--bg-cream-light)' }}
-                  />
+                  <div style={{ background: 'var(--bg-cream-light)', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid var(--border-warm)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', textTransform: 'uppercase' }}>
+                        📍 Saved Delivery Addresses
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddAddressForm(!showAddAddressForm)}
+                        style={{ background: 'none', border: 'none', color: '#8B1E1E', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
+                      >
+                        {showAddAddressForm ? 'Cancel' : '+ New Address'}
+                      </button>
+                    </div>
+
+                    {/* Saved Address Radio Cards */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {savedAddresses.map(addr => (
+                        <label
+                          key={addr.id}
+                          onClick={() => { setSelectedAddressId(addr.id); setDeliveryAddr(addr.address); setShowAddAddressForm(false); }}
+                          style={{
+                            display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 10px',
+                            borderRadius: '8px', cursor: 'pointer',
+                            border: `1.5px solid ${selectedAddressId === addr.id && !showAddAddressForm ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
+                            background: selectedAddressId === addr.id && !showAddAddressForm ? '#ffffff' : 'rgba(255,255,255,0.6)'
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name="customerAddress"
+                            checked={selectedAddressId === addr.id && !showAddAddressForm}
+                            onChange={() => { setSelectedAddressId(addr.id); setDeliveryAddr(addr.address); }}
+                            style={{ marginTop: '2px', accentColor: 'var(--haandi-red)' }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: '800', fontSize: '11px', color: 'var(--text-dark)' }}>
+                              {addr.label === 'Home' || addr.label === 'Executive Residence' ? '🏠 ' : addr.label === 'Office' || addr.label === 'Civic Office' ? '🏢 ' : '🌴 '}
+                              {addr.label}
+                            </div>
+                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.3, marginTop: '2px' }}>
+                              {addr.address}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+
+                    {/* Add New Address Sub-form */}
+                    {showAddAddressForm && (
+                      <div style={{ marginTop: '8px', padding: '10px', background: '#ffffff', borderRadius: '8px', border: '1px solid var(--border-warm)' }}>
+                        <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+                          {['Home', 'Office', 'Farmhouse'].map(lbl => (
+                            <button
+                              key={lbl}
+                              type="button"
+                              onClick={() => setNewAddrLabel(lbl)}
+                              style={{
+                                padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800',
+                                border: 'none', cursor: 'pointer',
+                                background: newAddrLabel === lbl ? 'var(--haandi-red)' : '#f3f4f6',
+                                color: newAddrLabel === lbl ? '#fff' : '#4b5563'
+                              }}
+                            >
+                              {lbl}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="House & Street in Gulberg Greens"
+                          value={newAddrText}
+                          onChange={e => setNewAddrText(e.target.value)}
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-warm)', fontSize: '11px', boxSizing: 'border-box', marginBottom: '6px' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!newAddrText.trim()) return;
+                            const newAddrObj: CustomerAddress = {
+                              id: 'addr-' + Date.now(),
+                              label: newAddrLabel,
+                              sector: selectedSector,
+                              address: `${newAddrText.trim()}, ${selectedSector}, Gulberg Greens`
+                            };
+                            db.saveCustomerAddress(profile?.uid || 'u-cust', newAddrObj);
+                            setDeliveryAddr(newAddrObj.address);
+                            setSelectedAddressId(newAddrObj.id);
+                            setNewAddrText('');
+                            setShowAddAddressForm(false);
+                            showToast('Address saved to address book!', 'success');
+                          }}
+                          disabled={!newAddrText.trim()}
+                          style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'var(--haandi-red)', color: '#fff', border: 'none', fontSize: '11px', fontWeight: '800', cursor: newAddrText.trim() ? 'pointer' : 'not-allowed' }}
+                        >
+                          Save & Select Address
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Prepayment Method (No COD) */}
@@ -1780,6 +1925,11 @@ export const CustomerPortal: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* ============================================================
+          CUSTOMER AUTHENTICATION & LOGIN MODAL
+          ============================================================ */}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
 
       {/* ============================================================
           TOAST NOTIFICATION

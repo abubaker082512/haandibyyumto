@@ -25,9 +25,9 @@ export const KitchenPortal: React.FC = () => {
   const selectedBranchId = 'br-isb';
   const tables = dbState.getTables(selectedBranchId);
 
-  // Active kitchen orders (PENDING, CONFIRMED, PREPARING, READY)
+  // Active kitchen orders (CONFIRMED, PREPARING, READY and already punched by Cashier/Manager)
   const rawActiveOrders = dbState.getOrders(selectedBranchId)
-    .filter(o => ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'].includes(o.status))
+    .filter(o => ['CONFIRMED', 'PREPARING', 'READY'].includes(o.status) && (o.isPunched !== false || !o.isOnline))
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()); // oldest first
 
   const activeOrders = rawActiveOrders.filter(order => {

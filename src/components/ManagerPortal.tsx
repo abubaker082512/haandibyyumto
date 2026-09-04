@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../store/mockDb';
+import { useAuth } from '../context/AuthContext';
 import type { OrderItem, MenuItem, Table } from '../types';
 import { 
   Truck, Plus, Minus, Trash2, ArrowRightLeft, 
-  X, Receipt, ChefHat
+  X, Receipt, ChefHat, PhoneCall, ShoppingBag, UserCheck
 } from 'lucide-react';
 
 export const ManagerPortal: React.FC = () => {
+  const { profile } = useAuth();
   const [dbState, setDbState] = useState(db);
   
   // Refresh on DB changes
@@ -24,6 +26,9 @@ export const ManagerPortal: React.FC = () => {
   const [tableDrawerOpen, setTableDrawerOpen] = useState(false);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [targetTableId, setTargetTableId] = useState('');
+  
+  // Order Taker Staff Identity
+  const [staffName, setStaffName] = useState(profile?.name || 'Manager Bilal');
   
   // New Order / Editing Order Items State
   const [currentOrderItems, setCurrentOrderItems] = useState<OrderItem[]>([]);
@@ -44,6 +49,12 @@ export const ManagerPortal: React.FC = () => {
   const menu = dbState.getMenu();
   const riders = dbState.getUsers().filter(u => u.role === 'RIDER');
   const settings = dbState.getSettings();
+
+  // Rush statistics
+  const occupiedTables = allTables.filter(t => t.status === 'OCCUPIED' || dbState.getOrderByTableId(t.id));
+  const activeDeliveries = orders.filter(o => o.orderType === 'DELIVERY' && o.status !== 'DELIVERED' && o.status !== 'CANCELLED');
+  const activeTakeaways = orders.filter(o => o.orderType === 'PICK_UP' && o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
+  const unconfirmedOnlineOrders = orders.filter(o => o.isOnline && !o.isPunched && o.status !== 'CANCELLED');
 
   // Sync drawer items when selecting a table
   const openTableManager = (table: Table) => {
@@ -107,7 +118,7 @@ export const ManagerPortal: React.FC = () => {
     dbState.addOrUpdateTableOrder({
       tableId: selectedTable.id,
       items: currentOrderItems,
-      waiterOrManagerName: 'Manager Bilal',
+      waiterOrManagerName: staffName || profile?.name || 'Manager Bilal',
       customerName: guestName.trim() || 'Table Guest',
       customerPhone: guestPhone.trim() || '0330-0500600',
     });
@@ -196,21 +207,94 @@ export const ManagerPortal: React.FC = () => {
             </div>
           </div>
 
-          {/* Floor Switcher Tabs */}
-          <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.08)', padding: '4px', borderRadius: '12px' }}>
-            {floors.map(fl => (
-              <button
-                key={fl.id}
-                onClick={() => setActiveFloorId(fl.id)}
-                style={{
-                  padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '800', border: 'none', cursor: 'pointer',
-                  background: activeFloorId === fl.id ? 'var(--haandi-red)' : 'transparent',
-                  color: activeFloorId === fl.id ? '#ffffff' : 'rgba(255,255,255,0.7)'
-                }}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {/* Order Taker Staff Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.08)', padding: '4px 10px', borderRadius: '10px' }}>
+              <UserCheck style={{ width: '14px', height: '14px', color: 'var(--haandi-gold)' }} />
+              <select
+                value={staffName}
+                onChange={e => setStaffName(e.target.value)}
+                style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}
               >
-                {fl.name}
-              </button>
-            ))}
+                <option value="Manager Bilal" style={{ background: '#1A120B' }}>Manager Bilal</option>
+                <option value="Ali Order Taker (Waiter)" style={{ background: '#1A120B' }}>Ali Order Taker (Waiter)</option>
+                <option value="Hamza Floor Captain" style={{ background: '#1A120B' }}>Hamza Floor Captain</option>
+              </select>
+            </div>
+
+            {/* Floor Switcher Tabs */}
+            <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.08)', padding: '4px', borderRadius: '12px' }}>
+              {floors.map(fl => (
+                <button
+                  key={fl.id}
+                  onClick={() => setActiveFloorId(fl.id)}
+                  style={{
+                    padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '800', border: 'none', cursor: 'pointer',
+                    background: activeFloorId === fl.id ? 'var(--haandi-red)' : 'transparent',
+                    color: activeFloorId === fl.id ? '#ffffff' : 'rgba(255,255,255,0.7)'
+                  }}
+                >
+                  {fl.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Rush & Floor Summary Stats Ribbon */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ background: '#ffffff', border: '1.5px solid var(--border-warm)', borderRadius: '14px', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Occupied Tables</div>
+              <div style={{ fontSize: '20px', fontWeight: '900', color: '#8B1E1E', marginTop: '2px' }}>
+                {occupiedTables.length} / {allTables.length} Tabs
+              </div>
+            </div>
+            <div style={{ background: 'rgba(139,30,30,0.1)', color: '#8B1E1E', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              🪑
+            </div>
+          </div>
+
+          <div style={{ background: '#ffffff', border: '1.5px solid var(--border-warm)', borderRadius: '14px', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Active Deliveries</div>
+              <div style={{ fontSize: '20px', fontWeight: '900', color: '#E85D04', marginTop: '2px' }}>
+                {activeDeliveries.length} Dispatches
+              </div>
+            </div>
+            <div style={{ background: 'rgba(232,93,4,0.1)', color: '#E85D04', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Truck style={{ width: '18px', height: '18px' }} />
+            </div>
+          </div>
+
+          <div style={{ background: '#ffffff', border: '1.5px solid var(--border-warm)', borderRadius: '14px', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Takeaways</div>
+              <div style={{ fontSize: '20px', fontWeight: '900', color: '#3B82F6', marginTop: '2px' }}>
+                {activeTakeaways.length} Active
+              </div>
+            </div>
+            <div style={{ background: 'rgba(59,130,246,0.1)', color: '#3B82F6', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShoppingBag style={{ width: '18px', height: '18px' }} />
+            </div>
+          </div>
+
+          <div style={{
+            background: unconfirmedOnlineOrders.length > 0 ? '#FEF2F2' : '#ffffff',
+            border: `1.5px solid ${unconfirmedOnlineOrders.length > 0 ? '#DC2626' : 'var(--border-warm)'}`,
+            borderRadius: '14px', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          }}>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: unconfirmedOnlineOrders.length > 0 ? '#DC2626' : 'var(--text-muted)', textTransform: 'uppercase' }}>
+                Online Queue (POS)
+              </div>
+              <div style={{ fontSize: '20px', fontWeight: '900', color: unconfirmedOnlineOrders.length > 0 ? '#DC2626' : 'var(--text-dark)', marginTop: '2px' }}>
+                {unconfirmedOnlineOrders.length} Unpunched
+              </div>
+            </div>
+            <div style={{ background: unconfirmedOnlineOrders.length > 0 ? 'rgba(220,38,38,0.15)' : 'rgba(0,0,0,0.05)', color: unconfirmedOnlineOrders.length > 0 ? '#DC2626' : 'var(--text-muted)', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <PhoneCall style={{ width: '18px', height: '18px' }} />
+            </div>
           </div>
         </div>
 

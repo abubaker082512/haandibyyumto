@@ -1,20 +1,31 @@
 import { HAANDI_MENU } from './menuData';
 import { useState, useEffect } from 'react';
-import type { Branch, Floor, Table, MenuItem, Reservation, Order, OrderItem, UserProfile, OrderStatus, TableStatus, CashierShift, HeldOrder, SystemSettings } from '../types';
+import type { Branch, Floor, Table, MenuItem, Reservation, Order, OrderItem, UserProfile, OrderStatus, TableStatus, CashierShift, HeldOrder, SystemSettings, TillTransaction, CustomerAddress } from '../types';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
 // Mock Users
 const INITIAL_USERS: UserProfile[] = [
-  { id: 'u-cust', name: 'Abubakar Customer', phone: '+92 300 1234567', role: 'CUSTOMER' },
-  { id: 'u-man1', name: 'Bilal Manager (Islamabad)', phone: '+92 333 4567890', role: 'MANAGER', branchId: 'br-isb' },
-  { id: 'u-kit1', name: 'Chef Tariq', phone: '+92 312 3456789', role: 'KITCHEN', branchId: 'br-isb' },
-  { id: 'u-ride1', name: 'Zahid Rider 1', phone: '+92 345 6789012', role: 'RIDER' },
-  { id: 'u-ride2', name: 'Kamran Rider 2', phone: '+92 315 1122334', role: 'RIDER' },
-  { id: 'u-own', name: 'Sajid Owner', phone: '+92 300 0000000', role: 'OWNER' },
-  { id: 'u-cash1', name: 'Nadia Cashier (Islamabad)', phone: '+92 321 5550001', role: 'CASHIER', branchId: 'br-isb' },
-  { id: 'u-cash2', name: 'Hamza Cashier (Islamabad)', phone: '+92 333 5550002', role: 'CASHIER', branchId: 'br-isb' },
+  {
+    id: 'u-cust',
+    name: 'Abubakar Customer',
+    phone: '0300 1234567',
+    role: 'CUSTOMER',
+    addresses: [
+      { id: 'addr-1', label: 'Executive Residence', sector: 'Executive Block', address: 'House 14, Street 7, Executive Block, Gulberg Greens, Islamabad', isDefault: true },
+      { id: 'addr-2', label: 'Civic Office', sector: 'Civic Center', address: 'Suite 402, Business Center, Civic Center, Gulberg Greens, Islamabad' },
+      { id: 'addr-3', label: 'Farmhouse Villa', sector: 'Sector 2 (Farmhouses)', address: 'Farmhouse 88, Main Boulevard, Sector 2, Gulberg Greens' }
+    ]
+  },
+  { id: 'u-man1', name: 'Bilal Manager (Islamabad)', phone: '0333 4567890', role: 'MANAGER', branchId: 'br-isb' },
+  { id: 'u-waiter1', name: 'Ali Order Taker (Waiter)', phone: '0322 7770001', role: 'WAITER', branchId: 'br-isb' },
+  { id: 'u-kit1', name: 'Chef Tariq', phone: '0312 3456789', role: 'KITCHEN', branchId: 'br-isb' },
+  { id: 'u-ride1', name: 'Zahid Rider 1', phone: '0345 6789012', role: 'RIDER' },
+  { id: 'u-ride2', name: 'Kamran Rider 2', phone: '0315 1122334', role: 'RIDER' },
+  { id: 'u-own', name: 'Sajid Owner (HQ)', phone: '0300 0000000', role: 'OWNER' },
+  { id: 'u-cash1', name: 'Nadia Cashier (Islamabad)', phone: '0321 5550001', role: 'CASHIER', branchId: 'br-isb' },
+  { id: 'u-cash2', name: 'Hamza Cashier (Islamabad)', phone: '0333 5550002', role: 'CASHIER', branchId: 'br-isb' },
 ];
 
 // Single Location — Gulberg Greens, Islamabad
@@ -269,10 +280,16 @@ class MockDatabase {
 
   addOrder(order: Omit<Order, 'id' | 'createdAt'>) {
     const orders = this.getOrders();
+    const isOnline = order.isOnline ?? true;
+    const isPunched = order.isPunched ?? (order.orderType === 'DINE_IN' && !isOnline ? true : false);
     const newOrder: Order = {
       ...order,
       discountAmount: order.discountAmount ?? 0,
       discountPercent: order.discountPercent ?? 0,
+      isOnline,
+      isPunched,
+      isCallConfirmed: order.isCallConfirmed ?? false,
+      status: isPunched ? (order.status || 'PREPARING') : 'PENDING',
       id: 'ord-' + generateId(),
       createdAt: new Date().toISOString()
     };
@@ -286,6 +303,110 @@ class MockDatabase {
 
     this.notify();
     return newOrder;
+  }
+
+  confirmAndPunchOnlineOrder(orderId: string, cashierName: string): boolean {
+    const orders = this.getOrders();
+    const index = orders.findIndex(o => o.id === orderId);
+    if (index === -1) return false;
+    
+    orders[index].isCallConfirmed = true;
+    orders[index].isPunched = true;
+    orders[index].confirmedByCashier = cashierName;
+    orders[index].status = 'PREPARING'; // Now sent to Kitchen KDS!
+    localStorage.setItem('yumto_orders', JSON.stringify(orders));
+    this.notify();
+    return true;
+  }
+
+  editOrderItems(orderId: string, items: OrderItem[], discountAmount?: number, discountPercent?: number): boolean {
+    const orders = this.getOrders();
+    const index = orders.findIndex(o => o.id === orderId);
+    if (index === -1) return false;
+    
+    // Once punched to kitchen and started, order cannot be edited
+    if (orders[index].isPunched && orders[index].status !== 'PENDING') {
+      return false;
+    }
+
+    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const discPct = discountPercent !== undefined ? discountPercent : orders[index].discountPercent || 0;
+    const discAmt = discountAmount !== undefined ? discountAmount : Math.round((subtotal * discPct) / 100);
+    const discounted = Math.max(0, subtotal - discAmt);
+    const taxCalc = this.calculateSalesTax(discounted, orders[index].paymentMethod);
+    const total = discounted + taxCalc.taxAmount + (orders[index].deliveryFee || 0) + (orders[index].premiumReservationFee || 0);
+
+    orders[index].items = items;
+    orders[index].subtotal = subtotal;
+    orders[index].discountAmount = discAmt;
+    orders[index].discountPercent = discPct;
+    orders[index].tax = taxCalc.taxAmount;
+    orders[index].total = total;
+
+    localStorage.setItem('yumto_orders', JSON.stringify(orders));
+    this.notify();
+    return true;
+  }
+
+  deleteOrder(orderId: string): boolean {
+    const orders = this.getOrders();
+    const index = orders.findIndex(o => o.id === orderId);
+    if (index === -1) return false;
+    if (orders[index].tableId) {
+      this.updateTableStatus(orders[index].tableId!, 'AVAILABLE');
+    }
+    orders.splice(index, 1);
+    localStorage.setItem('yumto_orders', JSON.stringify(orders));
+    this.notify();
+    return true;
+  }
+
+  getTillTransactions(branchId?: string, shiftId?: string): TillTransaction[] {
+    const txs: TillTransaction[] = JSON.parse(localStorage.getItem('yumto_till_transactions') || '[]');
+    let filtered = txs;
+    if (branchId) filtered = filtered.filter(t => t.branchId === branchId);
+    if (shiftId) filtered = filtered.filter(t => t.shiftId === shiftId);
+    return filtered;
+  }
+
+  addTillTransaction(tx: Omit<TillTransaction, 'id' | 'timestamp'>): TillTransaction {
+    const txs: TillTransaction[] = JSON.parse(localStorage.getItem('yumto_till_transactions') || '[]');
+    const newTx: TillTransaction = {
+      ...tx,
+      id: 'tx-' + generateId(),
+      timestamp: new Date().toISOString()
+    };
+    txs.unshift(newTx);
+    localStorage.setItem('yumto_till_transactions', JSON.stringify(txs));
+
+    // Update active shift cash movement
+    if (tx.shiftId) {
+      if (tx.type === 'CASH_IN') {
+        this.recordCashMovement(tx.shiftId, 'IN', tx.amount);
+      } else {
+        this.recordCashMovement(tx.shiftId, 'OUT', tx.amount);
+      }
+    }
+
+    this.notify();
+    return newTx;
+  }
+
+  saveCustomerAddress(userId: string, address: Omit<CustomerAddress, 'id'>): CustomerAddress {
+    const users = this.getUsers();
+    const userIndex = users.findIndex(u => u.id === userId);
+    const newAddr: CustomerAddress = {
+      ...address,
+      id: 'addr-' + generateId()
+    };
+
+    if (userIndex !== -1) {
+      if (!users[userIndex].addresses) users[userIndex].addresses = [];
+      users[userIndex].addresses!.push(newAddr);
+      localStorage.setItem('yumto_users', JSON.stringify(users));
+    }
+    this.notify();
+    return newAddr;
   }
 
   updateOrderStatus(orderId: string, status: OrderStatus) {

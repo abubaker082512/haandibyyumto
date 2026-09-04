@@ -53,6 +53,14 @@ const DEMO_PROFILES: Record<Role, AppUserProfile> = {
     role: 'KITCHEN',
     branchId: 'br-isb'
   },
+  WAITER: {
+    uid: 'demo-waiter',
+    name: 'Ali Order Taker (Waiter)',
+    email: 'waiter@haandi.yumto.com',
+    phone: '+92 322 7770001',
+    role: 'WAITER',
+    branchId: 'br-isb'
+  },
   MANAGER: {
     uid: 'demo-mgr',
     name: 'Bilal Manager (Islamabad)',
@@ -88,6 +96,7 @@ export const PRESET_CREDENTIALS: {
 }[] = [
   { username: 'owner', email: 'owner@haandi.yumto.com', password: 'Haandi@2026', role: 'OWNER', name: 'Sajid Owner', phone: '0300-0000000', portal: '/admin' },
   { username: 'manager', email: 'manager@haandi.yumto.com', password: 'Haandi@2026', role: 'MANAGER', name: 'Bilal Manager (Islamabad)', phone: '0333-4567890', portal: '/manager' },
+  { username: 'waiter', email: 'waiter@haandi.yumto.com', password: 'Haandi@2026', role: 'WAITER', name: 'Ali Order Taker (Waiter)', phone: '0322-7770001', portal: '/manager' },
   { username: 'cashier', email: 'cashier@haandi.yumto.com', password: 'Haandi@2026', role: 'CASHIER', name: 'Nadia Cashier (Islamabad)', phone: '0321-5550001', portal: '/pos' },
   { username: 'kitchen', email: 'kitchen@haandi.yumto.com', password: 'Haandi@2026', role: 'KITCHEN', name: 'Chef Tariq (Islamabad)', phone: '0312-3456789', portal: '/kitchen' },
   { username: 'rider', email: 'rider@haandi.yumto.com', password: 'Haandi@2026', role: 'RIDER', name: 'Zahid Rider (Islamabad)', phone: '0345-6789012', portal: '/rider' },
