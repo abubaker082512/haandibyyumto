@@ -4,8 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import type { OrderItem, MenuItem, Table } from '../types';
 import { 
   Truck, Plus, Minus, Trash2, ArrowRightLeft, 
-  X, Receipt, ChefHat, PhoneCall, ShoppingBag, UserCheck
+  X, Receipt, ChefHat, PhoneCall, ShoppingBag, UserCheck, MessageSquare
 } from 'lucide-react';
+import { WhatsAppBotModal } from './WhatsAppBotModal';
 
 export const ManagerPortal: React.FC = () => {
   const { profile } = useAuth();
@@ -35,6 +36,7 @@ export const ManagerPortal: React.FC = () => {
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [activeTabCat, setActiveTabCat] = useState('All');
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -221,6 +223,20 @@ export const ManagerPortal: React.FC = () => {
                 <option value="Hamza Floor Captain" style={{ background: '#1A120B' }}>Hamza Floor Captain</option>
               </select>
             </div>
+
+            {/* WhatsApp Bot Status Button */}
+            <button
+              onClick={() => setShowWhatsAppModal(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: 'rgba(37,211,102,0.2)', border: '1.5px solid #25D366',
+                borderRadius: '10px', padding: '6px 12px', fontSize: '11px', fontWeight: '800',
+                color: '#4ADE80', cursor: 'pointer'
+              }}
+            >
+              <MessageSquare style={{ width: '13px', height: '13px' }} />
+              <span>WhatsApp Bot</span>
+            </button>
 
             {/* Floor Switcher Tabs */}
             <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.08)', padding: '4px', borderRadius: '12px' }}>
@@ -691,6 +707,12 @@ export const ManagerPortal: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* WhatsApp Bot Management Modal */}
+        <WhatsAppBotModal
+          isOpen={showWhatsAppModal}
+          onClose={() => setShowWhatsAppModal(false)}
+        />
 
         {/* Toast */}
         {toastMsg && (

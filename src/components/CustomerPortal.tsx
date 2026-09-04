@@ -3,12 +3,9 @@ import { db } from '../store/mockDb';
 import { useAuth } from '../context/AuthContext';
 import { AuthModal } from './AuthModal';
 import type { MenuItem, OrderType, OrderItem, CustomerAddress } from '../types';
-import {
-  MapPin, ShoppingBag,
-  Trash2, Plus, Minus, X, Navigation,
-  Sparkles, ArrowRight, CheckCircle2, User
-} from 'lucide-react';
+import { MapPin, ShoppingBag, Trash2, Plus, Minus, X, Navigation, Sparkles, ArrowRight, CheckCircle2, User } from 'lucide-react';
 import { LiveTrackingMap } from './LiveTrackingMap';
+import { notificationService } from '../services/notificationService';
 
 export const CustomerPortal: React.FC = () => {
   const [dbState, setDbState] = useState(db);
@@ -280,22 +277,28 @@ export const CustomerPortal: React.FC = () => {
     setIsReservingTable(false);
     setCartOpen(false);
 
-    // Prepare WhatsApp Message with Live Tracking Link
+    // 1. Automated Background WhatsApp Dispatch (Baileys Service)
     const trackingUrl = `${window.location.origin}/#/track/${created.id}`;
-    const waText = `🍲 *HAANDI BY YUMTO — Order Confirmed!*\n\n*Order ID:* #${created.id.slice(-6).toUpperCase()}\n*Mode:* ${created.orderType}\n*Items:* ${created.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}\n*Total:* Rs. ${created.total.toLocaleString()}\n\n📍 *Track Live Order & Rider:* ${trackingUrl}\n\n*Haandi by Yumto*\nCivic Center, Gulberg Greens, Islamabad\n📞 0330 0500600`;
+    notificationService.sendOrderWhatsAppNotification(created, trackingUrl).then(res => {
+      if (res.success) {
+        console.log('[WhatsApp Bot] Automated order receipt dispatched to customer:', res.messageId);
+      }
+    }).catch(err => {
+      console.warn('[WhatsApp Bot] Background dispatch skipped:', err);
+    });
 
-    const cleanPhone = (custPhone || '').replace(/[^0-9]/g, '');
-    const formattedPhone = cleanPhone.startsWith('0') ? '92' + cleanPhone.slice(1) : cleanPhone.startsWith('92') ? cleanPhone : '92' + (cleanPhone || '3300500600');
-    const waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(waText)}`;
+    // 2. Direct 1-Tap Fallback WhatsApp URI
+    const waText = notificationService.formatOrderWhatsAppMessage(created, trackingUrl);
+    const waUrl = notificationService.getDirectWhatsAppUrl(created.userPhone, waText);
 
-    // Open WhatsApp Tracking
+    // Optional instant open
     try {
       window.open(waUrl, '_blank');
     } catch {
       // Handled in modal
     }
 
-    showToast('🎉 Order Placed! WhatsApp tracking link sent.', 'success');
+    showToast('🎉 Order Placed! Automated WhatsApp tracking sent.', 'success');
   };
 
   return (

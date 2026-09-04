@@ -8,15 +8,23 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "seed:firebase": "node scripts/seedFirebase.js"
+    "seed:firebase": "node scripts/seedFirebase.js",
+    "whatsapp:bot": "node server/whatsapp-server.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
     "@capacitor/core": "^8.5.0",
     "@types/leaflet": "^1.9.22",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "firebase": "^12.18.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.31.0",
+    "pino": "^10.3.1",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3"

@@ -10,6 +10,8 @@ import {
   Edit3, DollarSign,
   Package, CheckCircle2, MessageSquare, ChefHat
 } from 'lucide-react';
+import { WhatsAppBotModal } from './WhatsAppBotModal';
+import { notificationService } from '../services/notificationService';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const fmtMoney = (n: number) => `Rs. ${Math.round(n).toLocaleString('en-PK')}`;
@@ -1053,6 +1055,7 @@ export const CashierPortal: React.FC = () => {
 
   // ── Held orders & Receipt
   const [showHeldPanel, setShowHeldPanel] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const heldOrders = dbState.getHeldOrders(selectedBranchId);
   const [receiptData, setReceiptData] = useState<ReceiptProps['order'] | null>(null);
 
@@ -1227,6 +1230,11 @@ export const CashierPortal: React.FC = () => {
     const success = db.confirmAndPunchOnlineOrder(order.id, cashier.name);
     if (success) {
       showToast(`Order #${order.id.slice(-6).toUpperCase()} verified by call & punched to Kitchen KDS!`, 'success');
+      // Auto send WhatsApp confirmation update
+      const trackingUrl = `${window.location.origin}/#/track/${order.id}`;
+      notificationService.sendOrderWhatsAppNotification({ ...order, status: 'PREPARING' }, trackingUrl).catch(err => {
+        console.warn('Auto WhatsApp notification failed:', err);
+      });
     }
   };
 
@@ -1351,6 +1359,10 @@ export const CashierPortal: React.FC = () => {
       {receiptData && (
         <ReceiptModal order={receiptData} onClose={() => setReceiptData(null)} />
       )}
+      <WhatsAppBotModal
+        isOpen={showWhatsAppModal}
+        onClose={() => setShowWhatsAppModal(false)}
+      />
       {editingOnlineOrder && (
         <EditOnlineOrderModal
           order={editingOnlineOrder}
@@ -1519,6 +1531,24 @@ export const CashierPortal: React.FC = () => {
             Z-Report
           </button>
         )}
+
+        {/* WHATSAPP BOT STATUS & QR TRIGGER */}
+        <button
+          onClick={() => setShowWhatsAppModal(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            background: 'rgba(37,211,102,0.18)',
+            border: '1.5px solid #25D366',
+            borderRadius: '8px', padding: '5px 10px',
+            color: '#4ADE80',
+            fontWeight: '800', fontSize: '11px', cursor: 'pointer',
+            transition: 'all 0.2s', whiteSpace: 'nowrap'
+          }}
+          title="WhatsApp Order Automation Bot (Baileys)"
+        >
+          <MessageSquare style={{ width: '13px', height: '13px', color: '#25D366' }} />
+          <span>WhatsApp Bot</span>
+        </button>
 
         {/* THEME TOGGLE BUTTON (Light / Dark) */}
         <button
