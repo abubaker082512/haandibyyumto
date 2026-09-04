@@ -38,9 +38,37 @@ export const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({
   const riderMarkerRef = useRef<L.Marker | null>(null);
   const routePolylineRef = useRef<L.Polyline | null>(null);
 
+  // Initial progress based on real order status
+  const getInitialProgress = (status: string) => {
+    switch (status) {
+      case 'PENDING': return 0.0;
+      case 'PREPARING': return 0.08;
+      case 'READY': return 0.18;
+      case 'ON_THE_WAY': case 'SHIPPED': return 0.35;
+      case 'COMPLETED': case 'DELIVERED': return 1.0;
+      default: return 0.35;
+    }
+  };
+
   // Rider progress along the route (0.0 to 1.0)
-  const [progress, setProgress] = useState<number>(0.35);
+  const [progress, setProgress] = useState<number>(() => getInitialProgress(orderStatus));
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
+
+  // Sync progress when orderStatus prop changes in real-time
+  useEffect(() => {
+    if (orderStatus === 'PENDING') {
+      setProgress(0.0);
+    } else if (orderStatus === 'PREPARING') {
+      setProgress(0.08);
+    } else if (orderStatus === 'READY') {
+      setProgress(0.18);
+    } else if (orderStatus === 'ON_THE_WAY' || orderStatus === 'SHIPPED') {
+      setProgress(prev => (prev < 0.25 || prev >= 1.0 ? 0.25 : prev));
+      setIsPlaying(true);
+    } else if (orderStatus === 'COMPLETED' || orderStatus === 'DELIVERED') {
+      setProgress(1.0);
+    }
+  }, [orderStatus]);
 
   // Target destination coords based on sector
   const destCoords: LatLng = GULBERG_SECTOR_COORDS[customerSector] || GULBERG_SECTOR_COORDS['Block B (Gulberg Greens)'];
@@ -202,7 +230,16 @@ export const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({
     }
   }, [progress]);
 
-  const isDelivered = progress >= 1.0;
+  const isDelivered = progress >= 1.0 || orderStatus === 'COMPLETED' || orderStatus === 'DELIVERED';
+
+  const getStatusHeadline = () => {
+    if (orderStatus === 'PENDING') return 'Order Verified & Queued';
+    if (orderStatus === 'PREPARING') return 'Kitchen: Cooking in Handi';
+    if (orderStatus === 'READY') return 'Order Packed · Ready for Rider';
+    if (orderStatus === 'ON_THE_WAY' || orderStatus === 'SHIPPED') return isDelivered ? 'Order Arrived at Doorstep!' : 'Rider On The Way (Live GPS)';
+    if (orderStatus === 'COMPLETED' || orderStatus === 'DELIVERED') return 'Order Delivered Hot & Fresh!';
+    return 'Live GPS Tracking';
+  };
 
   return (
     <div style={{
@@ -219,14 +256,14 @@ export const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            background: isDelivered ? '#15803D' : '#E85D04', width: '32px', height: '32px',
+            background: (orderStatus === 'COMPLETED' || orderStatus === 'DELIVERED' || isDelivered) ? '#15803D' : '#E85D04', width: '32px', height: '32px',
             borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            {isDelivered ? <CheckCircle2 style={{ width: '18px', height: '18px' }} /> : <Bike style={{ width: '18px', height: '18px' }} />}
+            {(orderStatus === 'COMPLETED' || orderStatus === 'DELIVERED' || isDelivered) ? <CheckCircle2 style={{ width: '18px', height: '18px' }} /> : <Bike style={{ width: '18px', height: '18px' }} />}
           </div>
           <div>
             <div style={{ fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>{isDelivered ? 'Order Arrived!' : 'Rider On The Way'}</span>
+              <span>{getStatusHeadline()}</span>
               <span style={{
                 background: 'rgba(232,93,4,0.3)', color: '#F4C430', fontSize: '10px',
                 padding: '2px 6px', borderRadius: '6px', fontWeight: '700'

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { db } from '../store/mockDb';
 import { useAuth } from '../context/AuthContext';
 import { AuthModal } from './AuthModal';
@@ -276,6 +277,7 @@ export const CustomerPortal: React.FC = () => {
     });
 
     setPlacedOrderId(created.id);
+    localStorage.setItem('haandi_last_order_id', created.id);
     setIsOrderPlaced(true);
     setCart([]);
     setSelectedTableId(null);
@@ -437,17 +439,17 @@ export const CustomerPortal: React.FC = () => {
               <span>My Orders</span>
             </button>
 
-            <button
-              onClick={() => setShowLiveTrackingModal(true)}
+            <Link
+              to={`/track/${placedOrderId || localStorage.getItem('haandi_last_order_id') || ''}`}
               style={{
                 background: 'rgba(21,128,61,0.2)', border: '1px solid #15803D', borderRadius: '10px',
                 padding: '6px 12px', fontSize: '12px', fontWeight: '800', color: '#4ADE80',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px'
               }}
             >
               <Navigation style={{ width: '13px', height: '13px' }} />
               <span className="hidden sm:inline">Track</span>
-            </button>
+            </Link>
 
             <button
               onClick={() => setShowAuthModal(true)}
@@ -1563,9 +1565,10 @@ export const CustomerPortal: React.FC = () => {
 
             <div style={{ padding: '16px' }}>
               <LiveTrackingMap
-                orderId={placedOrderId || 'ORD-ISB-2026'}
+                orderId={placedOrderId || localStorage.getItem('haandi_last_order_id') || 'ORD-ISB-2026'}
                 customerSector={selectedSector}
                 customerAddress={deliveryAddr ? `${deliveryAddr}, ${selectedSector}, Islamabad` : `${selectedSector}, Islamabad`}
+                orderStatus={dbState.getOrders().find((o: any) => o.id === (placedOrderId || localStorage.getItem('haandi_last_order_id')))?.status || 'PREPARING'}
                 height="340px"
                 showControls={true}
               />
