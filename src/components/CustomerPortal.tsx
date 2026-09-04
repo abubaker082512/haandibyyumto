@@ -130,6 +130,8 @@ export const CustomerPortal: React.FC = () => {
   const menu = dbState.getMenu();
   const floors = dbState.getFloors('br-isb');
   const tables = dbState.getTables('br-isb', activeFloorId);
+  const selectedTable = tables.find(t => t.id === selectedTableId) || dbState.getTables('br-isb').find(t => t.id === selectedTableId);
+  const activeFloor = floors.find(f => f.id === activeFloorId) || floors[0];
   const settings = dbState.getSettings();
 
   // Categories list
@@ -148,6 +150,14 @@ export const CustomerPortal: React.FC = () => {
   const addToCart = (item: MenuItem, variation?: { name: string; price: number }) => {
     if (!item.isAvailable) {
       showToast('Item is currently sold out', 'error');
+      return;
+    }
+    if (orderType === 'DINE_IN' && !selectedTableId) {
+      showToast('⚠️ Please select your Dine-In table above first!', 'warning');
+      const el = document.getElementById('dine-in-top-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
       return;
     }
     if (item.variations && item.variations.length > 0 && !variation) {
@@ -244,6 +254,15 @@ export const CustomerPortal: React.FC = () => {
     }
     if (orderType === 'DELIVERY' && !deliveryAddr.trim()) {
       showToast('Please enter or select your delivery address in Gulberg Greens', 'error');
+      return;
+    }
+    if (orderType === 'DINE_IN' && !selectedTableId) {
+      showToast('⚠️ Please select your Dine-In table before placing your order!', 'warning');
+      setCartOpen(false);
+      setTimeout(() => {
+        const el = document.getElementById('dine-in-top-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
       return;
     }
 
@@ -401,10 +420,14 @@ export const CustomerPortal: React.FC = () => {
             }}
           >
             <span style={{ fontSize: '14px' }}>
-              {isReservingTable ? '🪑' : orderType === 'DELIVERY' ? '🛵' : '🛍️'}
+              {orderType === 'DINE_IN' ? '🪑' : orderType === 'DELIVERY' ? '🛵' : '🛍️'}
             </span>
             <span style={{ fontSize: '12px', fontWeight: '800', color: '#ffffff' }}>
-              {isReservingTable ? 'Dine-In Table' : orderType === 'DELIVERY' ? `Delivery (${selectedSector.split(' ')[0]})` : 'Takeaway'}
+              {orderType === 'DINE_IN'
+                ? (selectedTable ? `Dine-In (Table ${selectedTable.tableNumber})` : 'Dine-In (Select Table)')
+                : orderType === 'DELIVERY'
+                ? `Delivery (${selectedSector.split(' ')[0]})`
+                : 'Takeaway'}
             </span>
             <span style={{ fontSize: '10px', color: '#F4C430', fontWeight: '900', background: 'rgba(244,196,48,0.15)', padding: '2px 6px', borderRadius: '6px' }}>
               Change
@@ -514,7 +537,13 @@ export const CustomerPortal: React.FC = () => {
               boxShadow: '0 4px 14px rgba(232,93,4,0.4)'
             }}
           >
-            <span>{isReservingTable ? '🪑 Dine-In' : orderType === 'DELIVERY' ? `🛵 Delivery (${selectedSector.split(',')[0]})` : '🛍️ Takeaway'}</span>
+            <span>
+              {orderType === 'DINE_IN'
+                ? (selectedTable ? `🪑 Dine-In (Table ${selectedTable.tableNumber})` : '🪑 Dine-In · Pick Table')
+                : orderType === 'DELIVERY'
+                ? `🛵 Delivery (${selectedSector.split(',')[0]})`
+                : '🛍️ Takeaway'}
+            </span>
             <span style={{ fontSize: '10px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>Change</span>
           </button>
         </div>
@@ -566,6 +595,285 @@ export const CustomerPortal: React.FC = () => {
                 {isWithinDeliveryRadius ? `✓ ${currentSector.distanceKm} km · Eligible` : '✗ Outside 2.5 km'}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Takeaway Info Banner */}
+      {orderType === 'PICK_UP' && (
+        <div style={{ maxWidth: '1200px', margin: '16px auto 0', padding: '0 16px' }}>
+          <div style={{
+            background: '#FFFDF9', padding: '14px 18px', borderRadius: '14px',
+            border: '1.5px solid #EADBCC', display: 'flex', flexWrap: 'wrap',
+            alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '22px' }}>🛍️</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '900', color: '#1A120B' }}>
+                  Self Takeaway & Pickup · Civic Center, Gulberg Greens
+                </div>
+                <div style={{ fontSize: '11px', color: '#5C4B3C' }}>
+                  Your Handi dishes will be freshly packed in heat-retaining earthen containers ready in ~20 minutes.
+                </div>
+              </div>
+            </div>
+
+            <div style={{ fontSize: '12px', fontWeight: '800', color: '#E85D04', background: '#FDF4EB', padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(232,93,4,0.3)' }}>
+              Pickup Time: ~20 Mins
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          TOP DINE-IN STEP 1: INTERACTIVE TABLE SELECTION (Islamabad Branch)
+          ============================================================ */}
+      {orderType === 'DINE_IN' && (
+        <div id="dine-in-top-section" style={{ maxWidth: '1200px', margin: '20px auto 10px', padding: '0 16px' }}>
+          <div style={{
+            background: 'var(--bg-card)', border: '2px solid #E85D04',
+            borderRadius: '24px', padding: '24px', boxShadow: '0 8px 30px rgba(232,93,4,0.12)'
+          }}>
+            {/* Top Heading */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
+              <div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#FDF4EB', border: '1px solid rgba(232,93,4,0.3)', padding: '3px 10px', borderRadius: '99px', fontSize: '11px', color: '#E85D04', fontWeight: '800', marginBottom: '6px' }}>
+                  <span>🪑 STEP 1 of 2: SELECT YOUR TABLE</span>
+                </div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: '900', color: 'var(--text-dark)', margin: 0 }}>
+                  Choose Your Dine-In Table (Islamabad Branch)
+                </h2>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                  Civic Center, Gulberg Greens · Select an available table below to place your order.
+                </p>
+              </div>
+
+              {/* Floor Switcher Tabs */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {floors.map(fl => (
+                  <button
+                    key={fl.id}
+                    onClick={() => { setActiveFloorId(fl.id); }}
+                    style={{
+                      padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '800',
+                      border: activeFloorId === fl.id ? '2px solid #8B1E1E' : '1.5px solid var(--border-warm)',
+                      cursor: 'pointer',
+                      background: activeFloorId === fl.id ? 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)' : '#FFFFFF',
+                      color: activeFloorId === fl.id ? '#ffffff' : 'var(--text-dark)',
+                      boxShadow: activeFloorId === fl.id ? '0 4px 14px rgba(139,30,30,0.25)' : 'none',
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    {fl.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Visual Floor Canvas Layout */}
+            <div style={{
+              height: '240px', background: 'linear-gradient(180deg, #1A120B 0%, #2A1F17 100%)', borderRadius: '16px',
+              position: 'relative', overflow: 'hidden', border: '1.5px solid #3D2B1F', marginBottom: '16px'
+            }}>
+              <div style={{ position: 'absolute', inset: 0, opacity: 0.12, backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+
+              {tables.map(table => {
+                const isSelected = selectedTableId === table.id;
+                const isAvail = table.status === 'AVAILABLE';
+
+                return (
+                  <div
+                    key={table.id}
+                    onClick={() => {
+                      if (isAvail) {
+                        setSelectedTableId(table.id);
+                        showToast(`✓ Table ${table.tableNumber} selected! Now choose dishes below.`);
+                      } else {
+                        showToast(`Table ${table.tableNumber} is currently occupied or reserved`, 'error');
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      left: `${table.x}%`,
+                      top: `${table.y}%`,
+                      width: `${table.width}%`,
+                      height: `${table.height}%`,
+                      background: isSelected ? 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)' : isAvail ? 'rgba(21,128,61,0.3)' : 'rgba(220,38,38,0.3)',
+                      border: `2px solid ${isSelected ? '#F4C430' : isAvail ? '#22C55E' : '#EF4444'}`,
+                      borderRadius: '10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: isAvail ? 'pointer' : 'not-allowed',
+                      color: '#ffffff',
+                      boxShadow: isSelected ? '0 0 16px rgba(244,196,48,0.8)' : 'none',
+                      transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                      transition: 'all 0.2s',
+                      zIndex: isSelected ? 10 : 1
+                    }}
+                  >
+                    <div style={{ fontWeight: '900', fontSize: '13px' }}>{table.tableNumber}</div>
+                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.85)' }}>{table.capacity} seats</div>
+                    {isSelected && <div style={{ fontSize: '8px', color: '#F4C430', fontWeight: '900', background: 'rgba(0,0,0,0.4)', padding: '1px 4px', borderRadius: '4px', marginTop: '2px' }}>⭐ SELECTED</div>}
+                  </div>
+                );
+              })}
+
+              <div style={{
+                position: 'absolute', bottom: '8px', left: '8px', right: '8px',
+                background: 'rgba(26,18,11,0.92)', padding: '6px 14px', borderRadius: '10px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#ffffff',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>🟢 <strong style={{ color: '#4ADE80' }}>Available</strong></span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>🔴 <strong style={{ color: '#F87171' }}>Occupied</strong></span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>⭐ <strong style={{ color: '#F4C430' }}>Selected</strong></span>
+                </div>
+                {selectedTable && (
+                  <span style={{ color: '#F4C430', fontWeight: '900' }}>
+                    ✓ Table {selectedTable.tableNumber} Selected ({selectedTable.capacity} Seats)
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Table Buttons (Easy 1-Tap Grid) */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                Quick Table Selector ({activeFloor?.name}):
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px' }}>
+                {tables.map(table => {
+                  const isSelected = selectedTableId === table.id;
+                  const isAvail = table.status === 'AVAILABLE';
+
+                  return (
+                    <button
+                      key={table.id}
+                      onClick={() => {
+                        if (isAvail) {
+                          setSelectedTableId(table.id);
+                          showToast(`✓ Table ${table.tableNumber} selected!`);
+                        }
+                      }}
+                      disabled={!isAvail}
+                      style={{
+                        padding: '10px 12px', borderRadius: '12px', textAlign: 'left',
+                        background: isSelected ? '#FFF9F5' : isAvail ? '#FFFFFF' : '#F5F5F5',
+                        border: `2px solid ${isSelected ? '#8B1E1E' : isAvail ? 'var(--border-warm)' : '#E0E0E0'}`,
+                        cursor: isAvail ? 'pointer' : 'not-allowed',
+                        opacity: isAvail ? 1 : 0.6,
+                        boxShadow: isSelected ? '0 4px 14px rgba(139,30,30,0.15)' : 'none',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                        <strong style={{ fontSize: '13px', color: isSelected ? '#8B1E1E' : '#1A120B' }}>
+                          {table.tableNumber}
+                        </strong>
+                        <span style={{ fontSize: '10px', color: isAvail ? '#15803D' : '#DC2626', fontWeight: '800' }}>
+                          {isSelected ? '⭐ ACTIVE' : isAvail ? '🟢 Free' : '🔴 Busy'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        {table.capacity} Persons · {table.type.replace('_', ' ')}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Time / Date / Guests Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', padding: '14px', background: 'var(--bg-cream-light)', borderRadius: '14px', border: '1px solid var(--border-warm)', marginBottom: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px' }}>Dining Date</label>
+                <input
+                  type="date"
+                  value={bookingDate}
+                  onChange={e => setBookingDate(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', background: '#ffffff', fontSize: '12px', fontWeight: '700' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px' }}>Arrival Time</label>
+                <input
+                  type="time"
+                  value={bookingTime}
+                  onChange={e => setBookingTime(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', background: '#ffffff', fontSize: '12px', fontWeight: '700' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px' }}>Party Size</label>
+                <select
+                  value={guestCount}
+                  onChange={e => setGuestCount(parseInt(e.target.value))}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', background: '#ffffff', fontSize: '12px', fontWeight: '700' }}
+                >
+                  {[1, 2, 4, 6, 8, 10, 12, 16].map(n => (
+                    <option key={n} value={n}>{n} Persons</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* STEP 2 CONFIRMATION & PROCEED TO ORDER CTA */}
+            {selectedTable ? (
+              <div style={{
+                background: 'linear-gradient(135deg, #1A120B 0%, #2A170E 100%)',
+                color: '#ffffff', padding: '16px 20px', borderRadius: '16px',
+                border: '2px solid #E85D04', display: 'flex', justifyContent: 'space-between',
+                alignItems: 'center', flexWrap: 'wrap', gap: '12px',
+                boxShadow: '0 6px 20px rgba(0,0,0,0.25)'
+              }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#F4C430', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    ✓ Step 1 Complete · Table Reserved
+                  </div>
+                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#ffffff', marginTop: '2px' }}>
+                    Table {selectedTable.tableNumber} Selected ({selectedTable.capacity} Seats · {activeFloor?.name})
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', marginTop: '2px' }}>
+                    Now choose your Clay Pot Handis & BBQ dishes below to place your dine-in order.
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('menu-section');
+                    if (el) {
+                      const y = el.getBoundingClientRect().top + window.pageYOffset - 120;
+                      window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                  }}
+                  style={{
+                    background: 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)',
+                    color: '#ffffff', border: 'none', borderRadius: '12px', padding: '12px 22px',
+                    fontSize: '13px', fontWeight: '900', cursor: 'pointer', display: 'flex',
+                    alignItems: 'center', gap: '8px', boxShadow: '0 4px 16px rgba(232,93,4,0.45)'
+                  }}
+                >
+                  <span>Step 2: Choose Dishes & Order</span>
+                  <ArrowRight style={{ width: '16px', height: '16px' }} />
+                </button>
+              </div>
+            ) : (
+              <div style={{
+                background: '#FEF2F2', border: '1.5px solid #FCA5A5', padding: '12px 18px',
+                borderRadius: '14px', color: '#991B1B', display: 'flex', alignItems: 'center', gap: '10px'
+              }}>
+                <span style={{ fontSize: '18px' }}>⚠️</span>
+                <span style={{ fontSize: '13px', fontWeight: '800' }}>
+                  Please click and select an available green table above to reserve your table before ordering food.
+                </span>
+              </div>
+            )}
+
           </div>
         </div>
       )}
@@ -784,137 +1092,7 @@ export const CustomerPortal: React.FC = () => {
         ))}
       </div>
 
-      {/* ============================================================
-          INTERACTIVE DINE-IN TABLE BOOKING FLOORPLAN (When Dine-In Active)
-          ============================================================ */}
-      <div id="booking-section" style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 16px' }}>
-        <div style={{
-          background: 'var(--bg-card)', border: '1.5px solid var(--border-warm)',
-          borderRadius: '20px', padding: '24px', boxShadow: 'var(--shadow-md)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--haandi-red)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                Floor Layout & Majlis Suites
-              </div>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: '800', color: 'var(--text-dark)' }}>
-                Reserve Your Dining Table (Islamabad Branch)
-              </h3>
-            </div>
 
-            {/* Floor Tabs */}
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {floors.map(fl => (
-                <button
-                  key={fl.id}
-                  onClick={() => { setActiveFloorId(fl.id); setSelectedTableId(null); }}
-                  style={{
-                    padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '700',
-                    border: 'none', cursor: 'pointer',
-                    background: activeFloorId === fl.id ? 'var(--haandi-red)' : 'var(--bg-cream-light)',
-                    color: activeFloorId === fl.id ? '#ffffff' : 'var(--text-muted)'
-                  }}
-                >
-                  {fl.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Interactive Seating Layout Canvas */}
-          <div style={{
-            height: '280px', background: 'var(--bg-dark)', borderRadius: '14px',
-            position: 'relative', overflow: 'hidden', border: '1.5px solid var(--border-warm-dark)'
-          }}>
-            <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
-
-            {tables.map(table => {
-              const isSelected = selectedTableId === table.id;
-              const isAvail = table.status === 'AVAILABLE';
-
-              return (
-                <div
-                  key={table.id}
-                  onClick={() => isAvail && setSelectedTableId(table.id)}
-                  style={{
-                    position: 'absolute',
-                    left: `${table.x}%`,
-                    top: `${table.y}%`,
-                    width: `${table.width}%`,
-                    height: `${table.height}%`,
-                    background: isSelected ? '#8B1E1E' : isAvail ? 'rgba(21,128,61,0.25)' : 'rgba(220,38,38,0.25)',
-                    border: `2px solid ${isSelected ? '#F4C430' : isAvail ? '#15803D' : '#DC2626'}`,
-                    borderRadius: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: isAvail ? 'pointer' : 'not-allowed',
-                    color: '#ffffff',
-                    boxShadow: isSelected ? '0 0 14px rgba(244,196,48,0.6)' : 'none',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div style={{ fontWeight: '900', fontSize: '12px' }}>{table.tableNumber}</div>
-                  <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.8)' }}>{table.capacity} seats</div>
-                  {isSelected && <div style={{ fontSize: '8px', color: '#F4C430', fontWeight: '900' }}>SELECTED</div>}
-                </div>
-              );
-            })}
-
-            <div style={{
-              position: 'absolute', bottom: '8px', left: '8px', right: '8px',
-              background: 'rgba(26,18,11,0.9)', padding: '6px 12px', borderRadius: '8px',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#ffffff'
-            }}>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <span>🟢 Available</span>
-                <span>🔴 Occupied / Reserved</span>
-                <span>⭐ Selected Table</span>
-              </div>
-              {selectedTableId && (
-                <span style={{ color: '#F4C430', fontWeight: '800' }}>
-                  ✓ Table {tables.find(t => t.id === selectedTableId)?.tableNumber} selected
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Booking Inputs */}
-          <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Date</label>
-              <input
-                type="date"
-                value={bookingDate}
-                onChange={e => setBookingDate(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', background: 'var(--bg-cream-light)', fontSize: '12px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Time</label>
-              <input
-                type="time"
-                value={bookingTime}
-                onChange={e => setBookingTime(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', background: 'var(--bg-cream-light)', fontSize: '12px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>Guests</label>
-              <select
-                value={guestCount}
-                onChange={e => setGuestCount(parseInt(e.target.value))}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', background: 'var(--bg-cream-light)', fontSize: '12px', fontWeight: '700' }}
-              >
-                {[1, 2, 4, 6, 8, 10, 12, 16].map(n => (
-                  <option key={n} value={n}>{n} Persons</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* ============================================================
           HERITAGE STORY & BRAND TRUST PILLARS
@@ -1086,6 +1264,45 @@ export const CustomerPortal: React.FC = () => {
                     style={{ padding: '8px 10px', borderRadius: '8px', border: '1.5px solid var(--border-warm)', fontSize: '12px', background: 'var(--bg-cream-light)' }}
                   />
                 </div>
+
+                {orderType === 'DINE_IN' && (
+                  <div style={{
+                    background: '#FFF9F5', padding: '12px 14px', borderRadius: '12px',
+                    border: '1.5px solid #E85D04', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '20px' }}>🪑</span>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: '900', color: '#1A120B' }}>
+                          {selectedTable ? `Table ${selectedTable.tableNumber} (${selectedTable.capacity} Seats)` : 'Table Not Selected'}
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#5C4B3C' }}>
+                          {activeFloor?.name} · Gulberg Greens, Islamabad
+                        </div>
+                      </div>
+                    </div>
+                    {!selectedTableId ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCartOpen(false);
+                          setTimeout(() => {
+                            const el = document.getElementById('dine-in-top-section');
+                            if (el) el.scrollIntoView({ behavior: 'smooth' });
+                          }, 50);
+                          showToast('Please select your table first!', 'warning');
+                        }}
+                        style={{ background: '#8B1E1E', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
+                      >
+                        Select Table
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: '10px', fontWeight: '800', color: '#15803D', background: '#F0FDF4', padding: '3px 8px', borderRadius: '6px', border: '1px solid #BBF7D0' }}>
+                        ✓ Table Confirmed
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {orderType === 'DELIVERY' && (
                   <div style={{ background: 'var(--bg-cream-light)', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid var(--border-warm)' }}>
@@ -1498,8 +1715,11 @@ export const CustomerPortal: React.FC = () => {
                   setOrderType('DINE_IN');
                   setIsReservingTable(true);
                   setShowDiningModeModal(false);
-                  document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
-                  showToast('🪑 Dine-In selected · Pick your table');
+                  setTimeout(() => {
+                    const el = document.getElementById('dine-in-top-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }, 50);
+                  showToast('🪑 Dine-In Selected! Step 1: Choose your table below');
                 }}
                 style={{
                   width: '100%', padding: '12px 14px', borderRadius: '14px',
