@@ -364,9 +364,7 @@ export const CustomerPortal: React.FC = () => {
           LUXURY FLOATING DARK NAVBAR (Deep Roasted Charcoal & Saffron Gold)
           ============================================================ */}
       <nav className="haandi-floating-nav">
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
-        }}>
+        <div className="haandi-floating-nav-inner">
           {/* Brand Logo & Title */}
           <a href="#menu-section" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
             <img
@@ -520,53 +518,55 @@ export const CustomerPortal: React.FC = () => {
         </div>
       </div>
 
-          {/* Delivery Sector Selector */}
-          {orderType === 'DELIVERY' && (
-            <div style={{
-              background: 'var(--bg-cream-light)', padding: '14px', borderRadius: '14px',
-              border: '1px solid var(--border-warm)', display: 'flex', flexWrap: 'wrap',
-              alignItems: 'center', justifyContent: 'space-between', gap: '12px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MapPin style={{ width: '18px', height: '18px', color: 'var(--haandi-red)' }} />
-                <div>
-                  <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-dark)' }}>
-                    Delivery Destination in Gulberg Greens, Islamabad:
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    Orders dispatched hot from Civic Center · Max distance: 2.5 km
-                  </div>
+      {/* Delivery Sector Selector */}
+      {orderType === 'DELIVERY' && (
+        <div style={{ maxWidth: '1200px', margin: '16px auto 0', padding: '0 16px' }}>
+          <div style={{
+            background: 'var(--bg-cream-light)', padding: '14px', borderRadius: '14px',
+            border: '1px solid var(--border-warm)', display: 'flex', flexWrap: 'wrap',
+            alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MapPin style={{ width: '18px', height: '18px', color: 'var(--haandi-red)' }} />
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-dark)' }}>
+                  Delivery Destination in Gulberg Greens, Islamabad:
                 </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <select
-                  value={selectedSector}
-                  onChange={e => setSelectedSector(e.target.value)}
-                  style={{
-                    background: '#ffffff', border: `1.5px solid ${isWithinDeliveryRadius ? 'var(--border-warm)' : '#EF4444'}`,
-                    borderRadius: '10px', padding: '8px 12px', fontSize: '12px', fontWeight: '700',
-                    color: 'var(--text-dark)', outline: 'none'
-                  }}
-                >
-                  {GULBERG_SECTORS.map(s => (
-                    <option key={s.name} value={s.name}>
-                      {s.name} ({s.distanceKm} km)
-                    </option>
-                  ))}
-                </select>
-
-                <div style={{
-                  padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '800',
-                  background: isWithinDeliveryRadius ? 'var(--emerald-light)' : '#FEE2E2',
-                  color: isWithinDeliveryRadius ? 'var(--emerald)' : '#DC2626',
-                  border: `1px solid ${isWithinDeliveryRadius ? 'var(--emerald-border)' : '#FCA5A5'}`
-                }}>
-                  {isWithinDeliveryRadius ? `✓ ${currentSector.distanceKm} km · Eligible` : '✗ Outside 2.5 km'}
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  Orders dispatched hot from Civic Center · Max distance: 2.5 km
                 </div>
               </div>
             </div>
-          )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <select
+                value={selectedSector}
+                onChange={e => setSelectedSector(e.target.value)}
+                style={{
+                  background: '#ffffff', border: `1.5px solid ${isWithinDeliveryRadius ? 'var(--border-warm)' : '#EF4444'}`,
+                  borderRadius: '10px', padding: '8px 12px', fontSize: '12px', fontWeight: '700',
+                  color: 'var(--text-dark)', outline: 'none'
+                }}
+              >
+                {GULBERG_SECTORS.map(s => (
+                  <option key={s.name} value={s.name}>
+                    {s.name} ({s.distanceKm} km)
+                  </option>
+                ))}
+              </select>
+
+              <div style={{
+                padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '800',
+                background: isWithinDeliveryRadius ? 'var(--emerald-light)' : '#FEE2E2',
+                color: isWithinDeliveryRadius ? 'var(--emerald)' : '#DC2626',
+                border: `1px solid ${isWithinDeliveryRadius ? 'var(--emerald-border)' : '#FCA5A5'}`
+              }}>
+                {isWithinDeliveryRadius ? `✓ ${currentSector.distanceKm} km · Eligible` : '✗ Outside 2.5 km'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============================================================
           SIGNATURE SPECIALS SHOWCASE (Creamy Cards with Fire Badges)
