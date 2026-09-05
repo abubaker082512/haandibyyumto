@@ -176,7 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     if (preset) {
-      if (pass === preset.password || pass === 'haandi123' || pass === '123456' || pass === 'Haandi@2026') {
+      if (pass === preset.password || pass === 'Haandi@2026') {
         updateProfile({
           uid: `user-${preset.username}`,
           name: preset.name,
@@ -187,13 +187,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         return;
       } else {
-        throw new Error('Incorrect password. Default password is: Haandi@2026');
+        throw new Error('Invalid password. Please check your credentials.');
       }
     }
 
     // Try standard Firebase Auth
-    const cred = await signInWithEmailAndPassword(auth, usernameOrEmail, pass);
-    setUser(cred.user);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, usernameOrEmail, pass);
+      setUser(cred.user);
+    } catch {
+      throw new Error('Invalid username/email or password. Please verify your credentials.');
+    }
   };
 
   const signUp = async (

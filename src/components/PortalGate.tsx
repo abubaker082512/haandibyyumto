@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useAuth, PRESET_CREDENTIALS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import type { Role } from '../types';
-import { ShieldAlert, Lock, User, Key, ArrowRight, LogOut, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, Lock, User, Key, ArrowRight, LogOut } from 'lucide-react';
 
 interface PortalGateProps {
   allowedRoles: Role[];
@@ -29,14 +29,10 @@ export const PortalGate: React.FC<PortalGateProps> = ({
     return <>{children}</>;
   }
 
-  // Find relevant preset credential for this portal
-  const primaryRole = allowedRoles[0];
-  const presetForPortal = PRESET_CREDENTIALS.find(p => p.role === primaryRole) || PRESET_CREDENTIALS[0];
-
-  const handleLogin = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!username.trim() || !password) {
-      setError('Please enter both username and password.');
+      setError('Please enter both username/email and password.');
       return;
     }
     setError(null);
@@ -44,21 +40,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
     try {
       await signIn(username.trim(), password);
     } catch (err: any) {
-      setError(err?.message || 'Login failed. Please verify credentials.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleQuickLogin = async (role: Role) => {
-    const cred = PRESET_CREDENTIALS.find(p => p.role === role);
-    if (!cred) return;
-    setError(null);
-    setSubmitting(true);
-    try {
-      await signIn(cred.username, cred.password);
-    } catch (err: any) {
-      setError(err?.message || 'Quick login failed.');
+      setError(err?.message || 'Authentication failed. Please verify your credentials.');
     } finally {
       setSubmitting(false);
     }
@@ -66,7 +48,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
   return (
     <div style={{
-      minHeight: '80vh',
+      minHeight: '85vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -74,7 +56,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       background: 'linear-gradient(180deg, #1A120B 0%, #2A1F17 100%)'
     }}>
       <div style={{
-        maxWidth: '440px',
+        maxWidth: '420px',
         width: '100%',
         background: '#FDFBF7',
         borderRadius: '24px',
@@ -86,14 +68,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         {/* Header with Haandi Branding */}
         <div style={{
           background: 'linear-gradient(135deg, #8B1E1E 0%, #1A120B 100%)',
-          padding: '28px 24px 20px',
+          padding: '28px 24px 22px',
           color: '#ffffff',
           textAlign: 'center',
           position: 'relative'
         }}>
           <div style={{
-            width: '64px',
-            height: '64px',
+            width: '60px',
+            height: '60px',
             margin: '0 auto 12px',
             background: '#ffffff',
             borderRadius: '16px',
@@ -126,7 +108,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               border: '1px solid #FCA5A5',
               borderRadius: '12px',
               padding: '12px',
-              marginBottom: '16px',
+              marginBottom: '18px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -134,20 +116,21 @@ export const PortalGate: React.FC<PortalGateProps> = ({
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <ShieldAlert style={{ width: '18px', height: '18px', color: '#DC2626', flexShrink: 0 }} />
-                <div style={{ fontSize: '11px', color: '#991B1B' }}>
-                  Currently signed in as <strong>{profile.name}</strong> ({profile.role}). Requires <strong>{allowedRoles.join(' or ')}</strong>.
+                <div style={{ fontSize: '11px', color: '#991B1B', lineHeight: 1.4 }}>
+                  Signed in as <strong>{profile.name}</strong> ({profile.role}). Access requires <strong>{allowedRoles.join(' / ')}</strong>.
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => signOut()}
                 style={{
                   background: '#DC2626',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '6px',
-                  padding: '4px 8px',
-                  fontSize: '10px',
-                  fontWeight: '700',
+                  padding: '5px 10px',
+                  fontSize: '11px',
+                  fontWeight: '800',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -155,7 +138,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   whiteSpace: 'nowrap'
                 }}
               >
-                <LogOut style={{ width: '10px', height: '10px' }} />
+                <LogOut style={{ width: '11px', height: '11px' }} />
                 <span>Switch</span>
               </button>
             </div>
@@ -170,75 +153,33 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               marginBottom: '16px',
               color: '#B91C1C',
               fontSize: '12px',
-              fontWeight: '600'
+              fontWeight: '700'
             }}>
               ⚠ {error}
             </div>
           )}
 
-          {/* Quick Demo Login One-Click Button */}
-          <div style={{ marginBottom: '18px' }}>
-            <button
-              onClick={() => handleQuickLogin(primaryRole)}
-              disabled={submitting}
-              style={{
-                width: '100%',
-                background: 'linear-gradient(135deg, #E85D04 0%, #F4C430 100%)',
-                color: '#1A120B',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '12px 16px',
-                fontSize: '13px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 14px rgba(232,93,4,0.3)',
-                transition: 'transform 0.15s, opacity 0.15s'
-              }}
-              onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
-              onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
-            >
-              <CheckCircle2 style={{ width: '16px', height: '16px' }} />
-              <span>⚡ One-Click Login as {presetForPortal.name}</span>
-            </button>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            marginBottom: '16px',
-            fontSize: '11px',
-            color: '#9CA3AF'
-          }}>
-            <div style={{ flex: 1, height: '1px', background: '#E5E7EB' }}></div>
-            <span>or sign in manually</span>
-            <div style={{ flex: 1, height: '1px', background: '#E5E7EB' }}></div>
-          </div>
-
-          {/* Standard Form */}
+          {/* Secure Staff Login Form */}
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#4B3E32', marginBottom: '6px' }}>
-                Username or Email
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#4B3E32', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Staff Username or Email
               </label>
               <div style={{ position: 'relative' }}>
-                <User style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: '#9CA3AF' }} />
+                <User style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: '#9CA3AF' }} />
                 <input
                   type="text"
-                  placeholder={`e.g. ${presetForPortal.username} or ${presetForPortal.email}`}
+                  required
+                  placeholder="Enter authorized username or email"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '10px 12px 10px 36px',
+                    padding: '11px 12px 11px 38px',
                     borderRadius: '10px',
-                    border: '1.5px solid #E5E7EB',
+                    border: '1.5px solid #EADBCC',
                     fontSize: '13px',
-                    background: '#FBF8F3',
+                    background: '#FFFFFF',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
@@ -247,30 +188,28 @@ export const PortalGate: React.FC<PortalGateProps> = ({
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#4B3E32', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#4B3E32', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Password
               </label>
               <div style={{ position: 'relative' }}>
-                <Key style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: '#9CA3AF' }} />
+                <Key style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: '#9CA3AF' }} />
                 <input
                   type="password"
-                  placeholder="Default: Haandi@2026"
+                  required
+                  placeholder="Enter staff security password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '10px 12px 10px 36px',
+                    padding: '11px 12px 11px 38px',
                     borderRadius: '10px',
-                    border: '1.5px solid #E5E7EB',
+                    border: '1.5px solid #EADBCC',
                     fontSize: '13px',
-                    background: '#FBF8F3',
+                    background: '#FFFFFF',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
                 />
-              </div>
-              <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '4px' }}>
-                Password for all accounts: <code style={{ background: '#F3F4F6', padding: '1px 4px', borderRadius: '4px', fontWeight: 'bold' }}>Haandi@2026</code>
               </div>
             </div>
 
@@ -279,24 +218,26 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               disabled={submitting}
               style={{
                 width: '100%',
-                background: '#8B1E1E',
+                background: 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)',
                 color: '#ffffff',
                 border: 'none',
-                borderRadius: '10px',
-                padding: '12px',
+                borderRadius: '12px',
+                padding: '13px',
                 fontSize: '13px',
-                fontWeight: '800',
+                fontWeight: '900',
                 cursor: submitting ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
                 marginTop: '6px',
-                opacity: submitting ? 0.7 : 1
+                boxShadow: '0 4px 14px rgba(139,30,30,0.3)',
+                opacity: submitting ? 0.75 : 1,
+                transition: 'all 0.15s'
               }}
             >
               <Lock style={{ width: '14px', height: '14px' }} />
-              <span>{submitting ? 'Authenticating...' : `Access ${portalName}`}</span>
+              <span>{submitting ? 'Verifying Credentials...' : `Sign In to ${portalName}`}</span>
               <ArrowRight style={{ width: '14px', height: '14px' }} />
             </button>
           </form>
@@ -311,7 +252,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
           color: '#6B7280',
           textAlign: 'center'
         }}>
-          Authorized staff only · Haandi by Yumto Restaurant OS
+          Authorized restaurant personnel only · Haandi by Yumto POS
         </div>
       </div>
     </div>
