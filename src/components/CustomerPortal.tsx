@@ -68,13 +68,9 @@ export const CustomerPortal: React.FC = () => {
   const [deliveryAddr, setDeliveryAddr] = useState('');
 
   // Customer Saved Addresses
-  const customerUser = profile ? dbState.getUsers().find(u => u.id === profile.uid || u.role === 'CUSTOMER') : null;
-  const savedAddresses: CustomerAddress[] = customerUser?.addresses || [
-    { id: 'addr-1', label: 'Executive Residence', sector: 'Executive Block', address: 'House 14, Street 7, Executive Block, Gulberg Greens, Islamabad', isDefault: true },
-    { id: 'addr-2', label: 'Civic Office', sector: 'Civic Center', address: 'Suite 402, Business Center, Civic Center, Gulberg Greens, Islamabad' },
-    { id: 'addr-3', label: 'Farmhouse Villa', sector: 'Sector 2 (Farmhouses)', address: 'Farmhouse 88, Main Boulevard, Sector 2, Gulberg Greens' }
-  ];
-  const [selectedAddressId, setSelectedAddressId] = useState<string>(savedAddresses[0]?.id || 'addr-1');
+  const customerUser = profile ? dbState.getUsers().find(u => u.id === profile.uid || (profile.role === 'CUSTOMER' && u.role === 'CUSTOMER')) : null;
+  const savedAddresses: CustomerAddress[] = customerUser?.addresses || [];
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(savedAddresses[0]?.id || '');
   const [showAddAddressForm, setShowAddAddressForm] = useState(false);
   const [newAddrLabel, setNewAddrLabel] = useState('Home');
   const [newAddrText, setNewAddrText] = useState('');
@@ -82,20 +78,23 @@ export const CustomerPortal: React.FC = () => {
   // Sync profile data
   useEffect(() => {
     if (profile) {
-      if (!custName) setCustName(profile.name);
-      if (!custPhone && profile.phone) setCustPhone(profile.phone);
+      setCustName(profile.name || '');
+      setCustPhone(profile.phone || '');
+    } else {
+      setCustName('');
+      setCustPhone('');
     }
   }, [profile]);
 
   // Sync delivery address when selected address changes
   useEffect(() => {
-    if (orderType === 'DELIVERY') {
+    if (orderType === 'DELIVERY' && savedAddresses.length > 0) {
       const activeAddr = savedAddresses.find(a => a.id === selectedAddressId);
       if (activeAddr) {
         setDeliveryAddr(activeAddr.address);
       }
     }
-  }, [selectedAddressId, orderType]);
+  }, [selectedAddressId, orderType, savedAddresses]);
 
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'ONLINE'>('CARD');
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
@@ -1308,99 +1307,113 @@ export const CustomerPortal: React.FC = () => {
                   <div style={{ background: 'var(--bg-cream-light)', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid var(--border-warm)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', textTransform: 'uppercase' }}>
-                        📍 Saved Delivery Addresses
+                        📍 {savedAddresses.length > 0 ? 'Saved Delivery Addresses' : 'Delivery Address'}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowAddAddressForm(!showAddAddressForm)}
-                        style={{ background: 'none', border: 'none', color: '#8B1E1E', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
-                      >
-                        {showAddAddressForm ? 'Cancel' : '+ New Address'}
-                      </button>
+                      {savedAddresses.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowAddAddressForm(!showAddAddressForm)}
+                          style={{ background: 'none', border: 'none', color: '#8B1E1E', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
+                        >
+                          {showAddAddressForm ? 'Cancel' : '+ New Address'}
+                        </button>
+                      )}
                     </div>
 
                     {/* Saved Address Radio Cards */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {savedAddresses.map(addr => (
-                        <label
-                          key={addr.id}
-                          onClick={() => { setSelectedAddressId(addr.id); setDeliveryAddr(addr.address); setShowAddAddressForm(false); }}
-                          style={{
-                            display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 10px',
-                            borderRadius: '8px', cursor: 'pointer',
-                            border: `1.5px solid ${selectedAddressId === addr.id && !showAddAddressForm ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
-                            background: selectedAddressId === addr.id && !showAddAddressForm ? '#ffffff' : 'rgba(255,255,255,0.6)'
-                          }}
-                        >
-                          <input
-                            type="radio"
-                            name="customerAddress"
-                            checked={selectedAddressId === addr.id && !showAddAddressForm}
-                            onChange={() => { setSelectedAddressId(addr.id); setDeliveryAddr(addr.address); }}
-                            style={{ marginTop: '2px', accentColor: 'var(--haandi-red)' }}
-                          />
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: '800', fontSize: '11px', color: 'var(--text-dark)' }}>
-                              {addr.label === 'Home' || addr.label === 'Executive Residence' ? '🏠 ' : addr.label === 'Office' || addr.label === 'Civic Office' ? '🏢 ' : '🌴 '}
-                              {addr.label}
+                    {savedAddresses.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: showAddAddressForm ? '8px' : '0' }}>
+                        {savedAddresses.map(addr => (
+                          <label
+                            key={addr.id}
+                            onClick={() => { setSelectedAddressId(addr.id); setDeliveryAddr(addr.address); setShowAddAddressForm(false); }}
+                            style={{
+                              display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 10px',
+                              borderRadius: '8px', cursor: 'pointer',
+                              border: `1.5px solid ${selectedAddressId === addr.id && !showAddAddressForm ? 'var(--haandi-red)' : 'var(--border-warm)'}`,
+                              background: selectedAddressId === addr.id && !showAddAddressForm ? '#ffffff' : 'rgba(255,255,255,0.6)'
+                            }}
+                          >
+                            <input
+                              type="radio"
+                              name="customerAddress"
+                              checked={selectedAddressId === addr.id && !showAddAddressForm}
+                              onChange={() => { setSelectedAddressId(addr.id); setDeliveryAddr(addr.address); }}
+                              style={{ marginTop: '2px', accentColor: 'var(--haandi-red)' }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: '800', fontSize: '11px', color: 'var(--text-dark)' }}>
+                                {addr.label === 'Home' || addr.label === 'Executive Residence' ? '🏠 ' : addr.label === 'Office' || addr.label === 'Civic Office' ? '🏢 ' : '🌴 '}
+                                {addr.label}
+                              </div>
+                              <div style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.3, marginTop: '2px' }}>
+                                {addr.address}
+                              </div>
                             </div>
-                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.3, marginTop: '2px' }}>
-                              {addr.address}
-                            </div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
 
-                    {/* Add New Address Sub-form */}
-                    {showAddAddressForm && (
-                      <div style={{ marginTop: '8px', padding: '10px', background: '#ffffff', borderRadius: '8px', border: '1px solid var(--border-warm)' }}>
-                        <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
-                          {['Home', 'Office', 'Farmhouse'].map(lbl => (
-                            <button
-                              key={lbl}
-                              type="button"
-                              onClick={() => setNewAddrLabel(lbl)}
-                              style={{
-                                padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800',
-                                border: 'none', cursor: 'pointer',
-                                background: newAddrLabel === lbl ? 'var(--haandi-red)' : '#f3f4f6',
-                                color: newAddrLabel === lbl ? '#fff' : '#4b5563'
-                              }}
-                            >
-                              {lbl}
-                            </button>
-                          ))}
-                        </div>
+                    {/* Add New Address Sub-form or Direct Input */}
+                    {(savedAddresses.length === 0 || showAddAddressForm) && (
+                      <div style={{ padding: '10px', background: '#ffffff', borderRadius: '8px', border: '1px solid var(--border-warm)' }}>
+                        {savedAddresses.length > 0 && (
+                          <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+                            {['Home', 'Office', 'Farmhouse'].map(lbl => (
+                              <button
+                                key={lbl}
+                                type="button"
+                                onClick={() => setNewAddrLabel(lbl)}
+                                style={{
+                                  padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800',
+                                  border: 'none', cursor: 'pointer',
+                                  background: newAddrLabel === lbl ? 'var(--haandi-red)' : '#f3f4f6',
+                                  color: newAddrLabel === lbl ? '#fff' : '#4b5563'
+                                }}
+                              >
+                                {lbl}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                         <input
                           type="text"
-                          placeholder="House & Street in Gulberg Greens"
-                          value={newAddrText}
-                          onChange={e => setNewAddrText(e.target.value)}
-                          style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-warm)', fontSize: '11px', boxSizing: 'border-box', marginBottom: '6px' }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!newAddrText.trim()) return;
-                            const newAddrObj: CustomerAddress = {
-                              id: 'addr-' + Date.now(),
-                              label: newAddrLabel,
-                              sector: selectedSector,
-                              address: `${newAddrText.trim()}, ${selectedSector}, Gulberg Greens`
-                            };
-                            db.saveCustomerAddress(profile?.uid || 'u-cust', newAddrObj);
-                            setDeliveryAddr(newAddrObj.address);
-                            setSelectedAddressId(newAddrObj.id);
-                            setNewAddrText('');
-                            setShowAddAddressForm(false);
-                            showToast('Address saved to address book!', 'success');
+                          placeholder="House & Street in Gulberg Greens, Islamabad"
+                          value={savedAddresses.length === 0 ? deliveryAddr : newAddrText}
+                          onChange={e => {
+                            if (savedAddresses.length === 0) {
+                              setDeliveryAddr(e.target.value);
+                            } else {
+                              setNewAddrText(e.target.value);
+                            }
                           }}
-                          disabled={!newAddrText.trim()}
-                          style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'var(--haandi-red)', color: '#fff', border: 'none', fontSize: '11px', fontWeight: '800', cursor: newAddrText.trim() ? 'pointer' : 'not-allowed' }}
-                        >
-                          Save & Select Address
-                        </button>
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-warm)', fontSize: '11px', boxSizing: 'border-box', marginBottom: savedAddresses.length > 0 ? '6px' : '0' }}
+                        />
+                        {savedAddresses.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!newAddrText.trim()) return;
+                              const newAddrObj: CustomerAddress = {
+                                id: 'addr-' + Date.now(),
+                                label: newAddrLabel,
+                                sector: selectedSector,
+                                address: `${newAddrText.trim()}, ${selectedSector}, Gulberg Greens`
+                              };
+                              db.saveCustomerAddress(profile?.uid || 'u-cust', newAddrObj);
+                              setDeliveryAddr(newAddrObj.address);
+                              setSelectedAddressId(newAddrObj.id);
+                              setNewAddrText('');
+                              setShowAddAddressForm(false);
+                              showToast('Address saved to address book!', 'success');
+                            }}
+                            disabled={!newAddrText.trim()}
+                            style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'var(--haandi-red)', color: '#fff', border: 'none', fontSize: '11px', fontWeight: '800', cursor: newAddrText.trim() ? 'pointer' : 'not-allowed' }}
+                          >
+                            Save & Select Address
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

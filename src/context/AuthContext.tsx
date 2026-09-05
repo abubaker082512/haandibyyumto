@@ -117,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AppUserProfile | null>(() => {
     const saved = localStorage.getItem('haandi_current_profile');
-    return saved ? JSON.parse(saved) : DEMO_PROFILES.CUSTOMER;
+    return saved ? JSON.parse(saved) : null;
   });
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -233,7 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // ignore
     }
     setUser(null);
-    updateProfile(DEMO_PROFILES.CUSTOMER);
+    updateProfile(null);
   };
 
   const demoLogin = (role: Role) => {
