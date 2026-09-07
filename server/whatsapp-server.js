@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import cors from 'cors';
 import pino from 'pino';
 import QRCode from 'qrcode';
@@ -139,6 +139,21 @@ function formatPhoneNumberToJid(phoneStr) {
 // ─────────────────────────────────────────────────────────────
 // REST API ROUTES
 // ─────────────────────────────────────────────────────────────
+
+// Root & Health
+app.get('/', (req, res) => {
+  res.json({
+    service: 'Haandi by Yumto WhatsApp Automation Service',
+    status: botState.status,
+    isReady: botState.status === 'connected' && !!sock,
+    lastUpdated: botState.lastUpdated,
+    developer: 'Powered By: ABT IT innovations PVT LTD. · WhatsApp: +92-333-5945499'
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', botStatus: botState.status });
+});
 
 // 1. Health & Status
 app.get('/api/whatsapp/status', (req, res) => {

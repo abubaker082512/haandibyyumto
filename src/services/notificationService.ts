@@ -1,6 +1,12 @@
 import type { Order } from '../types';
 
-const WHATSAPP_API_BASE = (import.meta as any).env?.VITE_WHATSAPP_API_URL || 'http://localhost:5000';
+export const getWhatsAppApiBase = (): string => {
+  return localStorage.getItem('haandi_whatsapp_api_url') || (import.meta as any).env?.VITE_WHATSAPP_API_URL || 'http://localhost:5000';
+};
+
+export const setWhatsAppApiBase = (url: string): void => {
+  localStorage.setItem('haandi_whatsapp_api_url', url.trim().replace(/\/+$/, ''));
+};
 
 export interface WhatsAppStatusResponse {
   success: boolean;
@@ -93,16 +99,24 @@ _We are preparing your feast with traditional slow-cooked handi perfection!_ ðŸŒ
    * Sends automated WhatsApp message through the local/cloud microservice
    * If service is offline, returns fallback URL seamlessly
    */
+  /**
+   * Sends automated WhatsApp message through the local/cloud microservice
+   * If service is offline, returns fallback URL seamlessly
+   */
   async sendOrderWhatsAppNotification(
     order: Order,
     trackingUrl?: string
   ): Promise<{ success: boolean; messageId?: string; fallbackUrl: string; error?: string }> {
     const messageText = this.formatOrderWhatsAppMessage(order, trackingUrl);
     const fallbackUrl = this.getDirectWhatsAppUrl(order.userPhone, messageText);
-    const trackLink = trackingUrl || `${window.location.origin}/track?id=${order.id || 'NEW'}`;
+    const trackLink = trackingUrl || `${window.location.origin}/#/track/${order.id || 'NEW'}`;
+    const apiBase = getWhatsAppApiBase();
 
     try {
-      const response = await fetch(`${WHATSAPP_API_BASE}/api/whatsapp/send-order`, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      const response = await fetch(`${apiBase}/api/whatsapp/send-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -115,8 +129,11 @@ _We are preparing your feast with traditional slow-cooked handi perfection!_ ðŸŒ
           deliveryAddress: order.deliveryAddress,
           trackingUrl: trackLink,
           discountAmount: order.discountAmount
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
@@ -135,11 +152,11 @@ _We are preparing your feast with traditional slow-cooked handi perfection!_ ðŸŒ
         fallbackUrl
       };
     } catch (err: any) {
-      console.info('[NotificationService] WhatsApp bot service is not running locally. Using direct fallback URL.');
+      console.info('[NotificationService] WhatsApp bot service is not running locally. Direct fallback available.');
       return {
         success: false,
         fallbackUrl,
-        error: err.message || 'Network error'
+        error: err.name === 'AbortError' ? 'Connection timed out' : (err.message || 'Service offline')
       };
     }
   },
@@ -148,8 +165,16 @@ _We are preparing your feast with traditional slow-cooked handi perfection!_ ðŸŒ
    * Checks current connection status and retrieves QR code if waiting for link
    */
   async getWhatsAppBotStatus(): Promise<WhatsAppStatusResponse> {
+    const apiBase = getWhatsAppApiBase();
     try {
-      const res = await fetch(`${WHATSAPP_API_BASE}/api/whatsapp/status`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+      const res = await fetch(`${apiBase}/api/whatsapp/status`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
       if (!res.ok) throw new Error('Bot API error');
       return await res.json();
     } catch (err: any) {
@@ -157,7 +182,7 @@ _We are preparing your feast with traditional slow-cooked handi perfection!_ ðŸŒ
         success: false,
         status: 'disconnected',
         isReady: false,
-        error: 'WhatsApp Bot Service is offline. Run `npm run whatsapp:bot` to start.'
+        error: 'WhatsApp Bot Service is offline. Run `npm run whatsapp:bot` to start locally, or use direct WhatsApp dispatch.'
       };
     }
   },
@@ -165,16 +190,25 @@ _We are preparing your feast with traditional slow-cooked handi perfection!_ ðŸŒ
   /**
    * Sends custom text message via WhatsApp Bot
    */
-  async sendCustomWhatsAppMessage(phone: string, message: string): Promise<{ success: boolean; error?: string }> {
+  async sendCustomWhatsAppMessage(phone: string, message: string): Promise<{ success: boolean; fallbackUrl?: string; error?: string }> {
+    const apiBase = getWhatsAppApiBase();
+    const fallbackUrl = this.getDirectWhatsAppUrl(phone, message);
     try {
-      const res = await fetch(`${WHATSAPP_API_BASE}/api/whatsapp/send-custom`, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      const res = await fetch(`${apiBase}/api/whatsapp/send-custom`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, message })
+        body: JSON.stringify({ phone, message }),
+        signal: controller.signal
       });
-      return await res.json();
+      clearTimeout(timeoutId);
+
+      const data = await res.json();
+      return { ...data, fallbackUrl };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Service offline' };
+      return { success: false, fallbackUrl, error: err.name === 'AbortError' ? 'Connection timed out' : (err.message || 'Service offline') };
     }
   },
 
@@ -182,8 +216,9 @@ _We are preparing your feast with traditional slow-cooked handi perfection!_ ðŸŒ
    * Logouts and resets WhatsApp session
    */
   async logoutWhatsAppBot(): Promise<{ success: boolean }> {
+    const apiBase = getWhatsAppApiBase();
     try {
-      const res = await fetch(`${WHATSAPP_API_BASE}/api/whatsapp/logout`, { method: 'POST' });
+      const res = await fetch(`${apiBase}/api/whatsapp/logout`, { method: 'POST' });
       return await res.json();
     } catch {
       return { success: false };
