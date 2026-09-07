@@ -1,14 +1,8 @@
 ﻿{
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
   "rewrites": [
-    { "source": "/api/whatsapp/status", "destination": "/api/whatsapp/status.js" },
-    { "source": "/api/whatsapp/send-order", "destination": "/api/whatsapp/send-order.js" },
-    { "source": "/api/whatsapp/send-custom", "destination": "/api/whatsapp/send-custom.js" },
-    { "source": "/api/whatsapp/logout", "destination": "/api/whatsapp/logout.js" },
-    { "source": "/api/health", "destination": "/api/health.js" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
+    }
   ]
 }
