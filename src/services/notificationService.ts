@@ -1,7 +1,23 @@
 import type { Order } from '../types';
 
 export const getWhatsAppApiBase = (): string => {
-  return localStorage.getItem('haandi_whatsapp_api_url') || (import.meta as any).env?.VITE_WHATSAPP_API_URL || 'http://localhost:5000';
+  const saved = localStorage.getItem('haandi_whatsapp_api_url');
+  if (saved) return saved;
+
+  const envUrl = (import.meta as any).env?.VITE_WHATSAPP_API_URL;
+  if (envUrl) return envUrl;
+
+  // On Vercel or cloud web deployments, use native serverless /api endpoints (relative path)
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1'
+  ) {
+    return '';
+  }
+
+  return 'http://localhost:5000';
 };
 
 export const setWhatsAppApiBase = (url: string): void => {
