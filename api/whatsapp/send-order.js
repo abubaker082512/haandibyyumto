@@ -1,4 +1,4 @@
-﻿function formatPhoneNumberToJid(phoneStr) {
+function formatPhoneNumberToJid(phoneStr) {
   if (!phoneStr) return null;
   let clean = phoneStr.toString().replace(/[^\d]/g, '');
   if (clean.startsWith('03') && clean.length === 11) {
