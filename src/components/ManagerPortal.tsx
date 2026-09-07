@@ -725,6 +725,24 @@ export const ManagerPortal: React.FC = () => {
           </div>
         )}
 
+        {/* Footer Status Bar */}
+        <div style={{
+          marginTop: '30px',
+          padding: '14px 20px',
+          background: 'rgba(26,18,11,0.95)',
+          borderRadius: '14px',
+          border: '1px solid var(--border-warm)',
+          color: 'rgba(255,255,255,0.65)',
+          fontSize: '11px',
+          textAlign: 'center',
+          lineHeight: 1.6
+        }}>
+          <div>Haandi by Yumto — Floor, Waiter & Table Order Management System · Islamabad</div>
+          <div style={{ color: '#E85D04', fontWeight: '800', marginTop: '2px' }}>
+            Powered By: ABT IT innovations PVT LTD. · For Queries WhatsApp: +92-333-5945499
+          </div>
+        </div>
+
       </div>
     </div>
   );

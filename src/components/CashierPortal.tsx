@@ -23,7 +23,7 @@ const fmtDate = (iso: string) => {
   return `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
 };
 
-// ─── Thermal Printer Bill Modal (Matching User Screenshot) ─────────────────
+// ─── Thermal Printer Bill Modal (Matching User Screenshot 3) ─────────────────
 interface ReceiptProps {
   order: {
     id: string;
@@ -41,19 +41,23 @@ interface ReceiptProps {
     tenderedAmount?: number;
     splitPayment?: { cashAmount: number; cardAmount: number };
     createdAt: string;
+    userName?: string;
+    userPhone?: string;
+    deliveryAddress?: string;
   };
   onClose: () => void;
 }
 
 const ReceiptModal: React.FC<ReceiptProps> = ({ order, onClose }) => {
   const [activeTab, setActiveTab] = useState<'BILL' | 'KOT'>('BILL');
-  const totalQty = order.items.reduce((acc, i) => acc + i.quantity, 0);
   const received = order.tenderedAmount && order.tenderedAmount >= order.total ? order.tenderedAmount : order.total;
   const balance = Math.max(0, received - order.total);
 
   const handlePrint = () => {
     window.print();
   };
+
+  const shortToken = order.id.slice(-4).toUpperCase();
 
   return (
     <div
@@ -67,15 +71,15 @@ const ReceiptModal: React.FC<ReceiptProps> = ({ order, onClose }) => {
     >
       <div
         style={{
-          background: '#fff', borderRadius: '12px',
+          background: '#fff', borderRadius: '14px',
           maxWidth: '430px', width: '100%',
           overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
           display: 'flex', flexDirection: 'column'
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Top bar controls */}
-        <div style={{ background: '#1A120B', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/* Top bar controls (hidden in print) */}
+        <div className="no-print" style={{ background: '#1A120B', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Printer style={{ width: '16px', height: '16px', color: '#E85D04' }} />
             <span style={{ color: '#fff', fontWeight: '800', fontSize: '13px', letterSpacing: '0.05em' }}>
@@ -86,18 +90,18 @@ const ReceiptModal: React.FC<ReceiptProps> = ({ order, onClose }) => {
             <button
               onClick={() => setActiveTab('BILL')}
               style={{
-                padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700',
+                padding: '5px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '700',
                 border: 'none', cursor: 'pointer',
                 background: activeTab === 'BILL' ? '#E85D04' : 'rgba(255,255,255,0.1)',
                 color: '#fff'
               }}
             >
-              Provisional Bill
+              Customer Bill
             </button>
             <button
               onClick={() => setActiveTab('KOT')}
               style={{
-                padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700',
+                padding: '5px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '700',
                 border: 'none', cursor: 'pointer',
                 background: activeTab === 'KOT' ? '#E85D04' : 'rgba(255,255,255,0.1)',
                 color: '#fff'
@@ -111,204 +115,257 @@ const ReceiptModal: React.FC<ReceiptProps> = ({ order, onClose }) => {
           </div>
         </div>
 
-        {/* Printable Receipt Container */}
+        {/* Printable Receipt Container (Matching Screenshot 3) */}
         <div
           id="thermal-receipt-print"
           style={{
-            padding: '24px 20px',
+            padding: '16px 14px',
             background: '#ffffff',
             color: '#000000',
             fontFamily: "'Courier New', Courier, monospace",
-            fontSize: '12px',
-            lineHeight: '1.4',
-            maxHeight: '70vh',
+            fontSize: '11px',
+            lineHeight: '1.35',
+            maxHeight: '75vh',
             overflowY: 'auto'
           }}
         >
           {activeTab === 'BILL' ? (
-            <div style={{ border: '2px solid #000', padding: '16px', borderRadius: '2px' }}>
-              {/* Header */}
-              <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                <div style={{ fontSize: '22px', fontWeight: '900', letterSpacing: '0.04em', textTransform: 'lowercase', fontFamily: 'serif' }}>
-                  haandi by yumto
+            <div style={{ width: '100%', maxWidth: '340px', margin: '0 auto', color: '#000000' }}>
+              
+              {/* Top Haandi Logo */}
+              <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+                <img
+                  src="/logo.png"
+                  alt="Haandi by Yumto"
+                  style={{
+                    width: '54px', height: '54px',
+                    objectFit: 'contain',
+                    margin: '0 auto 4px auto',
+                    display: 'block'
+                  }}
+                />
+              </div>
+
+              {/* Header Restaurant Details */}
+              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                <div style={{ fontSize: '15px', fontWeight: '900', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                  HAANDI BY YUMTO
                 </div>
-                <div style={{ fontSize: '11px', marginTop: '4px', fontWeight: '600' }}>
-                  Sector-Executive Block, Gulberg Greens, Islamabad.
+                <div style={{ fontSize: '10px', marginTop: '2px', fontWeight: '600' }}>
+                  Civic Center, Executive Block, Gulberg Greens, Islamabad
+                </div>
+                <div style={{ fontSize: '10px', marginTop: '1px' }}>
+                  Call: <strong>0330 0500600</strong>
+                </div>
+                <div style={{ fontSize: '10px', marginTop: '1px' }}>
+                  SNTN (GST) <strong>4585147-3</strong>
                 </div>
               </div>
 
-              {/* Contact & GST info */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
-                <span>Phone No.</span>
-                <span style={{ fontWeight: '700' }}>0330-0500600</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '8px' }}>
-                <span>G.S.T. / NTN No.</span>
-                <span style={{ fontWeight: '700' }}>/4585147-3</span>
-              </div>
+              {/* Dashed Separator */}
+              <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
 
-              {/* Title */}
-              <div style={{ textAlign: 'center', margin: '8px 0 10px' }}>
-                <span style={{ fontWeight: '900', fontSize: '14px', textDecoration: 'underline', letterSpacing: '0.05em' }}>
-                  Provisional Bill
-                </span>
-              </div>
-
-              {/* Order Meta */}
-              <div style={{ fontSize: '11px', marginBottom: '8px', lineHeight: '1.5' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Inv # : {order.id.slice(-8).toUpperCase()}</span>
-                  <span>Cashier : {order.cashierName.split(' ')[0]}</span>
+              {/* Token Number & Order Subtitle */}
+              <div style={{ textAlign: 'center', margin: '4px 0 6px' }}>
+                <div style={{ fontSize: '16px', fontWeight: '900', letterSpacing: '0.05em' }}>
+                  TOKEN NO-{shortToken}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Date : {fmtDate(order.createdAt)}</span>
-                  <span>Time : {fmtTime(order.createdAt)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Table No. : ( {order.tableNumber || order.orderType} )</span>
-                  <span>Server : Counter</span>
+                <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginTop: '2px' }}>
+                  {order.orderType === 'DINE_IN' ? 'Dine In' : order.orderType === 'DELIVERY' ? 'Delivery' : 'Takeaway'} - Customer Copy
                 </div>
               </div>
 
-              {/* Items Table */}
-              <div style={{ borderTop: '1.5px solid #000', borderBottom: '1.5px solid #000', padding: '4px 0', margin: '6px 0' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '20px 1fr 55px 35px 60px', fontWeight: '800', fontSize: '11px' }}>
-                  <span>#</span>
-                  <span>Description</span>
-                  <span style={{ textAlign: 'right' }}>Price</span>
-                  <span style={{ textAlign: 'center' }}>QTY</span>
-                  <span style={{ textAlign: 'right' }}>Total</span>
+              {/* Order Meta Info */}
+              <div style={{ fontSize: '10px', lineHeight: '1.4', margin: '4px 0' }}>
+                <div>Date: {fmtDate(order.createdAt)}, {fmtTime(order.createdAt)}</div>
+                {order.tableNumber && (
+                  <div>Table No: <strong>Table {order.tableNumber}</strong></div>
+                )}
+                <div>Cashier: <strong>{order.cashierName.split(' ')[0]}</strong> · Server: <strong>Counter</strong></div>
+                <div style={{ fontWeight: '900', marginTop: '2px' }}>
+                  {order.paymentMethod === 'CARD' ? 'PAID (CARD)' : order.tenderedAmount && order.tenderedAmount >= order.total ? 'PAID (CASH)' : 'PAID'}
                 </div>
               </div>
 
-              {/* Items Rows */}
-              <div style={{ minHeight: '60px' }}>
+              {/* Dashed Separator */}
+              <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
+
+              {/* Items Column Header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '24px 1fr 65px', fontWeight: '900', fontSize: '10.5px', padding: '2px 0' }}>
+                <span>Qty</span>
+                <span>Item</span>
+                <span style={{ textAlign: 'right' }}>T.Price</span>
+              </div>
+
+              {/* Dashed Separator */}
+              <div style={{ borderTop: '1px dashed #000', margin: '3px 0 5px' }} />
+
+              {/* Items List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {order.items.map((item, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '20px 1fr 55px 35px 60px',
-                      fontSize: '11px',
-                      padding: '2px 0'
-                    }}
-                  >
-                    <span>{idx + 1}</span>
-                    <span style={{ textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '4px' }}>
-                      {item.name}{item.variation ? ` (${item.variation})` : ''}
-                    </span>
-                    <span style={{ textAlign: 'right' }}>{Math.round(item.price).toLocaleString()}</span>
-                    <span style={{ textAlign: 'center' }}>{item.quantity}</span>
-                    <span style={{ textAlign: 'right', fontWeight: '700' }}>
-                      {Math.round(item.price * item.quantity).toLocaleString()}
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '24px 1fr 65px', fontSize: '10.5px' }}>
+                    <span style={{ fontWeight: '800' }}>{item.quantity}</span>
+                    <div style={{ paddingRight: '4px' }}>
+                      <div style={{ fontWeight: '700' }}>{item.name}</div>
+                      {item.variation && (
+                        <div style={{ fontSize: '9.5px', color: '#333' }}>- {item.variation}</div>
+                      )}
+                    </div>
+                    <span style={{ textAlign: 'right', fontWeight: '800' }}>
+                      {(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
               </div>
 
-              {/* Total Qty Divider */}
-              <div style={{ borderTop: '1.5px solid #000', padding: '4px 0', marginTop: '6px', display: 'flex', justifyContent: 'space-between', fontWeight: '800' }}>
-                <span>Total :</span>
-                <div style={{ display: 'flex', gap: '30px' }}>
-                  <span>{totalQty}</span>
-                  <span>{Math.round(order.subtotal).toLocaleString()}</span>
-                </div>
-              </div>
+              {/* Dashed Separator */}
+              <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
 
-              {/* Financial Breakdown */}
-              <div style={{ borderTop: '1.5px solid #000', paddingTop: '6px', marginTop: '4px', fontSize: '11px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                  <span>Total Amount</span>
-                  <span style={{ fontWeight: '700' }}>{Math.round(order.subtotal).toLocaleString()}</span>
+              {/* Totals Breakdown */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '10.5px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Total</span>
+                  <span style={{ fontWeight: '700' }}>{order.subtotal.toFixed(2)}</span>
                 </div>
+
                 {order.discountAmount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Discount</span>
-                    <span style={{ fontWeight: '700' }}>-{Math.round(order.discountAmount).toLocaleString()}</span>
+                    <span style={{ fontWeight: '700' }}>-{order.discountAmount.toFixed(2)}</span>
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                  <span>5.00 % Service Charges</span>
-                  <span style={{ fontWeight: '700' }}>{Math.round(Math.max(0, order.subtotal - order.discountAmount) * 0.05).toLocaleString()}</span>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>5% Service Charges</span>
+                  <span style={{ fontWeight: '700' }}>{(Math.max(0, order.subtotal - order.discountAmount) * 0.05).toFixed(2)}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                  <span>{order.taxRatePercent}.00 % FBR Sale Tax</span>
-                  <span style={{ fontWeight: '700' }}>{Math.round(order.tax).toLocaleString()}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', fontWeight: '800', fontSize: '12px' }}>
-                  <span>Net Payable</span>
-                  <span>{Math.round(order.total).toLocaleString()}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                  <span>Received ({order.paymentMethod})</span>
-                  <span style={{ fontWeight: '700' }}>{Math.round(received).toLocaleString()}</span>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>FBR/PRA Tax ({order.taxRatePercent}%)</span>
+                  <span style={{ fontWeight: '700' }}>{order.tax.toFixed(2)}</span>
                 </div>
               </div>
 
-              {/* Balance Amount */}
-              <div style={{ borderTop: '1.5px solid #000', padding: '6px 0', marginTop: '6px', display: 'flex', justifyContent: 'space-between', fontWeight: '800' }}>
-                <span>Balance Amount</span>
-                <span>({Math.round(balance).toLocaleString()})</span>
+              {/* Dashed Separator */}
+              <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
+
+              {/* Grand Total */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '900', margin: '3px 0' }}>
+                <span>Grand Total</span>
+                <span>{order.total.toFixed(2)}</span>
               </div>
 
-              {/* Footer */}
-              <div style={{ borderTop: '1.5px solid #000', paddingTop: '8px', marginTop: '6px', fontSize: '10px', lineHeight: '1.4' }}>
-                <div>Software Developed by: <strong>YUMTO POS</strong></div>
-                <div>Ph: <strong>+92 330 0500600</strong></div>
-                <div style={{ marginTop: '4px' }}>Facebook / Instagram: <strong>@haandibyyumto</strong></div>
-                <div style={{ textAlign: 'center', marginTop: '6px', fontWeight: '700', letterSpacing: '0.05em' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px', marginTop: '2px' }}>
+                <span>Paid Amount</span>
+                <span style={{ fontWeight: '700' }}>{received.toFixed(2)}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px', marginTop: '2px' }}>
+                <span>Return Amount</span>
+                <span style={{ fontWeight: '700' }}>{balance.toFixed(2)}</span>
+              </div>
+
+              {/* Optional Customer info (for Delivery / online orders) */}
+              {(order.userName || order.userPhone || order.deliveryAddress) && (
+                <>
+                  <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
+                  <div style={{ fontSize: '10px', lineHeight: '1.4' }}>
+                    {order.userName && <div>Customer Name: <strong>{order.userName}</strong></div>}
+                    {order.userPhone && <div>Phone #: <strong>{order.userPhone}</strong></div>}
+                    {order.deliveryAddress && <div>Address: <strong>{order.deliveryAddress}</strong></div>}
+                  </div>
+                </>
+              )}
+
+              {/* Dashed Separator */}
+              <div style={{ borderTop: '1px dashed #000', margin: '8px 0 6px' }} />
+
+              {/* Thank you & Powered By ABT IT innovations */}
+              <div style={{ textAlign: 'center', fontSize: '9.5px', lineHeight: '1.4', marginTop: '4px' }}>
+                <div style={{ fontWeight: '800', letterSpacing: '0.04em', marginBottom: '4px' }}>
                   THANK YOU FOR DINING WITH US!
                 </div>
+                <div style={{ color: '#222' }}>
+                  Powered By: <strong>ABT IT innovations PVT LTD.</strong>
+                </div>
+                <div style={{ color: '#222' }}>
+                  For Queries WhatsApp: <strong>+92-333-5945499</strong>
+                </div>
               </div>
+
             </div>
           ) : (
-            <div style={{ border: '2px dashed #000', padding: '16px', borderRadius: '2px' }}>
-              <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                <div style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '0.04em' }}>
+            <div style={{ width: '100%', maxWidth: '340px', margin: '0 auto', color: '#000000' }}>
+              
+              {/* KOT Header */}
+              <div style={{ textAlign: 'center', marginBottom: '6px' }}>
+                <div style={{ fontSize: '14px', fontWeight: '900', letterSpacing: '0.05em' }}>
                   *** KITCHEN ORDER TICKET (KOT) ***
                 </div>
-                <div style={{ fontSize: '12px', fontWeight: '700', marginTop: '4px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '800', marginTop: '2px' }}>
                   HAANDI BY YUMTO · ISLAMABAD
                 </div>
               </div>
 
-              <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '6px 0', margin: '8px 0', fontSize: '11px', lineHeight: '1.5' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong>KOT #{order.id.slice(-6).toUpperCase()}</strong>
-                  <strong>Type: {order.orderType}</strong>
+              {/* Dashed Separator */}
+              <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
+
+              <div style={{ fontSize: '11px', lineHeight: '1.5' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '900' }}>
+                  <span>KOT #{shortToken}</span>
+                  <span>Type: {order.orderType}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Table: <strong>{order.tableNumber || 'Takeaway'}</strong></span>
-                  <span>Time: {fmtTime(order.createdAt)}</span>
+                  <span>Time: <strong>{fmtTime(order.createdAt)}</strong></span>
                 </div>
-                <div>Cashier / Waiter: {order.cashierName}</div>
+                <div>Cashier / Server: <strong>{order.cashierName}</strong></div>
               </div>
 
-              <div style={{ margin: '10px 0' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr', fontWeight: '800', borderBottom: '1px solid #000', paddingBottom: '4px', fontSize: '11px' }}>
-                  <span>QTY</span>
-                  <span>ITEM DESCRIPTION</span>
-                </div>
+              {/* Dashed Separator */}
+              <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />
+
+              {/* KOT Items List */}
+              <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr', fontWeight: '900', fontSize: '11px', paddingBottom: '3px' }}>
+                <span>QTY</span>
+                <span>ITEM DESCRIPTION</span>
+              </div>
+              <div style={{ borderTop: '1px dashed #000', margin: '3px 0 6px' }} />
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {order.items.map((item, idx) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '40px 1fr', padding: '6px 0', borderBottom: '1px dashed #ccc', fontSize: '13px', fontWeight: '800' }}>
-                    <span style={{ fontSize: '15px', color: '#000' }}>{item.quantity}x</span>
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '32px 1fr', fontSize: '12px', fontWeight: '800' }}>
+                    <span style={{ fontSize: '13px' }}>{item.quantity}x</span>
                     <div>
                       <div>{item.name}</div>
-                      {item.variation && <div style={{ fontSize: '10px', color: '#555' }}>Portion: {item.variation}</div>}
+                      {item.variation && (
+                        <div style={{ fontSize: '10px', color: '#444' }}>Portion: {item.variation}</div>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div style={{ textAlign: 'center', marginTop: '14px', fontSize: '10px', fontWeight: '700' }}>
+              {/* Dashed Separator */}
+              <div style={{ borderTop: '1px dashed #000', margin: '8px 0 6px' }} />
+
+              <div style={{ textAlign: 'center', fontSize: '10px', fontWeight: '900', letterSpacing: '0.04em' }}>
                 ** PLEASE EXPEDITE CLAY POTS & KARAHIS **
               </div>
+
+              <div style={{ borderTop: '1px dashed #000', margin: '6px 0 4px' }} />
+
+              <div style={{ textAlign: 'center', fontSize: '9px', lineHeight: '1.4' }}>
+                <div>Powered By: <strong>ABT IT innovations PVT LTD.</strong></div>
+                <div>For Queries WhatsApp: <strong>+92-333-5945499</strong></div>
+              </div>
+
             </div>
           )}
         </div>
 
-        {/* Action buttons */}
-        <div style={{ background: '#f9fafb', borderTop: '1px solid #e5e7eb', padding: '12px 16px', display: 'flex', gap: '8px' }}>
+        {/* Action buttons (hidden in print) */}
+        <div className="no-print" style={{ background: '#f9fafb', borderTop: '1px solid #e5e7eb', padding: '12px 16px', display: 'flex', gap: '8px' }}>
           <button
             onClick={handlePrint}
             style={{
@@ -2338,7 +2395,10 @@ export const CashierPortal: React.FC = () => {
                           taxRatePercent: ord.paymentMethod === 'CARD' ? 5 : 16,
                           total: ord.total,
                           paymentMethod: ord.paymentMethod,
-                          createdAt: ord.createdAt
+                          createdAt: ord.createdAt,
+                          userName: ord.userName,
+                          userPhone: ord.userPhone,
+                          deliveryAddress: ord.deliveryAddress
                         })}
                         style={{ padding: '6px 10px', borderRadius: '6px', border: `1px solid ${ui.border}`, background: 'transparent', color: ui.text, cursor: 'pointer', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}
                       >
@@ -2499,6 +2559,31 @@ export const CashierPortal: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* POS Terminal Bottom Status Bar */}
+      <footer className="no-print" style={{
+        background: isDark ? '#1A120B' : '#F5EFE6',
+        borderTop: `1px solid ${ui.border}`,
+        padding: '10px 20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '11px',
+        color: ui.textMuted,
+        flexWrap: 'wrap',
+        gap: '8px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontWeight: '800', color: '#E85D04' }}>Haandi by Yumto POS</span>
+          <span>·</span>
+          <span>Islamabad: Gulberg Greens (0330 0500600)</span>
+          <span>·</span>
+          <span>NTN/GST: 4585147-3</span>
+        </div>
+        <div style={{ fontWeight: '700', color: ui.text }}>
+          Powered By: <strong style={{ color: '#E85D04' }}>ABT IT innovations PVT LTD.</strong> · For Queries WhatsApp: <strong style={{ color: '#E85D04' }}>+92-333-5945499</strong>
+        </div>
+      </footer>
 
     </div>
   );

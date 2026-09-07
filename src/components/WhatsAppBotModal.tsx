@@ -308,6 +308,14 @@ export const WhatsAppBotModal: React.FC<WhatsAppBotModalProps> = ({ isOpen, onCl
               )}
             </div>
           </div>
+
+          {/* ABT IT innovations PVT LTD Footer */}
+          <div style={{ textAlign: 'center', marginTop: '14px', fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+            <div>WhatsApp Baileys Real-time Order Engine · Haandi by Yumto</div>
+            <div style={{ color: '#E85D04', fontWeight: '700' }}>
+              Powered By: ABT IT innovations PVT LTD. · For Queries WhatsApp: +92-333-5945499
+            </div>
+          </div>
         </div>
       </div>
     </div>

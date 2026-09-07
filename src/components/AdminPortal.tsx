@@ -2066,6 +2066,22 @@ export const AdminPortal: React.FC = () => {
         {activeTab === 'HR_PAYROLL' && renderHrTab()}
         {activeTab === 'SHIFTS_AUDIT' && renderShiftsTab()}
       </main>
+
+      {/* Admin Portal Footer */}
+      <footer style={{
+        background: '#1A120B',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        padding: '16px 20px',
+        textAlign: 'center',
+        marginTop: 'auto'
+      }}>
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+          Haandi by Yumto — Enterprise Executive Admin & Central Chain HQ (Islamabad: Gulberg Greens)<br />
+          <span style={{ color: '#E85D04', fontWeight: '700' }}>
+            Powered By: ABT IT innovations PVT LTD. · For Queries WhatsApp: +92-333-5945499
+          </span>
+        </div>
+      </footer>
     </div>
   );
 };

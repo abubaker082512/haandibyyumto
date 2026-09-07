@@ -37,7 +37,10 @@ function AppContent({ children }: { children: React.ReactNode }) {
             </div>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', lineHeight: 1.6 }}>
               © 2026 Haandi by Yumto. Authentic Desi, Karahi, Handi & Charcoal BBQ Cuisine.<br />
-              Islamabad: Gulberg Greens, Civic Center, Executive Block (0330 0500600) · NTN/GST: 4585147-3
+              Islamabad: Gulberg Greens, Civic Center, Executive Block (0330 0500600) · NTN/GST: 4585147-3<br />
+              <span style={{ color: '#E85D04', fontWeight: '700', marginTop: '4px', display: 'inline-block' }}>
+                Powered By: ABT IT innovations PVT LTD. · For Queries WhatsApp: +92-333-5945499
+              </span>
             </div>
           </div>
         </footer>

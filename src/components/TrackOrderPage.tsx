@@ -606,6 +606,24 @@ export const TrackOrderPage: React.FC = () => {
           </>
         )}
 
+        {/* ABT IT innovations Footer */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: '30px',
+          padding: '16px 20px',
+          background: 'rgba(26,18,11,0.95)',
+          borderRadius: '16px',
+          border: '1px solid var(--border-warm)',
+          color: 'rgba(255,255,255,0.65)',
+          fontSize: '11px',
+          lineHeight: 1.6
+        }}>
+          <div>Haandi by Yumto — Live Real-Time OpenStreetMap GPS Tracking Engine · Islamabad</div>
+          <div style={{ color: '#E85D04', fontWeight: '800', marginTop: '2px' }}>
+            Powered By: ABT IT innovations PVT LTD. · For Queries WhatsApp: +92-333-5945499
+          </div>
+        </div>
+
       </div>
     </div>
   );

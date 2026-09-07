@@ -250,9 +250,13 @@ export const PortalGate: React.FC<PortalGateProps> = ({
           borderTop: '1px solid #EADBCC',
           fontSize: '11px',
           color: '#6B7280',
-          textAlign: 'center'
+          textAlign: 'center',
+          lineHeight: 1.5
         }}>
-          Authorized restaurant personnel only · Haandi by Yumto POS
+          <div>Authorized restaurant personnel only · Haandi by Yumto POS</div>
+          <div style={{ color: '#8B1E1E', fontWeight: '700', marginTop: '2px' }}>
+            Powered By: ABT IT innovations PVT LTD. · For Queries WhatsApp: +92-333-5945499
+          </div>
         </div>
       </div>
     </div>

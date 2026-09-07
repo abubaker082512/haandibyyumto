@@ -70,3 +70,20 @@ All staff and management portals are guarded by **Role-Based Access Control (RBA
    - Track active orders via `/#/track` or direct URL link `/#/track/[orderId]`.
    - Live stage progression (`PENDING ➔ PREPARING ➔ READY ➔ SHIPPED ➔ DELIVERED`) updates automatically in real-time.
    - Interactive OpenStreetMap route visualizes the moving rider across Gulberg Greens sectors.
+
+3. **80mm High-Speed Thermal Receipt Printing:**
+   - High-contrast, top-logo Pakistani thermal receipt layout formatted for 80mm POS printers.
+   - Separate **Customer Bill** and **Kitchen KOT** views with automatic `@media print` isolation.
+   - Includes official FBR/PRA sales tax breakdown, service charges, customer address, token number, and developer credits:
+     - **Powered By:** ABT IT innovations PVT LTD.
+     - **For Queries WhatsApp:** +92-333-5945499
+
+---
+
+## 💼 5. Technology & Development Credits
+
+- **Powered By:** **ABT IT innovations PVT LTD.**
+- **For Queries WhatsApp:** **+92-333-5945499**
+- **Client / Brand:** Haandi by Yumto (Islamabad)
+- **Deployment Platform:** Vercel Global Edge & Google Firebase
+
