@@ -137,6 +137,8 @@ export interface Order {
   userId: string;
   userName: string;
   userPhone: string;
+  userEmail?: string;
+  userPinLocation?: string;
   orderType: OrderType;
   tableId?: string;
   reservationId?: string;

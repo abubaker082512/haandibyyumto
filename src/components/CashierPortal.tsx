@@ -1188,6 +1188,54 @@ export const CashierPortal: React.FC = () => {
     o => o.isOnline && !o.isPunched && o.status !== 'CANCELLED'
   );
 
+  // 🛎️ NEW INCOMING ORDER ALARM LOGIC (Foodpanda Style)
+  const [newOrderAlert, setNewOrderAlert] = useState<Order | null>(null);
+  const [previousPendingCount, setPreviousPendingCount] = useState(unconfirmedOnlineOrders.length);
+  
+  // Custom synthetic loud ringtone
+  const playLoudRing = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+      osc.frequency.setValueAtTime(1108.73, ctx.currentTime + 0.15); // C#6
+      
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch(e) { console.warn('Audio play failed', e); }
+  };
+
+  useEffect(() => {
+    // Check if new unconfirmed online order arrived
+    if (unconfirmedOnlineOrders.length > previousPendingCount) {
+      // Find the newest order
+      const newestOrder = unconfirmedOnlineOrders.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+      if (newestOrder) {
+        setNewOrderAlert(newestOrder);
+        playLoudRing();
+      }
+    }
+    setPreviousPendingCount(unconfirmedOnlineOrders.length);
+  }, [unconfirmedOnlineOrders.length, previousPendingCount, unconfirmedOnlineOrders]);
+
+  // Repeatedly ring if alert is active
+  useEffect(() => {
+    let interval: any;
+    if (newOrderAlert) {
+      interval = setInterval(() => {
+        playLoudRing();
+      }, 2000); // ring every 2 seconds until acknowledged
+    }
+    return () => clearInterval(interval);
+  }, [newOrderAlert]);
+
   // ── Edit online order state
   const [editingOnlineOrder, setEditingOnlineOrder] = useState<Order | null>(null);
 
@@ -2556,6 +2604,73 @@ export const CashierPortal: React.FC = () => {
               )}
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* 🛎️ NEW INCOMING ORDER ALARM POPUP (Foodpanda Style) */}
+      {newOrderAlert && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.85)', zIndex: 99999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '24px', width: '90%', maxWidth: '500px',
+            overflow: 'hidden', boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
+            border: '4px solid #E85D04', animation: 'pulse 1.5s infinite'
+          }}>
+            <div style={{ background: '#E85D04', padding: '24px', textAlign: 'center', color: '#fff' }}>
+              <div style={{ fontSize: '64px', marginBottom: '8px' }}>🛎️</div>
+              <h2 style={{ margin: 0, fontSize: '28px', fontWeight: '900', letterSpacing: '1px' }}>NEW ORDER!</h2>
+              <div style={{ fontSize: '14px', fontWeight: '800', marginTop: '4px', opacity: 0.9 }}>
+                #{newOrderAlert.id.slice(0, 8).toUpperCase()}
+              </div>
+            </div>
+            
+            <div style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '16px' }}>
+                <span style={{ color: '#666', fontWeight: '800' }}>Type</span>
+                <strong style={{ color: '#1A120B', fontWeight: '900' }}>
+                  {newOrderAlert.orderType === 'DELIVERY' ? '🚚 DELIVERY' : newOrderAlert.orderType === 'PICK_UP' ? '🛍️ TAKEAWAY' : '🍽️ DINE-IN'}
+                </strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '16px' }}>
+                <span style={{ color: '#666', fontWeight: '800' }}>Customer</span>
+                <strong style={{ color: '#1A120B', fontWeight: '900' }}>{newOrderAlert.userName || 'Guest'} ({newOrderAlert.userPhone || 'No Phone'})</strong>
+              </div>
+              {newOrderAlert.userEmail && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '16px' }}>
+                  <span style={{ color: '#666', fontWeight: '800' }}>Email</span>
+                  <strong style={{ color: '#1A120B', fontWeight: '900' }}>{newOrderAlert.userEmail}</strong>
+                </div>
+              )}
+              {newOrderAlert.userPinLocation && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '16px' }}>
+                  <span style={{ color: '#666', fontWeight: '800' }}>Location Pin</span>
+                  <strong style={{ color: '#16a34a', fontWeight: '900' }}>📍 {newOrderAlert.userPinLocation}</strong>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '20px' }}>
+                <span style={{ color: '#666', fontWeight: '800' }}>Amount</span>
+                <strong style={{ color: '#8B1E1E', fontWeight: '900' }}>{fmtMoney(newOrderAlert.total)}</strong>
+              </div>
+
+              <button
+                onClick={() => {
+                   setNewOrderAlert(null);
+                   setActiveTab('ONLINE_ORDERS');
+                }}
+                style={{
+                  width: '100%', padding: '20px', background: '#16a34a', color: '#fff',
+                  border: 'none', borderRadius: '12px', fontSize: '20px', fontWeight: '900',
+                  boxShadow: '0 8px 16px rgba(22,163,74,0.3)', cursor: 'pointer'
+                }}
+              >
+                VIEW & ACCEPT ORDER
+              </button>
+            </div>
           </div>
         </div>
       )}

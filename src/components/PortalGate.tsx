@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import type { Role } from '../types';
 import { ShieldAlert, Lock, User, Key, ArrowRight, LogOut } from 'lucide-react';
@@ -13,7 +13,7 @@ interface PortalGateProps {
 export const PortalGate: React.FC<PortalGateProps> = ({
   allowedRoles,
   portalName,
-  portalIcon = '🔒',
+  portalIcon = '🚪',
   children
 }) => {
   const { profile, signIn, signOut } = useAuth();
@@ -21,6 +21,27 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showSplash) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'radial-gradient(circle at center, #2A1F17 0%, #1A120B 100%)', animation: 'fadeIn 0.3s ease-out' }}>
+        <img src="/logo.png" alt="Haandi" style={{ width: '120px', height: '120px', borderRadius: '24px', boxShadow: '0 8px 32px rgba(232, 93, 4, 0.3)' }} />
+        <h1 style={{ color: '#E85D04', marginTop: '24px', fontSize: '28px', fontWeight: '900', letterSpacing: '2px', textAlign: 'center', lineHeight: '1.4' }}>
+          HAANDI<br/>
+          <span style={{fontSize: '18px', color: '#FFF'}}>{portalName}</span>
+        </h1>
+        <p style={{ color: '#F4C430', fontSize: '14px', fontWeight: '700', marginTop: '8px' }}>By Yumto</p>
+      </div>
+    );
+  }
 
   // Check if current logged-in profile matches any of the allowed roles
   const isAuthorized = profile && allowedRoles.includes(profile.role);

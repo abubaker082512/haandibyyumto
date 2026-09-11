@@ -508,43 +508,104 @@ export const CustomerPortal: React.FC = () => {
       </nav>
 
       {/* ============================================================
-          DARK LUXURY HERO BANNER
+          STUNNING HERO BANNER
           ============================================================ */}
       <div style={{
-        background: 'linear-gradient(135deg, #1A120B 0%, #2A1F17 100%)',
-        color: '#ffffff', padding: '22px 16px', borderBottom: '2px solid var(--haandi-saffron)'
+        position: 'relative',
+        width: '100%',
+        minHeight: '420px',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '40px 16px',
+        overflow: 'hidden',
+        borderBottom: '4px solid var(--haandi-saffron)'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(232,93,4,0.2)', border: '1px solid var(--haandi-saffron)', padding: '3px 10px', borderRadius: '99px', fontSize: '11px', color: 'var(--haandi-gold)', fontWeight: '800', marginBottom: '8px' }}>
-              <span>🏺 Authentic Desi Earthenware Cuisine</span>
+        {/* Background Image & Overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url("https://images.unsplash.com/photo-1544148103-0773bf10d330?auto=format&fit=crop&w=1920&q=80")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 60%',
+          zIndex: 0
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to right, rgba(26,18,11,0.98) 0%, rgba(26,18,11,0.85) 50%, rgba(26,18,11,0.2) 100%)',
+          zIndex: 1
+        }} />
+
+        {/* Content */}
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: '1200px', margin: '0 auto', width: '100%', display: 'flex', flexWrap: 'wrap', gap: '40px', justifyContent: 'space-between', alignItems: 'center' }}>
+          
+          <div style={{ maxWidth: '600px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(232,93,4,0.3)', border: '1px solid var(--haandi-saffron)', padding: '6px 14px', borderRadius: '99px', fontSize: '13px', color: '#F4C430', fontWeight: '800', marginBottom: '16px', backdropFilter: 'blur(4px)' }}>
+              <Sparkles style={{ width: '14px', height: '14px' }} />
+              <span>Authentic Desi Earthenware Cuisine</span>
             </div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: '900', color: '#ffffff', margin: '0 0 4px 0' }}>
-              Slow-Cooked Clay Pot Handi & Charcoal BBQ
+            
+            <h1 className="hero-title">
+              Experience the True Taste of <br/>
+              <span style={{ color: '#E85D04' }}>Clay Pot Handi & BBQ</span>
             </h1>
-            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0 }}>
-              Civic Center, Executive Block, Gulberg Greens, Islamabad · 0330 0500600
+            
+            <p className="hero-desc">
+              Savor slow-cooked perfection, sizzling charcoal grills, and authentic recipes passed down through generations.
+              <br/>
+              <span style={{ fontSize: '13px', opacity: 0.7, marginTop: '8px', display: 'block' }}>📍 Civic Center, Executive Block, Gulberg Greens, Islamabad · 📞 0330 0500600</span>
             </p>
+
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+               <button
+                  onClick={() => setShowDiningModeModal(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #8B1E1E 0%, #E85D04 100%)',
+                    color: '#ffffff', border: 'none', borderRadius: '12px', padding: '14px 24px',
+                    fontSize: '15px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+                    boxShadow: '0 8px 25px rgba(232,93,4,0.4)',
+                    transition: 'transform 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <span>
+                    {orderType === 'DINE_IN'
+                      ? (selectedTable ? `🪑 Dine-In (Table ${selectedTable.tableNumber})` : '🪑 Dine-In · Pick Table')
+                      : orderType === 'DELIVERY'
+                      ? `🛵 Delivery (${selectedSector.split(',')[0]})`
+                      : '🛍️ Takeaway'}
+                  </span>
+                  <span style={{ fontSize: '11px', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '6px', marginLeft: '4px' }}>Change Mode</span>
+                </button>
+            </div>
           </div>
 
-          <button
-            onClick={() => setShowDiningModeModal(true)}
-            style={{
-              background: 'linear-gradient(135deg, var(--haandi-red) 0%, #E85D04 100%)',
-              color: '#ffffff', border: 'none', borderRadius: '12px', padding: '10px 18px',
-              fontSize: '13px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-              boxShadow: '0 4px 14px rgba(232,93,4,0.4)'
-            }}
-          >
-            <span>
-              {orderType === 'DINE_IN'
-                ? (selectedTable ? `🪑 Dine-In (Table ${selectedTable.tableNumber})` : '🪑 Dine-In · Pick Table')
-                : orderType === 'DELIVERY'
-                ? `🛵 Delivery (${selectedSector.split(',')[0]})`
-                : '🛍️ Takeaway'}
-            </span>
-            <span style={{ fontSize: '10px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>Change</span>
-          </button>
+          {/* Graphics / Feature Badges */}
+          <div className="hide-on-mobile" style={{ flexDirection: 'column', gap: '12px' }}>
+            {[
+              { icon: '🔥', title: 'Live Charcoal BBQ', desc: 'Freshly grilled to perfection' },
+              { icon: '🛵', title: 'Lightning Fast Delivery', desc: 'Hot & fresh to your door' },
+              { icon: '🌿', title: '100% Authentic', desc: 'Premium ingredients only' }
+            ].map(f => (
+              <div key={f.title} style={{ 
+                background: 'rgba(26,18,11,0.6)', backdropFilter: 'blur(10px)', 
+                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', 
+                padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.3)', transform: 'translateX(0)', transition: 'transform 0.3s', cursor: 'default'
+              }}
+              onMouseOver={e => e.currentTarget.style.transform = 'translateX(-10px)'}
+              onMouseOut={e => e.currentTarget.style.transform = 'translateX(0)'}
+              >
+                <div style={{ fontSize: '24px', background: 'rgba(255,255,255,0.1)', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px' }}>
+                  {f.icon}
+                </div>
+                <div>
+                  <div style={{ color: '#fff', fontWeight: '800', fontSize: '15px' }}>{f.title}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>{f.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
         </div>
       </div>
 

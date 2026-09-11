@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../store/mockDb';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import type { 
   MenuItemRecipe, 
   RecipeIngredient, 
@@ -902,6 +904,123 @@ export const AdminPortal: React.FC = () => {
     }
   });
 
+  const handleExportPDF = () => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      
+      const catStats: Record<string, { cash: number, card: number, total: number }> = {};
+      let totalNetSale = 0; let totalGSTCash = 0; let totalGSTCard = 0;
+      let totalDiscountCash = 0; let totalDiscountCard = 0;
+      let cashSale = 0; let cardSale = 0;
+      let taOrders = 0; let taTotal = 0; let diOrders = 0; let diTotal = 0; let delOrders = 0; let delTotal = 0;
+
+      completedOrders.forEach(o => {
+        const isCash = o.paymentMethod === 'CASH';
+        const isCard = !isCash;
+        
+        if (isCash) { totalGSTCash += o.tax; totalDiscountCash += o.discountAmount; cashSale += o.total; } 
+        else { totalGSTCard += o.tax; totalDiscountCard += o.discountAmount; cardSale += o.total; }
+
+        totalNetSale += o.taxableAmount;
+
+        if (o.orderType === 'PICK_UP') { taOrders++; taTotal += o.total; }
+        if (o.orderType === 'DINE_IN') { diOrders++; diTotal += o.total; }
+        if (o.orderType === 'DELIVERY') { delOrders++; delTotal += o.total; }
+
+        o.items.forEach(i => {
+           const menuInfo = dbState.getMenu().find(m => m.id === i.menuItemId);
+           const cat = menuInfo ? menuInfo.category : 'Other';
+           if (!catStats[cat]) catStats[cat] = { cash: 0, card: 0, total: 0 };
+           const itemRev = i.price * i.quantity;
+           if (isCash) catStats[cat].cash += itemRev;
+           if (isCard) catStats[cat].card += itemRev;
+           catStats[cat].total += itemRev;
+        });
+      });
+
+      doc.setFontSize(22);
+      doc.setTextColor('#E85D04');
+      doc.text('HAANDI BY YUMTO', pageWidth - 14, 20, { align: 'right' });
+      doc.setFontSize(10);
+      doc.setTextColor('#333');
+      doc.text('0330-0500600', pageWidth - 14, 26, { align: 'right' });
+      doc.text('Civic Center, Gulberg Greens, Islamabad', pageWidth - 14, 32, { align: 'right' });
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Sales Report', pageWidth / 2, 45, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`for the period of 2026-08-01 to ${new Date().toISOString().slice(0,10)}`, pageWidth / 2, 52, { align: 'center' });
+      doc.line(14, 56, pageWidth - 14, 56);
+
+      let currentY = 62;
+      const catRows = Object.entries(catStats).map(([cat, stats]) => [
+         cat, stats.cash.toLocaleString(), stats.card.toLocaleString(), stats.total.toLocaleString()
+      ]);
+      const sumCash = Object.values(catStats).reduce((a,b)=>a+b.cash,0);
+      const sumCard = Object.values(catStats).reduce((a,b)=>a+b.card,0);
+      const sumTotal = Object.values(catStats).reduce((a,b)=>a+b.total,0);
+
+      (doc as any).autoTable({
+        startY: currentY,
+        head: [['Name', 'Cash Sales', 'Card Sales', 'Total']],
+        body: catRows,
+        foot: [['Total', sumCash.toLocaleString(), sumCard.toLocaleString(), sumTotal.toLocaleString()]],
+        theme: 'striped',
+        headStyles: { fillColor: [40, 40, 40] }
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+      const totalGST = totalGSTCash + totalGSTCard;
+      const totalDiscount = totalDiscountCash + totalDiscountCard;
+      const netSalePlusGST = totalNetSale + totalGST;
+      const grossSale = netSalePlusGST + totalDiscount;
+
+      (doc as any).autoTable({
+        startY: currentY,
+        head: [['Sales Summary', 'Amount (PKR)']],
+        body: [
+          ['Net Sale:', totalNetSale.toLocaleString()],
+          ['Add-GST:', totalGST.toLocaleString()],
+          ['  GST on Cash:', totalGSTCash.toLocaleString()],
+          ['  GST on Card:', totalGSTCard.toLocaleString()],
+          ['Net Sale + GST:', netSalePlusGST.toLocaleString()],
+          ['Add-Discount:', totalDiscount.toLocaleString()],
+          ['Gross Sale:', grossSale.toLocaleString()],
+        ],
+        theme: 'plain',
+        headStyles: { fillColor: [200, 200, 200], textColor: [0,0,0] }
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+      if (currentY > 250) { doc.addPage(); currentY = 20; }
+
+      (doc as any).autoTable({
+        startY: currentY,
+        head: [['Payments / Audit', 'Value']],
+        body: [
+          ['Cash Sale:', cashSale.toLocaleString()],
+          ['Visa Sale:', cardSale.toLocaleString()],
+          ['', ''],
+          ['Take Away Orders:', taOrders.toString()],
+          ['Avg Take Away:', taOrders ? Math.round(taTotal / taOrders).toLocaleString() : '0'],
+          ['Dine In Orders/Guests:', diOrders.toString()],
+          ['Delivery Orders:', delOrders.toString()],
+        ],
+        theme: 'plain',
+        headStyles: { fillColor: [200, 200, 200], textColor: [0,0,0] }
+      });
+
+      doc.save(`Haandi_Sales_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+      notify('📥 PDF Report generated successfully!');
+    } catch(err: any) {
+      console.error(err);
+      notify('❌ Error generating PDF: ' + err.message);
+    }
+  };
+
   const handleExportCSV = () => {
     let csvContent = 'data:text/csv;charset=utf-8,';
     if (reportSubTab === 'ITEMS') {
@@ -964,6 +1083,24 @@ export const AdminPortal: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={handleExportPDF}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              border: '1.5px solid #E85D04',
+              background: '#FFF5F0',
+              color: '#E85D04',
+              fontWeight: '700',
+              fontSize: '13px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <Download size={16} /> Export PDF
+          </button>
           <button
             onClick={handleExportCSV}
             style={{

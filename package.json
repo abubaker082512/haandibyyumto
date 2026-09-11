@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.0",
     "@types/leaflet": "^1.9.22",
     "@whiskeysockets/baileys": "^7.0.0-rc14",
@@ -20,6 +21,8 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "firebase": "^12.18.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.31.0",
     "pino": "^10.3.1",
