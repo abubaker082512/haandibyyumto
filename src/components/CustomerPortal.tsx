@@ -8,7 +8,7 @@ import { MapPin, ShoppingBag, Trash2, Plus, Minus, X, Navigation, Sparkles, Arro
 import { LiveTrackingMap } from './LiveTrackingMap';
 import { notificationService } from '../services/notificationService';
 
-export const CustomerPortal: React.FC = () => {
+export const CustomerPortal: React.FC<{ hideHero?: boolean }> = ({ hideHero }) => {
   const [dbState, setDbState] = useState(db);
   useEffect(() => db.subscribe(() => setDbState(Object.create(db))), []);
 
@@ -507,6 +507,8 @@ export const CustomerPortal: React.FC = () => {
         </div>
       </nav>
 
+      {!hideHero && (
+        <>
       {/* ============================================================
           STUNNING HERO BANNER
           ============================================================ */}

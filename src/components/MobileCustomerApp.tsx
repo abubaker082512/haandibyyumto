@@ -9,7 +9,7 @@ import { MapPin, ShoppingBag, Trash2, Plus, Minus, X, Navigation, Sparkles, Arro
 import { LiveTrackingMap } from './LiveTrackingMap';
 import { notificationService } from '../services/notificationService';
 
-export const MobileCustomerApp: React.FC = () => {
+export const MobileCustomerApp: React.FC<{ hideHero?: boolean }> = ({ hideHero }) => {
   const [mobileTab, setMobileTab] = useState<'SPLASH'|'ORDER_TYPE'|'HOME'|'MENU'|'CART'|'PROFILE'>('SPLASH');
   const [custEmail, setCustEmail] = useState('');
   const [custPinLocation, setCustPinLocation] = useState('');
