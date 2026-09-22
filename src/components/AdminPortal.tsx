@@ -10,7 +10,7 @@ import type {
 } from '../types';
 import { 
   BarChart3, 
-  TrendingUp, 
+  TrendingUp, TrendingDown, 
   DollarSign, 
   ShoppingBag, 
   UtensilsCrossed, 
@@ -51,6 +51,12 @@ export const AdminPortal: React.FC = () => {
   const [selectedBranch, setSelectedBranch] = useState<string>('br-isb');
   const [notification, setNotification] = useState<string | null>(null);
 
+  // --- GLOBAL REPORT FILTERS ---
+  const [filterStartDate, setFilterStartDate] = useState<string>('');
+  const [filterEndDate, setFilterEndDate] = useState<string>('');
+  const [filterStaffId, setFilterStaffId] = useState<string>('ALL');
+  const [filterOrderType, setFilterOrderType] = useState<string>('ALL');
+
   // Auto-refresh on DB state changes
   useEffect(() => {
     return db.subscribe(() => {
@@ -63,10 +69,12 @@ export const AdminPortal: React.FC = () => {
     setTimeout(() => setNotification(null), 3500);
   };
 
+  // ───────────────────────────────────────────────────────────────────────────
+  //  Data Derivation & Computations (Now with Filters!)
+  // ───────────────────────────────────────────────────────────────────────────
   const branches = dbState.getBranches();
   const rawMenu = dbState.getMenu();
   const effectiveMenu = dbState.getBranchEffectiveMenu(selectedBranch);
-  const orders = dbState.getOrders();
   const shifts = dbState.getShifts();
   const recipes = dbState.getRecipes();
   const vendors = dbState.getVendors();
@@ -75,7 +83,26 @@ export const AdminPortal: React.FC = () => {
   const payroll = dbState.getPayroll();
   const settings = dbState.getSettings();
 
+  // Fetch all orders and apply global filters!
+  let allOrders = dbState.getOrders();
+  if (filterStartDate) {
+    const s = new Date(filterStartDate).getTime();
+    allOrders = allOrders.filter(o => new Date(o.createdAt).getTime() >= s);
+  }
+  if (filterEndDate) {
+    const e = new Date(filterEndDate);
+    e.setHours(23, 59, 59, 999);
+    allOrders = allOrders.filter(o => new Date(o.createdAt).getTime() <= e.getTime());
+  }
+  if (filterStaffId !== 'ALL') {
+    allOrders = allOrders.filter(o => o.cashierId === filterStaffId || o.waiterId === filterStaffId || o.riderId === filterStaffId);
+  }
+  if (filterOrderType !== 'ALL') {
+    allOrders = allOrders.filter(o => o.orderType === filterOrderType);
+  }
+
   // Summary Metrics
+  const orders = allOrders;
   const completedOrders = orders.filter(o => o.status === 'COMPLETED' || o.paymentStatus === 'PAID');
   const totalGrossSales = completedOrders.reduce((sum, o) => sum + (o.subtotal - (o.discountAmount || 0)), 0);
   const totalTaxCollected = completedOrders.reduce((sum, o) => sum + (o.tax || 0), 0);
@@ -907,7 +934,7 @@ export const AdminPortal: React.FC = () => {
   // ───────────────────────────────────────────────────────────────────────────
   // TAB 4: ENTERPRISE REPORTS SUITE (10+ REPORTS, CSV EXPORT, PRINT)
   // ───────────────────────────────────────────────────────────────────────────
-  const [reportSubTab, setReportSubTab] = useState<'ITEMS' | 'CATEGORIES' | 'HOURLY' | 'PAYMENTS' | 'TAX_AUDIT' | 'VOIDS' | 'STAFF_PERF'>('ITEMS');
+  const [reportSubTab, setReportSubTab] = useState<'ITEMS' | 'CATEGORIES' | 'HOURLY' | 'PAYMENTS' | 'TAX_AUDIT' | 'VOIDS' | 'STAFF_PERF' | 'HIGH_LOW_SALES' | 'DISCOUNTS'>('ITEMS');
 
   const itemSalesMap: Record<string, { name: string; category: string; qty: number; revenue: number }> = {};
   completedOrders.forEach(o => {
@@ -1092,7 +1119,9 @@ export const AdminPortal: React.FC = () => {
         <div style={{ display: 'flex', gap: '8px', overflowX: 'auto' }}>
           {[
             { id: 'ITEMS', label: 'Item Sales Velocity' },
+            { id: 'HIGH_LOW_SALES', label: 'Top & Bottom Items' },
             { id: 'CATEGORIES', label: 'Category Profitability' },
+            { id: 'DISCOUNTS', label: 'Discounts & Promos Audit' },
             { id: 'HOURLY', label: 'Hourly Peak Heatmap' },
             { id: 'PAYMENTS', label: 'Payment Method Breakdown' },
             { id: 'TAX_AUDIT', label: 'Tax & Service Charge Audit' },
@@ -1213,6 +1242,85 @@ export const AdminPortal: React.FC = () => {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {reportSubTab === 'HIGH_LOW_SALES' && (
+          <div>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '800', color: '#1A120B' }}>
+              Top & Bottom Performing Items
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+              {/* TOP PERFORMERS */}
+              <div>
+                <div style={{ background: '#E8F5E9', padding: '12px 16px', borderRadius: '10px 10px 0 0', fontWeight: '800', color: '#2E7D32', border: '1px solid #C8E6C9' }}>
+                  <TrendingUp size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '6px' }} /> 
+                  Top 10 Selling Items (By Volume)
+                </div>
+                <div style={{ border: '1px solid #C8E6C9', borderTop: 'none', borderRadius: '0 0 10px 10px', background: '#fff', padding: '12px' }}>
+                  {itemSalesList.sort((a,b) => b.qty - a.qty).slice(0, 10).map((it, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F0F0F0' }}>
+                      <div style={{ fontWeight: '600', fontSize: '13px' }}>{idx + 1}. {it.name}</div>
+                      <div style={{ fontWeight: '800', color: '#2E7D32', fontSize: '13px' }}>{it.qty} Sold</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* BOTTOM PERFORMERS */}
+              <div>
+                <div style={{ background: '#FFEBEE', padding: '12px 16px', borderRadius: '10px 10px 0 0', fontWeight: '800', color: '#C62828', border: '1px solid #FFCDD2' }}>
+                  <TrendingDown size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '6px' }} /> 
+                  Bottom 10 Selling Items (By Volume)
+                </div>
+                <div style={{ border: '1px solid #FFCDD2', borderTop: 'none', borderRadius: '0 0 10px 10px', background: '#fff', padding: '12px' }}>
+                  {itemSalesList.sort((a,b) => a.qty - b.qty).slice(0, 10).map((it, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F0F0F0' }}>
+                      <div style={{ fontWeight: '600', fontSize: '13px' }}>{idx + 1}. {it.name}</div>
+                      <div style={{ fontWeight: '800', color: '#C62828', fontSize: '13px' }}>{it.qty} Sold</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {reportSubTab === 'DISCOUNTS' && (
+          <div>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '800', color: '#1A120B' }}>
+              Discounts & Promotions Audit Log
+            </h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ background: '#F8F3EA', borderBottom: '2px solid #EADBCC' }}>
+                    <th style={{ padding: '12px 14px' }}>Order ID</th>
+                    <th style={{ padding: '12px 14px' }}>Date</th>
+                    <th style={{ padding: '12px 14px' }}>Subtotal</th>
+                    <th style={{ padding: '12px 14px' }}>Discount Given</th>
+                    <th style={{ padding: '12px 14px' }}>Cashier / Waiter</th>
+                    <th style={{ padding: '12px 14px' }}>Source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {completedOrders.filter(o => (o.discountAmount && o.discountAmount > 0)).length === 0 ? (
+                    <tr><td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#888' }}>No discounts recorded in this period.</td></tr>
+                  ) : (
+                    completedOrders.filter(o => (o.discountAmount && o.discountAmount > 0)).map((o, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #F0ECE1' }}>
+                        <td style={{ padding: '12px 14px', fontWeight: '700', color: '#1A120B' }}>#{o.id.slice(-5).toUpperCase()}</td>
+                        <td style={{ padding: '12px 14px', color: '#666' }}>{new Date(o.createdAt).toLocaleString()}</td>
+                        <td style={{ padding: '12px 14px' }}>Rs {o.subtotal.toLocaleString()}</td>
+                        <td style={{ padding: '12px 14px', fontWeight: '800', color: '#D84315' }}>-Rs {o.discountAmount?.toLocaleString()}</td>
+                        <td style={{ padding: '12px 14px' }}>{o.cashierName || o.waiterId || 'Online'}</td>
+                        <td style={{ padding: '12px 14px', fontWeight: '600' }}>{o.orderType}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -2231,6 +2339,51 @@ export const AdminPortal: React.FC = () => {
 
       {/* Main Content Area */}
       <main style={{ maxWidth: '1400px', width: '100%', margin: '0 auto', padding: '24px 20px', flex: 1 }}>
+        
+        {/* Global Analytics Filters (For Dashboard & Reports) */}
+        {(activeTab === 'OVERVIEW' || activeTab === 'REPORTS') && (
+          <div style={{ 
+            background: '#ffffff', padding: '16px 20px', borderRadius: '16px', 
+            border: '1px solid #EADBCC', display: 'flex', gap: '16px', flexWrap: 'wrap', 
+            marginBottom: '24px', alignItems: 'flex-end', boxShadow: '0 4px 16px rgba(0,0,0,0.03)' 
+          }}>
+            <div style={{ flex: '1 1 200px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Filter Start Date</label>
+              <input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #CCC', fontSize: '13px' }} />
+            </div>
+            <div style={{ flex: '1 1 200px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Filter End Date</label>
+              <input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #CCC', fontSize: '13px' }} />
+            </div>
+            <div style={{ flex: '1 1 200px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Filter by Staff</label>
+              <select value={filterStaffId} onChange={(e) => setFilterStaffId(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #CCC', fontSize: '13px' }}>
+                <option value="ALL">All Staff (No Filter)</option>
+                {staff.map(s => <option key={s.id} value={s.id}>{s.name} ({s.role})</option>)}
+              </select>
+            </div>
+            <div style={{ flex: '1 1 200px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#888', textTransform: 'uppercase', marginBottom: '6px' }}>Filter Order Type</label>
+              <select value={filterOrderType} onChange={(e) => setFilterOrderType(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #CCC', fontSize: '13px' }}>
+                <option value="ALL">All Sources</option>
+                <option value="DINE_IN">Dine-In Orders</option>
+                <option value="TAKEAWAY">Takeaway Orders</option>
+                <option value="DELIVERY">Delivery Orders</option>
+              </select>
+            </div>
+            <button
+              onClick={() => { setFilterStartDate(''); setFilterEndDate(''); setFilterStaffId('ALL'); setFilterOrderType('ALL'); }}
+              style={{
+                background: '#F4ECE1', color: '#1A120B', border: 'none', borderRadius: '10px', 
+                padding: '11px 16px', fontSize: '13px', fontWeight: '800', cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
+
         {activeTab === 'OVERVIEW' && renderOverviewTab()}
         {activeTab === 'BRANCH_MENU' && renderBranchMenuTab()}
         {activeTab === 'RECIPES' && renderRecipeTab()}
