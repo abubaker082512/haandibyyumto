@@ -95,7 +95,7 @@ export const AdminPortal: React.FC = () => {
     allOrders = allOrders.filter(o => new Date(o.createdAt).getTime() <= e.getTime());
   }
   if (filterStaffId !== 'ALL') {
-    allOrders = allOrders.filter(o => o.cashierId === filterStaffId || o.waiterId === filterStaffId || o.riderId === filterStaffId);
+    allOrders = allOrders.filter(o => o.cashierId === filterStaffId || o.riderId === filterStaffId);
   }
   if (filterOrderType !== 'ALL') {
     allOrders = allOrders.filter(o => o.orderType === filterOrderType);
@@ -1316,7 +1316,7 @@ export const AdminPortal: React.FC = () => {
                         <td style={{ padding: '12px 14px', color: '#666' }}>{new Date(o.createdAt).toLocaleString()}</td>
                         <td style={{ padding: '12px 14px' }}>Rs {o.subtotal.toLocaleString()}</td>
                         <td style={{ padding: '12px 14px', fontWeight: '800', color: '#D84315' }}>-Rs {o.discountAmount?.toLocaleString()}</td>
-                        <td style={{ padding: '12px 14px' }}>{o.cashierName || o.waiterId || 'Online'}</td>
+                        <td style={{ padding: '12px 14px' }}>{o.cashierId || o.waiterName || 'Online'}</td>
                         <td style={{ padding: '12px 14px', fontWeight: '600' }}>{o.orderType}</td>
                       </tr>
                     ))
