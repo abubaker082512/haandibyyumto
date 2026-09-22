@@ -1,5 +1,6 @@
 import { HAANDI_MENU } from './menuData';
 import { useState, useEffect } from 'react';
+import { startFirestoreSync, pushToFirestore } from '../services/firestoreSync';
 import type {
   Branch, Floor, Table, MenuItem, Reservation, Order, OrderItem,
   UserProfile, OrderStatus, TableStatus, CashierShift, HeldOrder,
@@ -220,6 +221,16 @@ class MockDatabase {
   }
 
   private init() {
+    // Intercept localStorage to push to Firestore
+    const originalSet = localStorage.setItem;
+    localStorage.setItem = function(key: string, val: string) {
+      originalSet.call(this, key, val);
+      try {
+        if (typeof pushToFirestore === 'function') pushToFirestore(key, JSON.parse(val));
+      } catch(e) {}
+    };
+    setTimeout(() => startFirestoreSync(this), 1000);
+
     localStorage.setItem('yumto_users', JSON.stringify(INITIAL_USERS));
     localStorage.setItem('yumto_branches', JSON.stringify(INITIAL_BRANCHES));
     localStorage.setItem('yumto_floors', JSON.stringify(INITIAL_FLOORS));
@@ -275,7 +286,7 @@ class MockDatabase {
     };
   }
 
-  private notify() {
+  public notify() {
     this.listeners.forEach(l => l());
   }
 
