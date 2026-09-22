@@ -55,7 +55,7 @@ export const TribalLandingPage: React.FC = () => {
           borderBottom: scrolled ? '1px solid rgba(255,255,255,0.05)' : 'none'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src="/logo.png" alt="Haandi" style={{ width: '40px', height: '40px', filter: 'brightness(0) invert(1)' }} />
+            <img src="/logo.png" alt="Haandi" style={{ width: '40px', height: '40px', borderRadius: '8px' }} />
             <span style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '0.1em' }}>HAANDI BY YUMTO</span>
           </div>
           
@@ -107,7 +107,7 @@ export const TribalLandingPage: React.FC = () => {
 
       {/* FOOTER */}
       <footer style={{ background: '#0A0A0A', borderTop: '1px solid #222', padding: '60px 40px', textAlign: 'center' }}>
-        <img src="/logo.png" alt="Haandi" style={{ width: '60px', height: '60px', filter: 'brightness(0) invert(1)', marginBottom: '20px' }} />
+        <img src="/logo.png" alt="Haandi" style={{ width: '60px', height: '60px', borderRadius: '12px', marginBottom: '20px' }} />
         <div style={{ fontSize: '13px', color: '#666', marginBottom: '30px' }}>
           Civic Center, Executive Block, Gulberg Greens, Islamabad<br/>
           +92-330-0500600
