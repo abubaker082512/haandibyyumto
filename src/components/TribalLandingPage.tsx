@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../store/mockDb';
-import type { MenuItem } from '../types';
 import { ChevronDown } from 'lucide-react';
 import { CustomerPortal } from './CustomerPortal';
 import { MobileCustomerApp } from './MobileCustomerApp';
