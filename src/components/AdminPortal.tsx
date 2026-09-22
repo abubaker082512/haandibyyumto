@@ -100,6 +100,42 @@ export const AdminPortal: React.FC = () => {
   // ───────────────────────────────────────────────────────────────────────────
   const renderOverviewTab = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      
+      {/* 👑 LUXURY DASHBOARD HERO BANNER 👑 */}
+      <div style={{ 
+        position: 'relative', overflow: 'hidden', borderRadius: '20px', padding: '32px 24px', 
+        background: '#1A120B', color: '#fff', boxShadow: '0 10px 30px rgba(26,18,11,0.2)' 
+      }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url("https://images.unsplash.com/photo-1544148103-0773bf10d330?auto=format&fit=crop&w=1920&q=80")',
+          backgroundSize: 'cover', backgroundPosition: 'center 40%', opacity: 0.15, zIndex: 0
+        }} />
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexWrap: 'wrap', gap: '24px', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ display: 'inline-block', background: 'rgba(232,93,4,0.2)', border: '1px solid #E85D04', color: '#F4C430', padding: '4px 12px', borderRadius: '99px', fontSize: '12px', fontWeight: '800', marginBottom: '12px' }}>
+              ✦ Live Enterprise HQ
+            </div>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '36px', fontWeight: '900', margin: '0 0 8px 0', letterSpacing: '0.02em', color: '#FDFBF7' }}>
+              Welcome back, <span style={{ color: '#E85D04' }}>Director</span>
+            </h1>
+            <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255,255,255,0.7)', maxWidth: '500px', lineHeight: 1.5 }}>
+              All real-time telemetry from Haandi by Yumto is synchronized. Watch live restaurant performance, analytics, and active floor routing below.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px 20px', borderRadius: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', color: '#F4C430', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Live Orders</div>
+              <div style={{ fontSize: '28px', fontWeight: '900', color: '#fff' }}>{completedOrders.length}</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px 20px', borderRadius: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', color: '#4ADE80', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Online Status</div>
+              <div style={{ fontSize: '28px', fontWeight: '900', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><div style={{ width: '10px', height: '10px', background: '#4ADE80', borderRadius: '50%', boxShadow: '0 0 10px #4ADE80', animation: 'pulse 2s infinite' }} /> Sync</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Top Metrics Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
         <div style={{ background: '#ffffff', borderRadius: '16px', padding: '20px', border: '1px solid #EADBCC', boxShadow: '0 4px 16px rgba(0,0,0,0.03)' }}>
