@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../store/mockDb';
 import type { MenuItem } from '../types';
-import { ShoppingBag, ChevronDown, MapPin, Phone, Instagram, Facebook } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { CustomerPortal } from './CustomerPortal';
 import { MobileCustomerApp } from './MobileCustomerApp';
 import { Capacitor } from '@capacitor/core';

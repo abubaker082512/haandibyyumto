@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { CustomerPortal } from './components/CustomerPortal';
 import { TribalLandingPage } from './components/TribalLandingPage';
-import { MobileCustomerApp } from './components/MobileCustomerApp';
 import { Capacitor } from '@capacitor/core';
 import { ManagerPortal } from './components/ManagerPortal';
 import { KitchenPortal } from './components/KitchenPortal';

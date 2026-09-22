@@ -610,6 +610,8 @@ export const CustomerPortal: React.FC<{ hideHero?: boolean }> = ({ hideHero }) =
 
         </div>
       </div>
+      </>
+      )}
 
       {/* Delivery Sector Selector */}
       {orderType === 'DELIVERY' && (
