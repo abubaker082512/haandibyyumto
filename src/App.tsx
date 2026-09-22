@@ -15,11 +15,8 @@ import { db } from './store/mockDb';
 function AppContent({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const isCustomerView = location.pathname === '/' || location.pathname.startsWith('/track');
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768 || Capacitor.isNativePlatform());
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768 || Capacitor.isNativePlatform());
-    window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
