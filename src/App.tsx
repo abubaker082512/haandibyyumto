@@ -17,8 +17,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const isCustomerView = location.pathname === '/' || location.pathname.startsWith('/track');
 
   useEffect(() => {
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+      }, []);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F8F3EA' }}>
@@ -26,7 +25,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      {isCustomerView && !isMobile && (
+      {isCustomerView && (
         <footer style={{
           background: '#1A120B',
           borderTop: '1px solid rgba(255,255,255,0.08)',
@@ -60,13 +59,10 @@ function App() {
   const [, setDbState] = useState(db);
   useEffect(() => db.subscribe(() => setDbState(Object.create(db))), []);
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768 || Capacitor.isNativePlatform());
-  const [splash, setSplash] = useState({ visible: false, title: 'Haandi by Yumto' });
+    const [splash, setSplash] = useState({ visible: false, title: 'Haandi by Yumto' });
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768 || Capacitor.isNativePlatform());
-    window.addEventListener('resize', handleResize);
-    
+            
     // Redirect & Splash based on Capacitor App ID (Flavor)
     if (Capacitor.isNativePlatform()) {
       CapApp.getInfo().then(info => {
@@ -88,8 +84,7 @@ function App() {
       }).catch(console.error);
     }
     
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+      }, []);
 
   return (
     <AuthProvider>
